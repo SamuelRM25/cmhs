@@ -2808,9 +2808,10 @@ try {
     `;
         document.head.appendChild(style);
 
-        // Inyectar script de mantenimiento de sesión activo (Global)
-        <?php output_keep_alive_script(); ?>
     </script>
+
+    <!-- Inyectar script de mantenimiento de sesión activo (Global) -->
+    <?php output_keep_alive_script(); ?>
 </body>
 
 </html>
