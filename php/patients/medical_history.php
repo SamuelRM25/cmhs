@@ -321,9 +321,8 @@ try {
             flex-direction: column;
             min-height: 100vh;
             position: relative;
-            margin-left: var(--sidebar-width);
-            transition: margin-left var(--transition-base);
-            width: calc(100% - var(--sidebar-width));
+            margin-left: 0;
+            width: 100%;
         }
 
         /* ==========================================================================
@@ -1475,101 +1474,7 @@ try {
     <!-- Efecto de mármol animado -->
     <div class="marble-effect"></div>
 
-    <!-- Overlay para sidebar móvil -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Barra Lateral Moderna -->
-    <aside class="sidebar" id="sidebar">
-        <!-- Navegación -->
-        <nav class="sidebar-nav">
-            <ul class="nav-list">
-                <li class="nav-item">
-                    <a href="../dashboard/index.php" class="nav-link">
-                        <i class="bi bi-speedometer2 nav-icon"></i>
-                        <span class="nav-text">Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../appointments/index.php" class="nav-link">
-                        <i class="bi bi-calendar-check nav-icon"></i>
-                        <span class="nav-text">Citas</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../patients/index.php" class="nav-link active">
-                        <i class="bi bi-people nav-icon"></i>
-                        <span class="nav-text">Pacientes</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../hospitalization/index.php" class="nav-link">
-                        <i class="bi bi-hospital nav-icon"></i>
-                        <span class="nav-text">Hospitalización</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../minor_procedures/index.php" class="nav-link">
-                        <i class="bi bi-bandaid nav-icon"></i>
-                        <span class="nav-text">Procedimientos</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../examinations/index.php" class="nav-link">
-                        <i class="bi bi-file-earmark-medical nav-icon"></i>
-                        <span class="nav-text">Exámenes</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../laboratory/index.php" class="nav-link">
-                        <i class="bi bi-virus nav-icon"></i>
-                        <span class="nav-text">Laboratorio</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../inventory/index.php" class="nav-link">
-                        <i class="bi bi-box-seam nav-icon"></i>
-                        <span class="nav-text">Inventario</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../purchases/index.php" class="nav-link">
-                        <i class="bi bi-cart nav-icon"></i>
-                        <span class="nav-text">Compras</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../sales/index.php" class="nav-link">
-                        <i class="bi bi-receipt nav-icon"></i>
-                        <span class="nav-text">Ventas</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../billing/index.php" class="nav-link">
-                        <i class="bi bi-cash-coin nav-icon"></i>
-                        <span class="nav-text">Cobros</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../dispensary/index.php" class="nav-link">
-                        <i class="bi bi-capsule nav-icon"></i>
-                        <span class="nav-text">Dispensario</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../reports/index.php" class="nav-link">
-                        <i class="bi bi-graph-up nav-icon"></i>
-                        <span class="nav-text">Reportes</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../settings/index.php" class="nav-link">
-                        <i class="bi bi-gear nav-icon"></i>
-                        <span class="nav-text">Configuración</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </aside>
 
     <!-- Contenedor Principal -->
     <div class="dashboard-container">
@@ -1616,13 +1521,16 @@ try {
             </div>
         </header>
 
-        <!-- Botón para colapsar/expandir sidebar (solo escritorio) -->
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Colapsar/expandir menú">
-            <i class="bi bi-chevron-left" id="sidebarToggleIcon"></i>
-        </button>
 
         <!-- Contenido Principal -->
         <main class="main-content">
+            <!-- Botón Volver -->
+            <div class="mb-4 animate-in">
+                <a href="index.php" class="btn btn-outline-primary d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Volver a Pacientes</span>
+                </a>
+            </div>
             <!-- Bienvenida personalizada -->
             <div class="stat-card mb-4 animate-in">
                 <div class="stat-header">
