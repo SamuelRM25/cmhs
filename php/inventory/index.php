@@ -2642,6 +2642,8 @@ try {
                 const expiryDate = document.getElementById('receive_fecha_vencimiento').value;
                 const referenceDoc = document.getElementById('receive_documento_referencia')?.value || '';
 
+                const barcode = document.getElementById('receive_codigo_barras').value;
+
                 if (!expiryDate) {
                     alert('Por favor ingrese la fecha de vencimiento');
                     return;
@@ -2661,7 +2663,8 @@ try {
                     body: JSON.stringify({
                         id_inventario: id,
                         fecha_vencimiento: expiryDate,
-                        documento_referencia: referenceDoc
+                        documento_referencia: referenceDoc,
+                        codigo_barras: barcode
                     })
                 })
                     .then(response => response.json())
