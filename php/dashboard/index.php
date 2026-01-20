@@ -3184,56 +3184,38 @@ try {
                     this.setupGreeting();
                     this.setupClock();
                     this.setupPatientHandlers();
-                    this.setupBillingHandlers(); // COBROS
-                    this.setupLabOrderHandlers(); // LABORATORIO
+                    this.setupBillingHandlers();
+                    this.setupLabOrderHandlers();
                     this.setupAnimations();
                     this.setupAdminNotifications();
                 }
 
                 setupGreeting() {
-                    if (!DOM.greetingElement) return;
-
+                    const el = document.getElementById('greeting-text');
+                    if (!el) return;
                     const hour = new Date().getHours();
-                    let greeting = '';
-
-                    if (hour < 12) {
-                        greeting = 'Buenos días';
-                    } else if (hour < 19) {
-                        greeting = 'Buenas tardes';
-                    } else {
-                        greeting = 'Buenas noches';
-                    }
-
-                    DOM.greetingElement.textContent = greeting;
+                    let greeting = hour < 12 ? 'Buenos días' : (hour < 19 ? 'Buenas tardes' : 'Buenas noches');
+                    el.textContent = greeting;
                 }
 
                 setupClock() {
-                    if (!DOM.currentTimeElement) return;
-
-                    const updateClock = () => {
-                        const now = new Date();
-                        const timeString = now.toLocaleTimeString('es-GT', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false
-                        });
-                        DOM.currentTimeElement.textContent = timeString;
+                    const el = document.getElementById('current-time');
+                    if (!el) return;
+                    const update = () => {
+                        el.textContent = new Date().toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit', hour12: false });
                     };
-
-                    updateClock();
-                    setInterval(updateClock, 60000);
+                    update();
+                    setInterval(update, 60000);
                 }
 
                 setupPatientHandlers() {
-                    DOM.checkPatientButtons.forEach(btn => {
+                    document.querySelectorAll('.check-patient').forEach(btn => {
                         btn.addEventListener('click', async (e) => {
                             e.preventDefault();
                             const nombre = btn.getAttribute('data-nombre');
                             const apellido = btn.getAttribute('data-apellido');
-
                             if (!nombre || !apellido) return;
 
-                            // Mostrar indicador de carga en el botón
                             const icon = btn.querySelector('i');
                             const originalClass = icon ? icon.className : '';
                             if (icon) icon.className = 'bi bi-arrow-clockwise spin';
@@ -3244,17 +3226,15 @@ try {
                                 const data = await response.json();
 
                                 if (data.status === 'success' && data.exists) {
-                                    // Paciente existe, ir al historial
                                     window.location.href = `../patients/medical_history.php?id=${data.id}`;
                                 } else {
-                                    // Paciente no existe, preguntar si desea registrarlo
                                     Swal.fire({
                                         title: 'Paciente no encontrado',
-                                        text: `El paciente ${nombre} ${apellido} no está registrado en el sistema. ¿Desea registrarlo ahora?`,
+                                        text: `El paciente ${nombre} ${apellido} no está registrado. ¿Desea registrarlo?`,
                                         icon: 'question',
                                         showCancelButton: true,
                                         confirmButtonText: 'Sí, registrar',
-                                        cancelButtonText: 'No por ahora',
+                                        cancelButtonText: 'Cancelar',
                                         confirmButtonColor: 'var(--color-primary)',
                                         background: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1e293b' : '#ffffff',
                                         color: document.documentElement.getAttribute('data-theme') === 'dark' ? '#e2e8f0' : '#1a1a1a'
@@ -3265,13 +3245,7 @@ try {
                                     });
                                 }
                             } catch (error) {
-                                console.error('Error al verificar paciente:', error);
-                                Swal.fire({
-                                    title: 'Error',
-                                    text: 'Hubo un problema al conectar con el servidor.',
-                                    icon: 'error',
-                                    confirmButtonColor: 'var(--color-primary)'
-                                });
+                                Swal.fire('Error', 'Problema al conectar con el servidor', 'error');
                             } finally {
                                 if (icon) icon.className = originalClass;
                                 btn.style.pointerEvents = '';
@@ -3285,6 +3259,8 @@ try {
                     const montoInput = document.getElementById('billing_monto');
                     const tipoRadios = document.getElementsByName('tipo_consulta');
 
+                    if (!doctorSelect || !montoInput) return;
+
                     const calculatePrice = () => {
                         const doctorId = doctorSelect.value;
                         let type = 'Consulta';
@@ -3292,65 +3268,53 @@ try {
 
                         let price = 0;
                         const date = new Date();
-                        const day = date.getDay(); // 0 Sun, 6 Sat
+                        const day = date.getDay();
                         const hour = date.getHours();
 
-                        // Lógica de precios según el médico
                         switch (doctorId) {
-                            case '17': // Dra Libny Recinos
-                                price = (type === 'Consulta') ? 200 : 150;
-                                break;
-                            case '13': // Dr Luis Carlos del Valle
-                                price = (type === 'Consulta') ? 250 : 150;
-                                break;
-                            case '18': // Lic. Isabel Herrera
-                            case '11':
-                                price = (type === 'Consulta') ? 200 : 100;
-                                break;
-                            case '16': // Dra Mayeli (Complejo)
-                                if (type === 'Reconsulta') {
-                                    price = 150;
-                                } else {
-                                    if (day >= 1 && day <= 5) { // Lunes a Viernes
+                            case '17': price = (type === 'Consulta') ? 200 : 150; break;
+                            case '13': price = (type === 'Consulta') ? 250 : 150; break;
+                            case '18': case '11': price = (type === 'Consulta') ? 200 : 100; break;
+                            case '16':
+                                if (type === 'Reconsulta') price = 150;
+                                else {
+                                    if (day >= 1 && day <= 5) {
                                         if (hour >= 8 && hour < 16) price = 250;
                                         else if (hour >= 16 && hour < 22) price = 300;
                                         else price = 400;
-                                    } else if (day === 6) { // Sábado
+                                    } else if (day === 6) {
                                         if (hour < 13) price = 250;
                                         else if (hour >= 13 && hour < 22) price = 300;
                                         else price = 400;
-                                    } else { // Domingo
+                                    } else {
                                         if (hour >= 8 && hour < 20) price = 350;
                                         else price = 400;
                                     }
                                 }
                                 break;
-                            case '14': // Dra Jannya Rivas
-                            case '9':
-                            default: // Medicina General / Otros
-                                price = (type === 'Consulta') ? 100 : 0;
-                                break;
+                            default: price = (type === 'Consulta') ? 100 : 0; break;
                         }
-
                         montoInput.value = price;
                     };
 
-                    doctorSelect?.addEventListener('change', calculatePrice);
+                    doctorSelect.addEventListener('change', calculatePrice);
                     tipoRadios.forEach(r => r.addEventListener('change', calculatePrice));
+                    calculatePrice();
 
-                    // Guardar nuevo cobro
-                    if (document.getElementById('saveBillingBtn')) {
-                        document.getElementById('saveBillingBtn').addEventListener('click', async () => {
+                    const saveBtn = document.getElementById('saveBillingBtn');
+                    if (saveBtn) {
+                        saveBtn.addEventListener('click', async () => {
                             const form = document.getElementById('newBillingForm');
                             const patientInput = document.getElementById('billing_paciente_input');
                             const patientHidden = document.getElementById('billing_paciente');
                             const datalist = document.getElementById('billingDatalistOptions');
 
-                            // Sync patient ID
+                            if (!form || !patientInput || !datalist) return;
+
                             let patientId = '';
                             const val = patientInput.value;
-                            if (val.trim() === '') {
-                                Swal.fire({ title: 'Error', text: 'Nombre de paciente requerido', icon: 'warning' });
+                            if (!val.trim()) {
+                                Swal.fire('Aviso', 'Nombre de paciente requerido', 'warning');
                                 return;
                             }
 
@@ -3368,33 +3332,27 @@ try {
                                 return;
                             }
 
-                            const formData = new FormData(form);
-                            const data = Object.fromEntries(formData.entries());
-
-                            const btn = document.getElementById('saveBillingBtn');
-                            const originalText = btn.innerHTML;
-                            btn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Guardando...';
-                            btn.disabled = true;
+                            const originalText = saveBtn.innerHTML;
+                            saveBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Guardando...';
+                            saveBtn.disabled = true;
 
                             try {
                                 const response = await fetch('../billing/save_billing.php', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                                    body: new URLSearchParams(data)
+                                    body: new URLSearchParams(new FormData(form))
                                 });
-
                                 const result = await response.json();
                                 if (result.status === 'success') {
-                                    Swal.fire({ title: '¡Éxito!', text: 'Cobro guardado correctamente', icon: 'success' })
-                                        .then(() => location.reload());
+                                    Swal.fire('Éxito', 'Cobro guardado', 'success').then(() => location.reload());
                                 } else {
                                     throw new Error(result.message);
                                 }
                             } catch (error) {
-                                Swal.fire({ title: 'Error', text: error.message || 'Error de conexión', icon: 'error' });
+                                Swal.fire('Error', error.message || 'Error de conexión', 'error');
                             } finally {
-                                btn.innerHTML = originalText;
-                                btn.disabled = false;
+                                saveBtn.innerHTML = originalText;
+                                saveBtn.disabled = false;
                             }
                         });
                     }
@@ -3406,71 +3364,50 @@ try {
                     const totalElement = document.getElementById('orderTotal');
                     const saveBtn = document.getElementById('saveLabOrderBtn');
 
-                    if (!checkboxes.length) return;
+                    if (!checkboxes.length || !selectedList) return;
 
                     const updateSummary = () => {
                         selectedList.innerHTML = '';
-                        let total = 0;
-                        let count = 0;
-
+                        let total = 0, count = 0;
                         checkboxes.forEach(cb => {
                             if (cb.checked) {
                                 count++;
                                 const price = parseFloat(cb.getAttribute('data-price'));
-                                const name = cb.getAttribute('data-name');
                                 total += price;
-
                                 const item = document.createElement('div');
                                 item.className = 'd-flex justify-content-between align-items-center mb-2 small border-bottom pb-1';
-                                item.innerHTML = `
-                                    <span>${name}</span>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="fw-bold">Q${price.toFixed(2)}</span>
-                                        <i class="bi bi-x-circle text-danger cursor-pointer" onclick="document.getElementById('${cb.id}').click()"></i>
-                                    </div>
-                                `;
+                                item.innerHTML = `<span>${cb.getAttribute('data-name')}</span><div class="d-flex align-items-center gap-2"><span class="fw-bold">Q${price.toFixed(2)}</span><i class="bi bi-x-circle text-danger cursor-pointer" onclick="document.getElementById('${cb.id}').click()"></i></div>`;
                                 selectedList.appendChild(item);
                             }
                         });
-
-                        if (count === 0) {
-                            selectedList.innerHTML = '<p class="fst-italic text-center py-2">Ninguna prueba seleccionada</p>';
-                            saveBtn.disabled = true;
-                        } else {
-                            saveBtn.disabled = false;
-                        }
-
-                        totalElement.textContent = `Q${total.toFixed(2)}`;
+                        if (count === 0) selectedList.innerHTML = '<p class="fst-italic text-center py-2">Ninguna prueba seleccionada</p>';
+                        if (saveBtn) saveBtn.disabled = (count === 0);
+                        if (totalElement) totalElement.textContent = `Q${total.toFixed(2)}`;
                     };
 
-                    checkboxes.forEach(cb => {
-                        cb.addEventListener('change', updateSummary);
-                    });
+                    checkboxes.forEach(cb => cb.addEventListener('change', updateSummary));
 
-                    // Save Lab Order
                     if (saveBtn) {
                         saveBtn.addEventListener('click', async () => {
                             const form = document.getElementById('newLabOrderForm');
-
-                            // Sync patient ID
                             const patientInput = document.getElementById('lab_paciente_input');
                             const patientHidden = document.getElementById('lab_id_paciente');
                             const datalist = document.getElementById('labDatalistOptions');
 
+                            if (!form || !patientInput || !datalist) return;
+
                             patientHidden.value = '';
-                            if (patientInput && datalist) {
-                                const val = patientInput.value;
-                                const options = datalist.options;
-                                for (let i = 0; i < options.length; i++) {
-                                    if (options[i].value === val) {
-                                        patientHidden.value = options[i].getAttribute('data-id');
-                                        break;
-                                    }
+                            const val = patientInput.value;
+                            const options = datalist.options;
+                            for (let i = 0; i < options.length; i++) {
+                                if (options[i].value === val) {
+                                    patientHidden.value = options[i].getAttribute('data-id');
+                                    break;
                                 }
                             }
 
                             if (!patientHidden.value) {
-                                Swal.fire({ title: 'Error', text: 'Seleccione un paciente válido', icon: 'warning' });
+                                Swal.fire('Aviso', 'Seleccione un paciente válido', 'warning');
                                 return;
                             }
 
@@ -3479,8 +3416,6 @@ try {
                                 return;
                             }
 
-                            const formData = new FormData(form);
-                            // Collect checked tests
                             const pruebas = [];
                             document.querySelectorAll('.test-checkbox:checked').forEach(cb => pruebas.push(cb.value));
 
@@ -3502,7 +3437,6 @@ try {
                                     body: JSON.stringify(data)
                                 });
                                 const result = await response.json();
-
                                 if (result.status === 'success') {
                                     Swal.fire({
                                         title: '¡Orden Creada!',
@@ -3512,9 +3446,7 @@ try {
                                         confirmButtonText: 'Ver PDF',
                                         cancelButtonText: 'Cerrar'
                                     }).then((res) => {
-                                        if (res.isConfirmed) {
-                                            window.open('../laboratory/print_order.php?id=' + result.id_orden, '_blank');
-                                        }
+                                        if (res.isConfirmed) window.open('../laboratory/print_order.php?id=' + result.id_orden, '_blank');
                                         location.reload();
                                     });
                                 } else {
@@ -3531,13 +3463,6 @@ try {
                 }
 
                 setupAnimations() {
-                    // Animar elementos al cargar
-                    const observerOptions = {
-                        root: null,
-                        rootMargin: '0px',
-                        threshold: 0.1
-                    };
-
                     const observer = new IntersectionObserver((entries) => {
                         entries.forEach(entry => {
                             if (entry.isIntersecting) {
@@ -3545,24 +3470,17 @@ try {
                                 observer.unobserve(entry.target);
                             }
                         });
-                    }, observerOptions);
+                    }, { threshold: 0.1 });
 
-                    // Observar elementos con clase de animación
-                    document.querySelectorAll('.stat-card, .appointments-section, .alert-card').forEach(el => {
-                        observer.obser                        ve(el);
-                    });
+                    document.querySelectorAll('.stat-card, .appointments-section, .alert-card').forEach(el => observer.observe(el));
                 }
 
                 setupAdminNotifications() {
                     <?php if ($user_type === 'admin'): ?>
-                        const lastSummaryDate = localStorage.getItem(CONFIG.greetingKey);
+                        const lastDate = localStorage.getItem('dailyReportDate');
                         const today = new Date().toISOString().split('T')[0];
-                        const currentHour = new Date().getHours();
-
-                        if (currentHour >= 8 && lastSummaryDate !== today) {
-                            setTimeout(() => {
-                                this.showDailyReportNotification(today);
-                            }, 2000);
+                        if (new Date().getHours() >= 8 && lastDate !== today) {
+                            setTimeout(() => this.showDailyReportNotification(today), 2000);
                         }
                     <?php endif; ?>
                 }
@@ -3572,29 +3490,18 @@ try {
                     notification.className = 'alert-card mb-4 animate-in';
                     notification.style.borderLeft = '4px solid var(--color-info)';
                     notification.innerHTML = `
-                    <div class="alert-header">
-                        <div class="alert-icon info">
-                            <i class="bi bi-info-circle"></i>
+                        <div class="alert-header">
+                            <div class="alert-icon info"><i class="bi bi-info-circle"></i></div>
+                            <h3 class="alert-title">Reporte Diario</h3>
+                            <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
                         </div>
-                        <h3 class="alert-title">Reporte Diario</h3>
-                        <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
-                    </div>
-                    <p class="text-muted mb-3">¿Desea generar el reporte de la jornada anterior?</p>
-                    <div class="d-flex gap-2">
-                        <button class="action-btn" onclick="window.open('../reports/export_jornada.php?date=${today}', '_blank'); localStorage.setItem('${CONFIG.greetingKey}', '${today}'); this.parentElement.parentElement.remove();">
-                            <i class="bi bi-file-earmark-pdf"></i>
-                            Generar Reporte
-                        </button>
-                        <button class="btn btn-outline-secondary" onclick="localStorage.setItem('${CONFIG.greetingKey}', '${today}'); this.parentElement.parentElement.remove();">
-                            Más tarde
-                        </button>
-                    </div>
-                `;
-
-                    const mainContent = document.querySelector('.main-content');
-                    if (mainContent) {
-                        mainContent.insertBefore(notification, mainContent.firstChild);
-                    }
+                        <p class="text-muted mb-3">¿Desea generar el reporte de la jornada anterior?</p>
+                        <div class="d-flex gap-2">
+                            <button class="action-btn" onclick="window.open('../reports/export_jornada.php?date=${today}', '_blank'); localStorage.setItem('dailyReportDate', '${today}'); this.parentElement.parentElement.remove();"><i class="bi bi-file-earmark-pdf"></i> Generar Reporte</button>
+                            <button class="btn btn-outline-secondary" onclick="localStorage.setItem('dailyReportDate', '${today}'); this.parentElement.parentElement.remove();">Más tarde</button>
+                        </div>`;
+                    const main = document.querySelector('.main-content');
+                    if (main) main.insertBefore(notification, main.firstChild);
                 }
             }
 
