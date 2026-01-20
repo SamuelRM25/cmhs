@@ -19,7 +19,7 @@ $id_prueba = $_POST['id_prueba'] ?? null;
 $nombre = $_POST['nombre'] ?? '';
 $codigo = $_POST['codigo'] ?? '';
 $categoria = $_POST['categoria'] ?? '';
-$price = $_POST['price'] ?? 0;
+$precio = $_POST['precio'] ?? 0;
 $muestra = $_POST['muestra'] ?? '';
 $tiempo = $_POST['tiempo'] ?? 0;
 
@@ -31,28 +31,28 @@ if (empty($nombre) || empty($codigo)) {
 try {
     $database = new Database();
     $conn = $database->getConnection();
-    
+
     if ($id_prueba) {
         // Update
         $stmt = $conn->prepare("
             UPDATE catalogo_pruebas 
-            SET nombre_prueba = ?, codigo_prueba = ?, categoria = ?, price = ?, muestra_requerida = ?, tiempo_procesamiento_horas = ?
+            SET nombre_prueba = ?, codigo_prueba = ?, categoria = ?, precio = ?, muestra_requerida = ?, tiempo_procesamiento_horas = ?
             WHERE id_prueba = ?
         ");
-        $stmt->execute([$nombre, $codigo, $categoria, $price, $muestra, $tiempo, $id_prueba]);
+        $stmt->execute([$nombre, $codigo, $categoria, $precio, $muestra, $tiempo, $id_prueba]);
         $message = 'Prueba actualizada correctamente';
     } else {
         // Create
         $stmt = $conn->prepare("
-            INSERT INTO catalogo_pruebas (nombre_prueba, codigo_prueba, categoria, price, muestra_requerida, tiempo_procesamiento_horas)
+            INSERT INTO catalogo_pruebas (nombre_prueba, codigo_prueba, categoria, precio, muestra_requerida, tiempo_procesamiento_horas)
             VALUES (?, ?, ?, ?, ?, ?)
         ");
-        $stmt->execute([$nombre, $codigo, $categoria, $price, $muestra, $tiempo]);
+        $stmt->execute([$nombre, $codigo, $categoria, $precio, $muestra, $tiempo]);
         $message = 'Prueba creada correctamente';
     }
-    
+
     echo json_encode(['success' => true, 'message' => $message]);
-    
+
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
