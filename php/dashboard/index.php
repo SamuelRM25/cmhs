@@ -35,6 +35,25 @@ try {
 
     // ============ CONSULTAS ESTADÍSTICAS ============
 
+    // Obtener Pacientes (para Cobros y Laboratorio)
+    $stmt = $conn->prepare("SELECT id_paciente, CONCAT(nombre, ' ', apellido) as nombre_completo FROM pacientes ORDER BY nombre");
+    $stmt->execute();
+    $pacientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Obtener Doctores (para Cobros y Laboratorio)
+    $stmtDoc = $conn->prepare("SELECT idUsuario, nombre, apellido FROM usuarios WHERE tipoUsuario = 'doc' ORDER BY nombre");
+    $stmtDoc->execute();
+    $doctores = $stmtDoc->fetchAll(PDO::FETCH_ASSOC);
+
+    // Obtener Catálogo de Pruebas (para Laboratorio)
+    $stmtCat = $conn->query("SELECT id_prueba, codigo_prueba, nombre_prueba, categoria, precio FROM catalogo_pruebas ORDER BY categoria, nombre_prueba");
+    $catalogo = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
+
+    $pruebas_por_categoria = [];
+    foreach ($catalogo as $prueba) {
+        $pruebas_por_categoria[$prueba['categoria'] ?? 'Sin Categoría'][] = $prueba;
+    }
+
     // 1. Citas de hoy
     $params = $is_doctor ? [$today, $user_id] : [$today];
     $stmt = $conn->prepare("SELECT COUNT(*) as count FROM citas WHERE fecha_cita = ?" . $doctor_filter);
@@ -175,12 +194,16 @@ try {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Bootstrap CSS y JS Bundle -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
     <!-- CSS Crítico (incrustado para máxima velocidad) -->
     <style>
@@ -340,16 +363,6 @@ try {
 
             --marble-color-1: rgba(15, 23, 42, 0.95);
             --marble-color-2: rgba(30, 41, 59, 0.8);
-        }
-
-        /* ==========================================================================
-       APLICACIÓN DE VARIABLES
-       ========================================================================== */
-        body {
-            background-color: var(--color-bg);
-            color: var(--color-text);
-            min-height: 100vh;
-            position: relative;
         }
 
         /* ==========================================================================
@@ -819,6 +832,145 @@ try {
             box-shadow: var(--shadow-md);
         }
 
+        .sidebar-toggle {
+            left: calc(var(--sidebar-width) - 12px);
+        }
+
+        .sidebar.collapsed+.dashboard-container .sidebar-toggle {
+            left: calc(var(--sidebar-collapsed-width) - 12px);
+        }
+
+        .sidebar.collapsed .sidebar-toggle i {
+            transform: rotate(180deg);
+        }
+        }
+
+        .theme-icon {
+            position: absolute;
+            font-size: 1.25rem;
+            transition: all var(--transition-base);
+        }
+
+        .sun-icon {
+            opacity: 1;
+            transform: rotate(0);
+        }
+
+        .moon-icon {
+            opacity: 0;
+            transform: rotate(-90deg);
+        }
+
+        [data-theme="dark"] .sun-icon {
+            opacity: 0;
+            transform: rotate(90deg);
+        }
+
+        [data-theme="dark"] .moon-icon {
+            opacity: 1;
+            transform: rotate(0);
+        }
+
+        /* Información usuario en header */
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .header-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-info));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: var(--font-size-lg);
+        }
+
+        .header-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-name {
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+            color: var(--color-text);
+        }
+
+        .header-role {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+        }
+
+        /* Botón de cerrar sesión */
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            background: var(--color-surface);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all var(--transition-base);
+        }
+
+        .logout-btn:hover {
+            background: var(--color-danger);
+            color: white;
+            border-color: var(--color-danger);
+            transform: translateY(-2px);
+        }
+
+        /* ==========================================================================
+       CONTENIDO PRINCIPAL
+       ========================================================================== */
+        .main-content {
+            flex: 1;
+            padding: var(--space-lg);
+            /* Margin-left movido al contenedor padre */
+            transition: all var(--transition-base);
+            min-height: 100vh;
+            background-color: transparent;
+            width: 100%;
+        }
+
+        .sidebar.collapsed~.dashboard-container {
+            margin-left: var(--sidebar-collapsed-width);
+            width: calc(100% - var(--sidebar-collapsed-width));
+        }
+
+        /* Botón toggle sidebar (escritorio) */
+        .sidebar-toggle {
+            position: fixed;
+            /* Ajustado para estar dentro del container que tiene margen */
+            left: -12px;
+            /* Relativo al dashboard-container */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 48px;
+            background: var(--color-card);
+            border: 1px solid var(--color-border);
+            border-left: none;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            color: var(--color-text);
+            cursor: pointer;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-base);
+            box-shadow: var(--shadow-md);
+        }
+
         .sidebar-toggle:hover {
             background: var(--color-primary);
             color: white;
@@ -850,35 +1002,45 @@ try {
         /* Tarjetas de estadísticas */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: var(--space-lg);
-            margin-bottom: var(--space-xl);
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
         }
 
         .stat-card {
-            background: var(--color-card);
+            background: var(--color-surface);
             border: 1px solid var(--color-border);
             border-radius: var(--radius-lg);
-            padding: var(--space-lg);
-            transition: all var(--transition-base);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .stat-card:hover {
             transform: translateY(-4px);
             box-shadow: var(--shadow-xl);
-            border-color: var(--color-primary);
         }
 
-        .stat-card::before {
+        .stat-card::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--color-primary), var(--color-info));
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity var(--transition-base);
+            pointer-events: none;
+        }
+
+        .stat-card:hover::after {
+            opacity: 1;
         }
 
         .stat-header {
@@ -888,18 +1050,18 @@ try {
             margin-bottom: var(--space-md);
         }
 
-        .stat-title {
-            font-size: var(--font-size-sm);
-            color: var(--color-text-secondary);
+        .stat-label {
+            color: var(--color-text-light);
+            font-size: 0.9rem;
             font-weight: 500;
-            margin-bottom: var(--space-xs);
         }
 
         .stat-value {
-            font-size: var(--font-size-3xl);
+            font-size: 2rem;
             font-weight: 700;
             color: var(--color-text);
             line-height: 1;
+            margin-bottom: 0.25rem;
         }
 
         .stat-icon {
@@ -910,26 +1072,33 @@ try {
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
+            position: relative;
+            transition: all var(--transition-base);
         }
 
+
         .stat-icon.primary {
-            background: rgba(var(--color-primary-rgb), 0.1);
+            background: rgba(124, 144, 219, 0.15);
             color: var(--color-primary);
         }
 
         .stat-icon.success {
-            background: rgba(var(--color-success-rgb), 0.1);
+            background: rgba(52, 211, 153, 0.15);
             color: var(--color-success);
         }
 
         .stat-icon.warning {
-            background: rgba(var(--color-warning-rgb), 0.1);
+            background: rgba(251, 191, 36, 0.15);
             color: var(--color-warning);
         }
 
         .stat-icon.info {
-            background: rgba(var(--color-info-rgb), 0.1);
+            background: rgba(56, 189, 248, 0.15);
             color: var(--color-info);
+        }
+
+        .stat-card:hover .stat-icon {
+            transform: scale(1.05) rotate(3deg);
         }
 
         .stat-change {
@@ -944,62 +1113,68 @@ try {
             color: var(--color-success);
         }
 
-        /* Secciones */
-        .appointments-section {
-            background: var(--color-card);
+        /* Secciones del dashboard */
+        .appointments-section,
+        .billing-section {
+            background: var(--color-surface);
             border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-lg);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
             margin-bottom: var(--space-lg);
-            transition: all var(--transition-base);
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
         }
 
-        .appointments-section:hover {
-            box-shadow: var(--shadow-lg);
+        .appointments-section:hover,
+        .billing-section:hover {
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-2px);
         }
 
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: var(--space-lg);
-            flex-wrap: wrap;
-            gap: var(--space-md);
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: var(--space-sm);
         }
 
         .section-title {
-            font-size: var(--font-size-xl);
+            font-size: 1.25rem;
             font-weight: 600;
             color: var(--color-text);
             display: flex;
             align-items: center;
-            gap: var(--space-sm);
+            gap: 0.5rem;
         }
 
         .section-title-icon {
             color: var(--color-primary);
+            font-size: 1.5rem;
         }
 
         .action-btn {
             display: inline-flex;
             align-items: center;
             gap: var(--space-sm);
-            padding: var(--space-sm) var(--space-md);
+            padding: 0.75rem 1.5rem;
             background: var(--color-primary);
             color: white;
             border: none;
             border-radius: var(--radius-md);
             font-weight: 500;
+            font-size: 0.95rem;
             text-decoration: none;
-            transition: all var(--transition-base);
             cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
         }
 
         .action-btn:hover {
             transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-            background: var(--color-primary);
-            opacity: 0.9;
+            box-shadow: var(--shadow-lg);
+            background: var(--color-primary-dark);
             color: white;
         }
 
@@ -1011,36 +1186,36 @@ try {
 
         .appointments-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
+            border-collapse: collapse;
         }
 
         .appointments-table thead {
-            background: var(--color-surface);
+            background: var(--color-border-light);
+            border-bottom: 2px solid var(--color-border);
         }
 
         .appointments-table th {
-            padding: var(--space-md);
+            padding: 1rem;
             text-align: left;
             font-weight: 600;
-            color: var(--color-text);
-            border-bottom: 2px solid var(--color-border);
-            white-space: nowrap;
+            font-size: 0.85rem;
+            color: var(--color-text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .appointments-table td {
-            padding: var(--space-md);
+            padding: 1rem;
             border-bottom: 1px solid var(--color-border);
-            vertical-align: middle;
+            color: var(--color-text);
         }
 
         .appointments-table tbody tr {
-            transition: all var(--transition-base);
+            transition: background 0.2s ease;
         }
 
         .appointments-table tbody tr:hover {
-            background: var(--color-surface);
-            transform: translateX(4px);
+            background: var(--color-border-light);
         }
 
         /* Celdas personalizadas */
@@ -1054,14 +1229,17 @@ try {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-info));
+            background: var(--color-primary);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: var(--font-size-base);
-            flex-shrink: 0;
+            font-size: 1.1rem;
+        }
+
+        font-size: var(--font-size-base);
+        flex-shrink: 0;
         }
 
         .patient-info {
@@ -1131,15 +1309,22 @@ try {
         /* Estado vacío */
         .empty-state {
             text-align: center;
-            padding: var(--space-xl);
-            color: var(--color-text-secondary);
+            padding: 3rem 1.5rem;
+            color: var(--color-text-light);
+            border: 2px dashed var(--color-border);
+            border-radius: var(--radius-lg);
+            margin: var(--space-lg) 0;
         }
 
         .empty-icon {
-            font-size: 3rem;
+            font-size: 4rem;
             color: var(--color-border);
-            margin-bottom: var(--space-md);
+            margin-bottom: 1rem;
             opacity: 0.5;
+        }
+
+        margin-bottom: var(--space-md);
+        opacity: 0.3;
         }
 
         /* Grid de alertas */
@@ -1730,6 +1915,266 @@ try {
                 box-shadow: none !important;
             }
         }
+
+        /* ==========================================================================
+       ANIMACIONES DE ENTRADA
+       ========================================================================== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .delay-1 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.3s;
+        }
+
+        .delay-4 {
+            animation-delay: 0.4s;
+        }
+
+        /* ==========================================================================
+       ESTADOS DE CARGA
+       ========================================================================== */
+        .loading {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        /* ==========================================================================
+       UTILIDADES
+       ========================================================================== */
+        .text-primary {
+            color: var(--color-primary);
+        }
+
+        .text-success {
+            color: var(--color-success);
+        }
+
+        .text-warning {
+            color: var(--color-warning);
+        }
+
+        .text-danger {
+            color: var(--color-danger);
+        }
+
+        .text-info {
+            color: var(--color-info);
+        }
+
+        .text-muted {
+            color: var(--color-text-secondary);
+        }
+
+        .bg-primary {
+            background-color: var(--color-primary);
+        }
+
+        .bg-success {
+            background-color: var(--color-success);
+        }
+
+        .bg-warning {
+            background-color: var(--color-warning);
+        }
+
+        .bg-danger {
+            background-color: var(--color-danger);
+        }
+
+        .bg-info {
+            background-color: var(--color-info);
+        }
+
+        .mb-0 {
+            margin-bottom: 0;
+        }
+
+        .mb-1 {
+            margin-bottom: var(--space-xs);
+        }
+
+        .mb-2 {
+            margin-bottom: var(--space-sm);
+        }
+
+        .mb-3 {
+            margin-bottom: var(--space-md);
+        }
+
+        .mb-4 {
+            margin-bottom: var(--space-lg);
+        }
+
+        .mb-5 {
+            margin-bottom: var(--space-xl);
+        }
+
+        .mt-0 {
+            margin-top: 0;
+        }
+
+        .mt-1 {
+            margin-top: var(--space-xs);
+        }
+
+        .mt-2 {
+            margin-top: var(--space-sm);
+        }
+
+        .mt-3 {
+            margin-top: var(--space-md);
+        }
+
+        .mt-4 {
+            margin-top: var(--space-lg);
+        }
+
+        .mt-5 {
+            margin-top: var(--space-xl);
+        }
+
+        .d-none {
+            display: none;
+        }
+
+        .d-block {
+            display: block;
+        }
+
+        .d-flex {
+            display: flex;
+        }
+
+        .gap-1 {
+            gap: var(--space-xs);
+        }
+
+        .gap-2 {
+            gap: var(--space-sm);
+        }
+
+        .gap-3 {
+            gap: var(--space-md);
+        }
+
+        .gap-4 {
+            gap: var(--space-lg);
+        }
+
+        .gap-5 {
+            gap: var(--space-xl);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-left {
+            text-align: left;
+        }
+
+        .fw-bold {
+            font-weight: 700;
+        }
+
+        .fw-semibold {
+            font-weight: 600;
+        }
+
+        .fw-medium {
+            font-weight: 500;
+        }
+
+        .fw-normal {
+            font-weight: 400;
+        }
+
+        .fw-light {
+            font-weight: 300;
+        }
+
+        /* ==========================================================================
+       PRINT STYLES
+       ========================================================================== */
+        @media print {
+
+            .sidebar,
+            .dashboard-header,
+            .sidebar-toggle,
+            .theme-btn,
+            .logout-btn,
+            .action-btn {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+
+            .marble-effect {
+                display: none;
+            }
+
+            body {
+                background: white !important;
+                color: black !important;
+            }
+
+            .stat-card,
+            .appointments-section,
+            .alert-card {
+                break-inside: avoid;
+                border: 1px solid #ddd !important;
+                box-shadow: none !important;
+            }
+        }
     </style>
 
 </head>
@@ -1797,7 +2242,7 @@ try {
                             <i class="bi bi-box-seam nav-icon"></i>
                             <span class="nav-text">Inventario</span>
                             <?php if ($pending_purchases > 0): ?>
-                                    <span class="badge bg-warning"><?php echo $pending_purchases; ?></span>
+                                <span class="badge bg-warning"><?php echo $pending_purchases; ?></span>
                             <?php endif; ?>
                         </a>
                     </li>
@@ -1905,20 +2350,20 @@ try {
         <main class="main-content">
             <!-- Notificación de compras pendientes -->
             <?php if ($pending_purchases > 0): ?>
-                    <div class="alert-card mb-4 animate-in delay-1">
-                        <div class="alert-header">
-                            <div class="alert-icon warning">
-                                <i class="bi bi-box-seam"></i>
-                            </div>
-                            <h3 class="alert-title">Compras Pendientes</h3>
+                <div class="alert-card mb-4 animate-in delay-1">
+                    <div class="alert-header">
+                        <div class="alert-icon warning">
+                            <i class="bi bi-box-seam"></i>
                         </div>
-                        <p class="text-muted mb-0">
-                            Hay <strong><?php echo $pending_purchases; ?></strong> productos por recibir en inventario.
-                            <a href="../inventory/index.php" class="text-primary text-decoration-none ms-1">
-                                Revisar inventario <i class="bi bi-arrow-right"></i>
-                            </a>
-                        </p>
+                        <h3 class="alert-title">Compras Pendientes</h3>
                     </div>
+                    <p class="text-muted mb-0">
+                        Hay <strong><?php echo $pending_purchases; ?></strong> productos por recibir en inventario.
+                        <a href="../inventory/index.php" class="text-primary text-decoration-none ms-1">
+                            Revisar inventario <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </p>
+                </div>
             <?php endif; ?>
 
             <!-- Bienvenida personalizada -->
@@ -1940,6 +2385,35 @@ try {
                         <i class="bi bi-heart-pulse text-primary" style="font-size: 3rem; opacity: 0.3;"></i>
                     </div>
                 </div>
+            </div>
+
+            <!-- Acciones Rápidas -->
+            <div class="stats-grid mb-4 animate-in delay-1">
+                <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#newLabOrderModal"
+                    style="text-decoration: none; border-left: 4px solid var(--color-info);">
+                    <div class="stat-header mb-0">
+                        <div>
+                            <div class="stat-title text-info fw-bold">Laboratorio</div>
+                            <div class="stat-value" style="font-size: 1.25rem;">Nueva Orden</div>
+                        </div>
+                        <div class="stat-icon info">
+                            <i class="bi bi-virus"></i>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#newBillingModal"
+                    style="text-decoration: none; border-left: 4px solid var(--color-success);">
+                    <div class="stat-header mb-0">
+                        <div>
+                            <div class="stat-title text-success fw-bold">Cobros</div>
+                            <div class="stat-value" style="font-size: 1.25rem;">Registrar Cobro</div>
+                        </div>
+                        <div class="stat-icon success">
+                            <i class="bi bi-cash-coin"></i>
+                        </div>
+                    </div>
+                </a>
             </div>
 
             <!-- Estadísticas principales -->
@@ -2027,69 +2501,69 @@ try {
                 </div>
 
                 <?php if (count($todays_appointments) > 0): ?>
-                        <div class="table-responsive">
-                            <table class="appointments-table">
-                                <thead>
+                    <div class="table-responsive">
+                        <table class="appointments-table">
+                            <thead>
+                                <tr>
+                                    <th>Paciente</th>
+                                    <th>Hora</th>
+                                    <th>Contacto</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($todays_appointments as $appointment): ?>
+                                    <?php
+                                    $patient_name = htmlspecialchars($appointment['nombre_pac'] . ' ' . $appointment['apellido_pac']);
+                                    $patient_initials = strtoupper(
+                                        substr($appointment['nombre_pac'], 0, 1) .
+                                        substr($appointment['apellido_pac'], 0, 1)
+                                    );
+                                    ?>
                                     <tr>
-                                        <th>Paciente</th>
-                                        <th>Hora</th>
-                                        <th>Contacto</th>
-                                        <th>Acciones</th>
+                                        <td>
+                                            <div class="patient-cell">
+                                                <div class="patient-avatar">
+                                                    <?php echo $patient_initials; ?>
+                                                </div>
+                                                <div class="patient-info">
+                                                    <div class="patient-name"><?php echo $patient_name; ?></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="time-badge">
+                                                <i class="bi bi-clock"></i>
+                                                <?php echo htmlspecialchars($appointment['hora_cita']); ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="patient-contact">
+                                                <?php echo htmlspecialchars($appointment['telefono'] ?? 'No disponible'); ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <a href="#" class="btn-icon history check-patient" title="Ver historial"
+                                                    data-nombre="<?php echo htmlspecialchars($appointment['nombre_pac']); ?>"
+                                                    data-apellido="<?php echo htmlspecialchars($appointment['apellido_pac']); ?>">
+                                                    <i class="bi bi-file-medical"></i>
+                                                </a>
+                                            </div>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($todays_appointments as $appointment): ?>
-                                            <?php
-                                            $patient_name = htmlspecialchars($appointment['nombre_pac'] . ' ' . $appointment['apellido_pac']);
-                                            $patient_initials = strtoupper(
-                                                substr($appointment['nombre_pac'], 0, 1) .
-                                                substr($appointment['apellido_pac'], 0, 1)
-                                            );
-                                            ?>
-                                            <tr>
-                                                <td>
-                                                    <div class="patient-cell">
-                                                        <div class="patient-avatar">
-                                                            <?php echo $patient_initials; ?>
-                                                        </div>
-                                                        <div class="patient-info">
-                                                            <div class="patient-name"><?php echo $patient_name; ?></div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="time-badge">
-                                                        <i class="bi bi-clock"></i>
-                                                        <?php echo htmlspecialchars($appointment['hora_cita']); ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <div class="patient-contact">
-                                                        <?php echo htmlspecialchars($appointment['telefono'] ?? 'No disponible'); ?>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="action-buttons">
-                                                        <a href="#" class="btn-icon history check-patient" title="Ver historial"
-                                                            data-nombre="<?php echo htmlspecialchars($appointment['nombre_pac']); ?>"
-                                                            data-apellido="<?php echo htmlspecialchars($appointment['apellido_pac']); ?>">
-                                                            <i class="bi bi-file-medical"></i>
-                                                        </a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 <?php else: ?>
-                        <div class="empty-state">
-                            <div class="empty-icon">
-                                <i class="bi bi-calendar-x"></i>
-                            </div>
-                            <h4 class="text-muted mb-2">No hay citas programadas para hoy</h4>
-                            <p class="text-muted mb-3">Total de citas en sistema: <?php echo $total_appointments; ?></p>
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="bi bi-calendar-x"></i>
                         </div>
+                        <h4 class="text-muted mb-2">No hay citas programadas para hoy</h4>
+                        <p class="text-muted mb-3">Total de citas en sistema: <?php echo $total_appointments; ?></p>
+                    </div>
                 <?php endif; ?>
             </section>
 
@@ -2113,84 +2587,84 @@ try {
                 </div>
 
                 <?php if (count($hospitalized_patients) > 0): ?>
-                        <div class="table-responsive">
-                            <table class="appointments-table">
-                                <thead>
+                    <div class="table-responsive">
+                        <table class="appointments-table">
+                            <thead>
+                                <tr>
+                                    <th>Paciente</th>
+                                    <th>Habitación</th>
+                                    <th>Ingreso</th>
+                                    <th>Diagnóstico</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($hospitalized_patients as $hosp): ?>
+                                    <?php
+                                    $patient_name = htmlspecialchars($hosp['nombre'] . ' ' . $hosp['apellido']);
+                                    $patient_initials = strtoupper(
+                                        substr($hosp['nombre'], 0, 1) .
+                                        substr($hosp['apellido'], 0, 1)
+                                    );
+                                    ?>
                                     <tr>
-                                        <th>Paciente</th>
-                                        <th>Habitación</th>
-                                        <th>Ingreso</th>
-                                        <th>Diagnóstico</th>
-                                        <th>Acciones</th>
+                                        <td>
+                                            <div class="patient-cell">
+                                                <div class="patient-avatar" style="background: var(--color-secondary);">
+                                                    <?php echo $patient_initials; ?>
+                                                </div>
+                                                <div class="patient-info">
+                                                    <div class="patient-name"><?php echo $patient_name; ?></div>
+                                                    <small class="text-muted">ID:
+                                                        #<?php echo $hosp['id_encamamiento']; ?></small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info text-white">
+                                                Hab. <?php echo htmlspecialchars($hosp['numero_habitacion']); ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <?php echo date('d/m/Y', strtotime($hosp['fecha_ingreso'])); ?>
+                                            <br>
+                                            <small
+                                                class="text-muted"><?php echo date('H:i', strtotime($hosp['fecha_ingreso'])); ?></small>
+                                        </td>
+                                        <td>
+                                            <small class="d-block text-truncate" style="max-width: 150px;">
+                                                <?php echo htmlspecialchars($hosp['diagnostico_ingreso']); ?>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <a href="../hospitalization/detalle_encamamiento.php?id=<?php echo $hosp['id_encamamiento']; ?>"
+                                                class="btn-icon" title="Ver detalles"
+                                                style="color: var(--color-primary); border-color: var(--color-primary);">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($hospitalized_patients as $hosp): ?>
-                                            <?php
-                                            $patient_name = htmlspecialchars($hosp['nombre'] . ' ' . $hosp['apellido']);
-                                            $patient_initials = strtoupper(
-                                                substr($hosp['nombre'], 0, 1) .
-                                                substr($hosp['apellido'], 0, 1)
-                                            );
-                                            ?>
-                                            <tr>
-                                                <td>
-                                                    <div class="patient-cell">
-                                                        <div class="patient-avatar" style="background: var(--color-secondary);">
-                                                            <?php echo $patient_initials; ?>
-                                                        </div>
-                                                        <div class="patient-info">
-                                                            <div class="patient-name"><?php echo $patient_name; ?></div>
-                                                            <small class="text-muted">ID:
-                                                                #<?php echo $hosp['id_encamamiento']; ?></small>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-info text-white">
-                                                        Hab. <?php echo htmlspecialchars($hosp['numero_habitacion']); ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <?php echo date('d/m/Y', strtotime($hosp['fecha_ingreso'])); ?>
-                                                    <br>
-                                                    <small
-                                                        class="text-muted"><?php echo date('H:i', strtotime($hosp['fecha_ingreso'])); ?></small>
-                                                </td>
-                                                <td>
-                                                    <small class="d-block text-truncate" style="max-width: 150px;">
-                                                        <?php echo htmlspecialchars($hosp['diagnostico_ingreso']); ?>
-                                                    </small>
-                                                </td>
-                                                <td>
-                                                    <a href="../hospitalization/detalle_encamamiento.php?id=<?php echo $hosp['id_encamamiento']; ?>"
-                                                        class="btn-icon" title="Ver detalles"
-                                                        style="color: var(--color-primary); border-color: var(--color-primary);">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="mt-3 text-center">
-                            <a href="../hospitalization/index.php" class="text-primary text-decoration-none">
-                                Ver todos los pacientes hospitalizados <i class="bi bi-arrow-right"></i>
-                            </a>
-                        </div>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <a href="../hospitalization/index.php" class="text-primary text-decoration-none">
+                            Ver todos los pacientes hospitalizados <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
                 <?php else: ?>
-                        <div class="empty-state">
-                            <div class="empty-icon">
-                                <i class="bi bi-hospital"></i>
-                            </div>
-                            <h4 class="text-muted mb-2">No hay hospitalizaciones activas</h4>
-                            <p class="text-muted mb-3">Todas las camas están disponibles</p>
-                            <a href="../hospitalization/ingresar_paciente.php" class="action-btn">
-                                <i class="bi bi-plus-lg"></i>
-                                Ingresar Paciente
-                            </a>
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="bi bi-hospital"></i>
                         </div>
+                        <h4 class="text-muted mb-2">No hay hospitalizaciones activas</h4>
+                        <p class="text-muted mb-3">Todas las camas están disponibles</p>
+                        <a href="../hospitalization/ingresar_paciente.php" class="action-btn">
+                            <i class="bi bi-plus-lg"></i>
+                            Ingresar Paciente
+                        </a>
+                    </div>
                 <?php endif; ?>
             </section>
 
@@ -2206,44 +2680,44 @@ try {
                     </div>
 
                     <?php if (count($expiring_medications) > 0): ?>
-                            <ul class="alert-list">
-                                <?php foreach (array_slice($expiring_medications, 0, 5) as $medication): ?>
-                                        <?php
-                                        $expiry_date = new DateTime($medication['fecha_vencimiento']);
-                                        $today = new DateTime();
-                                        $days_diff = $today->diff($expiry_date)->days;
-                                        $is_expired = $expiry_date < $today;
-                                        ?>
-                                        <li class="alert-item">
-                                            <div class="alert-item-header">
-                                                <span
-                                                    class="alert-item-name"><?php echo htmlspecialchars($medication['nom_medicamento']); ?></span>
-                                                <span class="alert-badge <?php echo $is_expired ? 'expired' : 'warning'; ?>">
-                                                    <?php echo $is_expired ? 'Vencido' : $days_diff . ' días'; ?>
-                                                </span>
-                                            </div>
-                                            <div class="alert-item-details">
-                                                <span>Vence: <?php echo $expiry_date->format('d/m/Y'); ?></span>
-                                                <span>Stock: <?php echo $medication['cantidad_med']; ?></span>
-                                            </div>
-                                        </li>
-                                <?php endforeach; ?>
-                            </ul>
-
-                            <?php if (count($expiring_medications) > 5): ?>
-                                    <div class="text-center mt-3">
-                                        <a href="../inventory/index.php?filter=expiring" class="text-primary text-decoration-none">
-                                            Ver todas (<?php echo count($expiring_medications); ?>) <i class="bi bi-arrow-right"></i>
-                                        </a>
+                        <ul class="alert-list">
+                            <?php foreach (array_slice($expiring_medications, 0, 5) as $medication): ?>
+                                <?php
+                                $expiry_date = new DateTime($medication['fecha_vencimiento']);
+                                $today = new DateTime();
+                                $days_diff = $today->diff($expiry_date)->days;
+                                $is_expired = $expiry_date < $today;
+                                ?>
+                                <li class="alert-item">
+                                    <div class="alert-item-header">
+                                        <span
+                                            class="alert-item-name"><?php echo htmlspecialchars($medication['nom_medicamento']); ?></span>
+                                        <span class="alert-badge <?php echo $is_expired ? 'expired' : 'warning'; ?>">
+                                            <?php echo $is_expired ? 'Vencido' : $days_diff . ' días'; ?>
+                                        </span>
                                     </div>
-                            <?php endif; ?>
-                    <?php else: ?>
-                            <div class="no-alerts">
-                                <div class="no-alerts-icon">
-                                    <i class="bi bi-check-circle"></i>
-                                </div>
-                                <p class="text-muted mb-0">Sin medicamentos próximos a caducar</p>
+                                    <div class="alert-item-details">
+                                        <span>Vence: <?php echo $expiry_date->format('d/m/Y'); ?></span>
+                                        <span>Stock: <?php echo $medication['cantidad_med']; ?></span>
+                                    </div>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+
+                        <?php if (count($expiring_medications) > 5): ?>
+                            <div class="text-center mt-3">
+                                <a href="../inventory/index.php?filter=expiring" class="text-primary text-decoration-none">
+                                    Ver todas (<?php echo count($expiring_medications); ?>) <i class="bi bi-arrow-right"></i>
+                                </a>
                             </div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="no-alerts">
+                            <div class="no-alerts-icon">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <p class="text-muted mb-0">Sin medicamentos próximos a caducar</p>
+                        </div>
                     <?php endif; ?>
                 </div>
 
@@ -2257,38 +2731,237 @@ try {
                     </div>
 
                     <?php if (count($low_stock_medications) > 0): ?>
-                            <ul class="alert-list">
-                                <?php foreach (array_slice($low_stock_medications, 0, 5) as $medication): ?>
-                                        <li class="alert-item">
-                                            <div class="alert-item-header">
-                                                <span
-                                                    class="alert-item-name"><?php echo htmlspecialchars($medication['nom_medicamento']); ?></span>
-                                                <span class="alert-badge danger">
-                                                    <?php echo $medication['cantidad_med']; ?> unidades
-                                                </span>
-                                            </div>
-                                        </li>
-                                <?php endforeach; ?>
-                            </ul>
-
-                            <?php if (count($low_stock_medications) > 5): ?>
-                                    <div class="text-center mt-3">
-                                        <a href="../inventory/index.php?filter=low_stock" class="text-primary text-decoration-none">
-                                            Ver todas (<?php echo count($low_stock_medications); ?>) <i class="bi bi-arrow-right"></i>
-                                        </a>
+                        <ul class="alert-list">
+                            <?php foreach (array_slice($low_stock_medications, 0, 5) as $medication): ?>
+                                <li class="alert-item">
+                                    <div class="alert-item-header">
+                                        <span
+                                            class="alert-item-name"><?php echo htmlspecialchars($medication['nom_medicamento']); ?></span>
+                                        <span class="alert-badge danger">
+                                            <?php echo $medication['cantidad_med']; ?> unidades
+                                        </span>
                                     </div>
-                            <?php endif; ?>
-                    <?php else: ?>
-                            <div class="no-alerts">
-                                <div class="no-alerts-icon">
-                                    <i class="bi bi-check-circle"></i>
-                                </div>
-                                <p class="text-muted mb-0">Inventario con stock suficiente</p>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+
+                        <?php if (count($low_stock_medications) > 5): ?>
+                            <div class="text-center mt-3">
+                                <a href="../inventory/index.php?filter=low_stock" class="text-primary text-decoration-none">
+                                    Ver todas (<?php echo count($low_stock_medications); ?>) <i class="bi bi-arrow-right"></i>
+                                </a>
                             </div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="no-alerts">
+                            <div class="no-alerts-icon">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <p class="text-muted mb-0">Inventario con stock suficiente</p>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Modal para nuevo cobro (Billing) -->
+    <div class="modal fade" id="newBillingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-cash-coin me-2"></i>
+                        Nuevo Cobro
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="newBillingForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Paciente</label>
+                            <input type="text" name="paciente_nombre" class="form-control" list="billingDatalistOptions"
+                                id="billing_paciente_input"
+                                placeholder="Nombre del paciente (o seleccione de la lista)..." required
+                                autocomplete="off">
+                            <datalist id="billingDatalistOptions">
+                                <?php foreach ($pacientes as $paciente): ?>
+                                    <option data-id="<?php echo $paciente['id_paciente']; ?>"
+                                        value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
+                                    <?php endforeach; ?>
+                            </datalist>
+                            <input type="hidden" id="billing_paciente" name="paciente">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Médico que atiende</label>
+                            <select class="form-select" id="billing_id_doctor" name="id_doctor" required>
+                                <option value="">Seleccione un médico...</option>
+                                <?php foreach ($doctores as $doctor): ?>
+                                    <option value="<?php echo $doctor['idUsuario']; ?>">
+                                        Dr(a).
+                                        <?php echo htmlspecialchars($doctor['nombre'] . ' ' . $doctor['apellido']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Tipo de Consulta</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="tipo_consulta" id="btn_consulta"
+                                    value="Consulta" checked autocomplete="off">
+                                <label class="btn btn-outline-success" for="btn_consulta">Consulta</label>
+
+                                <input type="radio" class="btn-check" name="tipo_consulta" id="btn_reconsulta"
+                                    value="Reconsulta" autocomplete="off">
+                                <label class="btn btn-outline-success" for="btn_reconsulta">Re-Consulta</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Monto a Cobrar (Q)</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-success text-white border-0">Q</span>
+                                <input type="number" class="form-control border-success text-success fw-bold"
+                                    id="billing_monto" name="cantidad" min="0" step="0.01" placeholder="0.00" required>
+                            </div>
+                        </div>
+
+                        <div class="small text-muted mb-0">
+                            <i class="bi bi-info-circle me-1"></i> El monto se calcula automáticamente al seleccionar
+                            médico y tipo.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success px-4" id="saveBillingBtn">
+                        <i class="bi bi-check-lg me-1"></i>Guardar Cobro
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Nueva Orden de Laboratorio -->
+    <div class="modal fade" id="newLabOrderModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-virus text-primary"></i>
+                        Nueva Orden de Laboratorio
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="d-flex h-100 flex-column flex-lg-row">
+                        <!-- Panel Izquierdo: Formulario -->
+                        <div class="p-4 flex-grow-1 overflow-auto">
+                            <form id="newLabOrderForm">
+                                <!-- Datos del Paciente -->
+                                <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Datos Generales</h6>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Paciente</label>
+                                        <input class="form-control" list="labDatalistOptions" id="lab_paciente_input"
+                                            placeholder="Buscar nombre..." required autocomplete="off">
+                                        <datalist id="labDatalistOptions">
+                                            <?php foreach ($pacientes as $paciente): ?>
+                                                <option data-id="<?php echo $paciente['id_paciente']; ?>"
+                                                    value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
+                                                <?php endforeach; ?>
+                                        </datalist>
+                                        <input type="hidden" id="lab_id_paciente" name="id_paciente">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Doctor Referente</label>
+                                        <select class="form-select" id="lab_id_doctor" name="id_doctor" required>
+                                            <option value="">Seleccionar doctor...</option>
+                                            <?php foreach ($doctores as $doctor): ?>
+                                                <option value="<?php echo $doctor['idUsuario']; ?>">
+                                                    Dr(a).
+                                                    <?php echo htmlspecialchars($doctor['nombre'] . ' ' . $doctor['apellido']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Observaciones</label>
+                                        <input type="text" class="form-control" name="observaciones"
+                                            placeholder="Notas adicionales...">
+                                    </div>
+                                </div>
+
+                                <!-- Selección de Pruebas -->
+                                <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Selección de Pruebas</h6>
+                                <div class="accordion" id="testsAccordion">
+                                    <?php foreach ($pruebas_por_categoria as $categoria => $pruebas): ?>
+                                        <?php $catID = 'cat_' . md5($categoria); ?>
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="heading_<?php echo $catID; ?>">
+                                                <button class="accordion-button collapsed" type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#collapse_<?php echo $catID; ?>" aria-expanded="false">
+                                                    <?php echo htmlspecialchars($categoria); ?>
+                                                </button>
+                                            </h2>
+                                            <div id="collapse_<?php echo $catID; ?>" class="accordion-collapse collapse"
+                                                data-bs-parent="#testsAccordion">
+                                                <div class="accordion-body">
+                                                    <div class="row g-2">
+                                                        <?php foreach ($pruebas as $prueba): ?>
+                                                            <div class="col-md-6 col-lg-4">
+                                                                <div class="form-check p-2 border rounded hover-bg">
+                                                                    <input class="form-check-input test-checkbox"
+                                                                        type="checkbox" name="pruebas[]"
+                                                                        value="<?php echo $prueba['id_prueba']; ?>"
+                                                                        id="test_<?php echo $prueba['id_prueba']; ?>"
+                                                                        data-price="<?php echo $prueba['precio']; ?>"
+                                                                        data-name="<?php echo htmlspecialchars($prueba['nombre_prueba']); ?>">
+                                                                    <label class="form-check-label w-100 stretched-link"
+                                                                        for="test_<?php echo $prueba['id_prueba']; ?>">
+                                                                        <div class="d-flex justify-content-between small">
+                                                                            <span><?php echo htmlspecialchars($prueba['nombre_prueba']); ?></span>
+                                                                            <span
+                                                                                class="fw-bold text-success">Q<?php echo number_format($prueba['precio'], 2); ?></span>
+                                                                        </div>
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Panel Derecho: Resumen -->
+                        <div class="bg-light border-start p-4" style="min-width: 300px;">
+                            <h6 class="fw-bold mb-3">Resumen de Orden</h6>
+                            <div id="selectedTestsList" class="mb-3 small text-muted"
+                                style="max-height: 200px; overflow-y: auto;">
+                                <p class="fst-italic text-center py-2">Ninguna prueba seleccionada</p>
+                            </div>
+                            <div class="border-top pt-3 mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="fw-bold">Total:</span>
+                                    <span class="fs-4 fw-bold text-primary" id="orderTotal">Q0.00</span>
+                                </div>
+                                <button type="button" class="btn btn-primary w-100 py-2" id="saveLabOrderBtn" disabled>
+                                    <i class="bi bi-save me-2"></i>Crear Orden
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- JavaScript Optimizado -->
@@ -2511,6 +3184,8 @@ try {
                     this.setupGreeting();
                     this.setupClock();
                     this.setupPatientHandlers();
+                    this.setupBillingHandlers(); // COBROS
+                    this.setupLabOrderHandlers(); // LABORATORIO
                     this.setupAnimations();
                     this.setupAdminNotifications();
                 }
@@ -2605,6 +3280,256 @@ try {
                     });
                 }
 
+                setupBillingHandlers() {
+                    const doctorSelect = document.getElementById('billing_id_doctor');
+                    const montoInput = document.getElementById('billing_monto');
+                    const tipoRadios = document.getElementsByName('tipo_consulta');
+
+                    const calculatePrice = () => {
+                        const doctorId = doctorSelect.value;
+                        let type = 'Consulta';
+                        tipoRadios.forEach(r => { if (r.checked) type = r.value; });
+
+                        let price = 0;
+                        const date = new Date();
+                        const day = date.getDay(); // 0 Sun, 6 Sat
+                        const hour = date.getHours();
+
+                        // Lógica de precios según el médico
+                        switch (doctorId) {
+                            case '17': // Dra Libny Recinos
+                                price = (type === 'Consulta') ? 200 : 150;
+                                break;
+                            case '13': // Dr Luis Carlos del Valle
+                                price = (type === 'Consulta') ? 250 : 150;
+                                break;
+                            case '18': // Lic. Isabel Herrera
+                            case '11':
+                                price = (type === 'Consulta') ? 200 : 100;
+                                break;
+                            case '16': // Dra Mayeli (Complejo)
+                                if (type === 'Reconsulta') {
+                                    price = 150;
+                                } else {
+                                    if (day >= 1 && day <= 5) { // Lunes a Viernes
+                                        if (hour >= 8 && hour < 16) price = 250;
+                                        else if (hour >= 16 && hour < 22) price = 300;
+                                        else price = 400;
+                                    } else if (day === 6) { // Sábado
+                                        if (hour < 13) price = 250;
+                                        else if (hour >= 13 && hour < 22) price = 300;
+                                        else price = 400;
+                                    } else { // Domingo
+                                        if (hour >= 8 && hour < 20) price = 350;
+                                        else price = 400;
+                                    }
+                                }
+                                break;
+                            case '14': // Dra Jannya Rivas
+                            case '9':
+                            default: // Medicina General / Otros
+                                price = (type === 'Consulta') ? 100 : 0;
+                                break;
+                        }
+
+                        montoInput.value = price;
+                    };
+
+                    doctorSelect?.addEventListener('change', calculatePrice);
+                    tipoRadios.forEach(r => r.addEventListener('change', calculatePrice));
+
+                    // Guardar nuevo cobro
+                    if (document.getElementById('saveBillingBtn')) {
+                        document.getElementById('saveBillingBtn').addEventListener('click', async () => {
+                            const form = document.getElementById('newBillingForm');
+                            const patientInput = document.getElementById('billing_paciente_input');
+                            const patientHidden = document.getElementById('billing_paciente');
+                            const datalist = document.getElementById('billingDatalistOptions');
+
+                            // Sync patient ID
+                            let patientId = '';
+                            const val = patientInput.value;
+                            if (val.trim() === '') {
+                                Swal.fire({ title: 'Error', text: 'Nombre de paciente requerido', icon: 'warning' });
+                                return;
+                            }
+
+                            const options = datalist.options;
+                            for (let i = 0; i < options.length; i++) {
+                                if (options[i].value === val) {
+                                    patientId = options[i].getAttribute('data-id');
+                                    break;
+                                }
+                            }
+                            patientHidden.value = patientId;
+
+                            if (!form.checkValidity()) {
+                                form.reportValidity();
+                                return;
+                            }
+
+                            const formData = new FormData(form);
+                            const data = Object.fromEntries(formData.entries());
+
+                            const btn = document.getElementById('saveBillingBtn');
+                            const originalText = btn.innerHTML;
+                            btn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Guardando...';
+                            btn.disabled = true;
+
+                            try {
+                                const response = await fetch('../billing/save_billing.php', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                    body: new URLSearchParams(data)
+                                });
+
+                                const result = await response.json();
+                                if (result.status === 'success') {
+                                    Swal.fire({ title: '¡Éxito!', text: 'Cobro guardado correctamente', icon: 'success' })
+                                        .then(() => location.reload());
+                                } else {
+                                    throw new Error(result.message);
+                                }
+                            } catch (error) {
+                                Swal.fire({ title: 'Error', text: error.message || 'Error de conexión', icon: 'error' });
+                            } finally {
+                                btn.innerHTML = originalText;
+                                btn.disabled = false;
+                            }
+                        });
+                    }
+                }
+
+                setupLabOrderHandlers() {
+                    const checkboxes = document.querySelectorAll('.test-checkbox');
+                    const selectedList = document.getElementById('selectedTestsList');
+                    const totalElement = document.getElementById('orderTotal');
+                    const saveBtn = document.getElementById('saveLabOrderBtn');
+
+                    if (!checkboxes.length) return;
+
+                    const updateSummary = () => {
+                        selectedList.innerHTML = '';
+                        let total = 0;
+                        let count = 0;
+
+                        checkboxes.forEach(cb => {
+                            if (cb.checked) {
+                                count++;
+                                const price = parseFloat(cb.getAttribute('data-price'));
+                                const name = cb.getAttribute('data-name');
+                                total += price;
+
+                                const item = document.createElement('div');
+                                item.className = 'd-flex justify-content-between align-items-center mb-2 small border-bottom pb-1';
+                                item.innerHTML = `
+                                    <span>${name}</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-bold">Q${price.toFixed(2)}</span>
+                                        <i class="bi bi-x-circle text-danger cursor-pointer" onclick="document.getElementById('${cb.id}').click()"></i>
+                                    </div>
+                                `;
+                                selectedList.appendChild(item);
+                            }
+                        });
+
+                        if (count === 0) {
+                            selectedList.innerHTML = '<p class="fst-italic text-center py-2">Ninguna prueba seleccionada</p>';
+                            saveBtn.disabled = true;
+                        } else {
+                            saveBtn.disabled = false;
+                        }
+
+                        totalElement.textContent = `Q${total.toFixed(2)}`;
+                    };
+
+                    checkboxes.forEach(cb => {
+                        cb.addEventListener('change', updateSummary);
+                    });
+
+                    // Save Lab Order
+                    if (saveBtn) {
+                        saveBtn.addEventListener('click', async () => {
+                            const form = document.getElementById('newLabOrderForm');
+
+                            // Sync patient ID
+                            const patientInput = document.getElementById('lab_paciente_input');
+                            const patientHidden = document.getElementById('lab_id_paciente');
+                            const datalist = document.getElementById('labDatalistOptions');
+
+                            patientHidden.value = '';
+                            if (patientInput && datalist) {
+                                const val = patientInput.value;
+                                const options = datalist.options;
+                                for (let i = 0; i < options.length; i++) {
+                                    if (options[i].value === val) {
+                                        patientHidden.value = options[i].getAttribute('data-id');
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!patientHidden.value) {
+                                Swal.fire({ title: 'Error', text: 'Seleccione un paciente válido', icon: 'warning' });
+                                return;
+                            }
+
+                            if (!form.checkValidity()) {
+                                form.reportValidity();
+                                return;
+                            }
+
+                            const formData = new FormData(form);
+                            // Collect checked tests
+                            const pruebas = [];
+                            document.querySelectorAll('.test-checkbox:checked').forEach(cb => pruebas.push(cb.value));
+
+                            const data = {
+                                id_paciente: patientHidden.value,
+                                id_doctor: document.getElementById('lab_id_doctor').value,
+                                observaciones: form.observaciones.value,
+                                pruebas: pruebas
+                            };
+
+                            const originalText = saveBtn.innerHTML;
+                            saveBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Creando...';
+                            saveBtn.disabled = true;
+
+                            try {
+                                const response = await fetch('../laboratory/save_order.php', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(data)
+                                });
+                                const result = await response.json();
+
+                                if (result.status === 'success') {
+                                    Swal.fire({
+                                        title: '¡Orden Creada!',
+                                        text: 'La orden se ha generado exitosamente.',
+                                        icon: 'success',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Ver PDF',
+                                        cancelButtonText: 'Cerrar'
+                                    }).then((res) => {
+                                        if (res.isConfirmed) {
+                                            window.open('../laboratory/print_order.php?id=' + result.id_orden, '_blank');
+                                        }
+                                        location.reload();
+                                    });
+                                } else {
+                                    throw new Error(result.message);
+                                }
+                            } catch (e) {
+                                Swal.fire('Error', e.message || 'Error al guardar orden', 'error');
+                            } finally {
+                                saveBtn.innerHTML = originalText;
+                                saveBtn.disabled = false;
+                            }
+                        });
+                    }
+                }
+
                 setupAnimations() {
                     // Animar elementos al cargar
                     const observerOptions = {
@@ -2624,21 +3549,21 @@ try {
 
                     // Observar elementos con clase de animación
                     document.querySelectorAll('.stat-card, .appointments-section, .alert-card').forEach(el => {
-                        observer.observe(el);
+                        observer.obser                        ve(el);
                     });
                 }
 
                 setupAdminNotifications() {
                     <?php if ($user_type === 'admin'): ?>
-                            const lastSummaryDate = localStorage.getItem(CONFIG.greetingKey);
-                            const today = new Date().toISOString().split('T')[0];
-                            const currentHour = new Date().getHours();
+                        const lastSummaryDate = localStorage.getItem(CONFIG.greetingKey);
+                        const today = new Date().toISOString().split('T')[0];
+                        const currentHour = new Date().getHours();
 
-                            if (currentHour >= 8 && lastSummaryDate !== today) {
-                                setTimeout(() => {
-                                    this.showDailyReportNotification(today);
-                                }, 2000);
-                            }
+                        if (currentHour >= 8 && lastSummaryDate !== today) {
+                            setTimeout(() => {
+                                this.showDailyReportNotification(today);
+                            }, 2000);
+                        }
                     <?php endif; ?>
                 }
 

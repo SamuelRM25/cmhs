@@ -160,6 +160,8 @@ INSERT INTO `citas` (`id_cita`, `nombre_pac`, `apellido_pac`, `num_cita`, `fecha
 CREATE TABLE `cobros` (
   `in_cobro` int NOT NULL,
   `paciente_cobro` int NOT NULL,
+  `id_doctor` int DEFAULT NULL,
+  `tipo_consulta` enum('Consulta','Reconsulta') DEFAULT 'Consulta',
   `cantidad_consulta` int NOT NULL,
   `fecha_consulta` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -1054,7 +1056,11 @@ INSERT INTO `usuarios` (`idUsuario`, `usuario`, `password`, `nombre`, `apellido`
 (15, 'erivas', 'password123', 'Estuardo', 'Rivas', 'Ginecólogo y Obstetra', 'doc', 'Centro Médico Herrera Saenz', '0000', 'estuardo@example.com', '{\"hospitalization\": true, \"laboratory\": true, \"hospitalization_admin\": false, \"laboratory_admin\": false, \"view_all_patients\": true, \"inventory\": false, \"billing\": true, \"reports\": false, \"appointments\": true, \"patients\": true, \"medications\": true, \"settings\": false}'),
 (16, 'mmutas', 'password123', 'Mayeli', 'Mutás Ochoa', 'Medicina Interna', 'doc', 'Centro Médico Herrera Saenz', '0000', 'mayeli@example.com', '{\"hospitalization\": true, \"laboratory\": true, \"hospitalization_admin\": false, \"laboratory_admin\": false, \"view_all_patients\": true, \"inventory\": false, \"billing\": true, \"reports\": false, \"appointments\": true, \"patients\": true, \"medications\": true, \"settings\": false}'),
 (17, 'lrecinos', 'password123', 'Libny', 'Recinos', 'Pediatra', 'doc', 'Centro Médico Herrera Saenz', '0000', 'libny@example.com', '{\"hospitalization\": true, \"laboratory\": true, \"hospitalization_admin\": false, \"laboratory_admin\": false, \"view_all_patients\": true, \"inventory\": false, \"billing\": true, \"reports\": false, \"appointments\": true, \"patients\": true, \"medications\": true, \"settings\": false}'),
-(18, 'iherrera_nutri', 'password123', 'Isabel', 'Herrera', 'Nutricionista', 'doc', 'Centro Médico Herrera Saenz', '0000', 'isabel_n@example.com', '{\"hospitalization\": true, \"laboratory\": true, \"hospitalization_admin\": false, \"laboratory_admin\": false, \"view_all_patients\": true, \"inventory\": false, \"billing\": true, \"reports\": false, \"appointments\": true, \"patients\": true, \"medications\": true, \"settings\": false}');
+(18, 'iherrera_nutri', 'password123', 'Isabel', 'Herrera', 'Nutricionista', 'doc', 'Centro Médico Herrera Saenz', '0000', 'isabel_n@example.com', '{\"hospitalization\": true, \"laboratory\": true, \"hospitalization_admin\": false, \"laboratory_admin\": false, \"view_all_patients\": true, \"inventory\": false, \"billing\": true, \"reports\": false, \"appointments\": true, \"patients\": true, \"medications\": true, \"settings\": false}'),
+(19, 'doc_turno1', 'password123', 'Médico', 'Turno 1', 'Médico de Turno', 'doc', 'Centro Médico Herrera Saenz', '0000', 'turno1@example.com', '{\"billing\": true, \"patients\": true}'),
+(20, 'doc_turno2', 'password123', 'Médico', 'Turno 2', 'Médico de Turno', 'doc', 'Centro Médico Herrera Saenz', '0000', 'turno2@example.com', '{\"billing\": true, \"patients\": true}'),
+(21, 'doc_turno3', 'password123', 'Médico', 'Turno 3', 'Médico de Turno', 'doc', 'Centro Médico Herrera Saenz', '0000', 'turno3@example.com', '{\"billing\": true, \"patients\": true}'),
+(22, 'lab_user', 'password123', 'Usuario', 'Laboratorio', 'Técnico de Laboratorio', 'user', 'Centro Médico Herrera Saenz', '0000', 'lab@example.com', '{\"laboratory\": true, \"patients\": true}');
 
 -- --------------------------------------------------------
 
