@@ -1060,7 +1060,8 @@ INSERT INTO `usuarios` (`idUsuario`, `usuario`, `password`, `nombre`, `apellido`
 (19, 'doc_turno1', 'password123', 'Médico', 'Turno 1', 'Médico de Turno', 'doc', 'Centro Médico Herrera Saenz', '0000', 'turno1@example.com', '{\"billing\": true, \"patients\": true}'),
 (20, 'doc_turno2', 'password123', 'Médico', 'Turno 2', 'Médico de Turno', 'doc', 'Centro Médico Herrera Saenz', '0000', 'turno2@example.com', '{\"billing\": true, \"patients\": true}'),
 (21, 'doc_turno3', 'password123', 'Médico', 'Turno 3', 'Médico de Turno', 'doc', 'Centro Médico Herrera Saenz', '0000', 'turno3@example.com', '{\"billing\": true, \"patients\": true}'),
-(22, 'lab_user', 'password123', 'Usuario', 'Laboratorio', 'Técnico de Laboratorio', 'user', 'Centro Médico Herrera Saenz', '0000', 'lab@example.com', '{\"laboratory\": true, \"patients\": true}');
+(22, 'lab_user', 'password123', 'Usuario', 'Laboratorio', 'Técnico de Laboratorio', 'user', 'Centro Médico Herrera Saenz', '0000', 'lab@example.com', '{\"laboratory\": true, \"patients\": true}'),
+(23, 'farmacia_2', 'password123', 'Farmacia', 'User 2', 'Farmacia', 'user', 'Centro Médico Herrera Saenz', '0000', 'farmacia2@example.com', '{\"hospitalization\": false, \"laboratory\": false, \"hospitalization_admin\": false, \"laboratory_admin\": false, \"view_all_patients\": false, \"inventory\": true, \"billing\": false, \"reports\": false, \"appointments\": false, \"patients\": false, \"medications\": true, \"settings\": false}');
 
 -- --------------------------------------------------------
 

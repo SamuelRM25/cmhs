@@ -30,6 +30,10 @@ try {
     $user_name = $_SESSION['nombre'];
     $user_specialty = $_SESSION['especialidad'] ?? 'Profesional Médico';
 
+    // Permiso de gestión: Solo el usuario jrivas_farmacia (ID 6) puede gestionar el inventario
+    // Los demás usuarios solo tienen permiso de lectura
+    $can_manage_inventory = ($user_id == 6);
+
     // ============ ESTADÍSTICAS DEL INVENTARIO ============
 
     // 1. Total de items en inventario
@@ -1686,11 +1690,13 @@ try {
                             <i class="bi bi-file-earmark-spreadsheet"></i>
                             Exportar CSV
                         </a>
-                        <button type="button" class="action-btn" data-bs-toggle="modal"
-                            data-bs-target="#addMedicineModal">
-                            <i class="bi bi-plus-circle"></i>
-                            Nuevo Medicamento
-                        </button>
+                        <?php if ($can_manage_inventory): ?>
+                            <button type="button" class="action-btn" data-bs-toggle="modal"
+                                data-bs-target="#addMedicineModal">
+                                <i class="bi bi-plus-circle"></i>
+                                Nuevo Medicamento
+                            </button>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -1923,15 +1929,17 @@ try {
                                                         <i class="bi bi-box-arrow-in-down"></i>
                                                     </button>
                                                 <?php else: ?>
-                                                    <button type="button" class="btn-icon edit"
-                                                        data-id="<?php echo $item['id_inventario']; ?>" data-bs-toggle="modal"
-                                                        data-bs-target="#editMedicineModal" title="Editar">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </button>
-                                                    <button type="button" class="btn-icon delete"
-                                                        data-id="<?php echo $item['id_inventario']; ?>" title="Eliminar">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
+                                                    <?php if ($can_manage_inventory): ?>
+                                                        <button type="button" class="btn-icon edit"
+                                                            data-id="<?php echo $item['id_inventario']; ?>" data-bs-toggle="modal"
+                                                            data-bs-target="#editMedicineModal" title="Editar">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+                                                        <button type="button" class="btn-icon delete"
+                                                            data-id="<?php echo $item['id_inventario']; ?>" title="Eliminar">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
                                             </div>
                                         </td>
@@ -1947,10 +1955,12 @@ try {
                         </div>
                         <h4 class="text-muted mb-2">No hay medicamentos en el inventario</h4>
                         <p class="text-muted mb-3">Comience agregando nuevos medicamentos al sistema</p>
-                        <button type="button" class="action-btn" data-bs-toggle="modal" data-bs-target="#addMedicineModal">
-                            <i class="bi bi-plus-circle"></i>
-                            Agregar primer medicamento
-                        </button>
+                        <?php if ($can_manage_inventory): ?>
+                            <button type="button" class="action-btn" data-bs-toggle="modal" data-bs-target="#addMedicineModal">
+                                <i class="bi bi-plus-circle"></i>
+                                Agregar primer medicamento
+                            </button>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </section>
