@@ -1360,6 +1360,93 @@ try {
                 <?php endif; ?>
             </section>
         </main>
+
+        <!-- Modal para Nueva/Editar Prueba -->
+        <div class="modal fade" id="testModal" tabindex="-1" aria-labelledby="testModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="testModalLabel">Nueva Prueba de Laboratorio</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="testForm">
+                            <input type="hidden" id="id_prueba" name="id_prueba">
+
+                            <div class="mb-3">
+                                <label for="nombre_prueba" class="form-label">
+                                    <i class="bi bi-clipboard-pulse"></i> Nombre de la Prueba *
+                                </label>
+                                <input type="text" class="form-control" id="nombre_prueba" name="nombre" required
+                                    placeholder="Ej: Hemograma Completo">
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="codigo_prueba" class="form-label">
+                                        <i class="bi bi-upc-scan"></i> Código *
+                                    </label>
+                                    <input type="text" class="form-control" id="codigo_prueba" name="codigo" required
+                                        placeholder="HEM-01">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="categoria" class="form-label">
+                                        <i class="bi bi-folder"></i> Categoría
+                                    </label>
+                                    <input type="text" class="form-control" id="categoria" name="categoria"
+                                        placeholder="Hematología">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">
+                                    <i class="bi bi-text-paragraph"></i> Descripción
+                                </label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" rows="2"
+                                    placeholder="Descripción de la prueba..."></textarea>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="precio" class="form-label">
+                                        <i class="bi bi-currency-dollar"></i> Precio (Q)
+                                    </label>
+                                    <input type="number" step="0.01" class="form-control" id="precio" name="precio"
+                                        placeholder="0.00" value="0">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="muestra_requerida" class="form-label">
+                                        <i class="bi bi-droplet"></i> Muestra Requerida
+                                    </label>
+                                    <input type="text" class="form-control" id="muestra_requerida"
+                                        name="muestra_requerida" placeholder="Sangre, Orina, etc.">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="tiempo_procesamiento_horas" class="form-label">
+                                        <i class="bi bi-clock"></i> Tiempo (Hrs)
+                                    </label>
+                                    <input type="number" class="form-control" id="tiempo_procesamiento_horas"
+                                        name="tiempo_procesamiento_horas" placeholder="24" value="24">
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info d-flex align-items-center" role="alert">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <div>Los campos marcados con * son obligatorios</div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="saveTest()">
+                            <i class="bi bi-check-circle"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- JavaScript Optimizado (mismo que index.php) -->
@@ -1519,206 +1606,72 @@ try {
         // ==========================================================================
 
         function openTestModal(data = null) {
-            const isEdit = !!data;
-            const title = isEdit ? 'Editar Prueba' : 'Nueva Prueba de Laboratorio';
-
-            // Cargar SweetAlert2 dinámicamente si no está disponible
-            if (typeof window.Swal === 'undefined' || typeof window.Swal.fire !== 'function') {
-                loadSweetAlert().then(() => showTestModal(title, data, isEdit));
+            const modal = new bootstrap.Modal(document.getElementById('testModal'));
+            const form = document.getElementById('testForm');
+            const modalTitle = document.getElementById('testModalLabel');
+            
+            // Reset form
+            form.reset();
+            
+            if (data) {
+                // Edit mode
+                modalTitle.textContent = 'Editar Prueba';
+                document.getElementById('id_prueba').value = data.id_prueba || '';
+                document.getElementById('nombre_prueba').value = data.nombre_prueba || '';
+                document.getElementById('codigo_prueba').value = data.codigo_prueba || '';
+                document.getElementById('categoria').value = data.categoria || '';
+                document.getElementById('descripcion').value = data.notas || '';
+                document.getElementById('precio').value = data.precio || '0';
+                document.getElementById('muestra_requerida').value = data.muestra_requerida || '';
+                document.getElementById('tiempo_procesamiento_horas').value = data.tiempo_procesamiento_horas || '24';
             } else {
-                showTestModal(title, data, isEdit);
+                // Create mode
+                modalTitle.textContent = 'Nueva Prueba de Laboratorio';
             }
+            
+            modal.show();
         }
 
-
-
-        function showTestModal(title, data, isEdit) {
-            window.Swal.fire({
-                title: title,
-                html: `
-                <div class="modal-test-form">
-                    <input type="hidden" id="id_prueba" value="${data?.id_prueba || ''}">
-                    
-                    <div class="form-section">
-                        <div class="form-group-full">
-                            <label class="modal-label">
-                                <i class="bi bi-clipboard-pulse"></i>
-                                Nombre de la Prueba *
-                            </label>
-                            <input type="text" 
-                                   id="nombre_prueba" 
-                                   class="modal-input" 
-                                   placeholder="Ej: Hemograma Completo" 
-                                   value="${data?.nombre_prueba || ''}">
-                        </div>
-                    </div>
-                    
-                    <div class="form-section">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="modal-label">
-                                    <i class="bi bi-upc-scan"></i>
-                                    Código *
-                                </label>
-                                <input type="text" 
-                                       id="codigo_prueba" 
-                                       class="modal-input" 
-                                       placeholder="HEM-01" 
-                                       value="${data?.codigo_prueba || ''}">
-                            </div>
-                            <div class="form-group">
-                                <label class="modal-label">
-                                    <i class="bi bi-folder"></i>
-                                    Categoría
-                                </label>
-                                <input type="text" 
-                                       id="categoria" 
-                                       class="modal-input" 
-                                       placeholder="Hematología" 
-                                       value="${data?.categoria || ''}">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-section">
-                        <div class="form-group-full">
-                            <label class="modal-label">
-                                <i class="bi bi-text-paragraph"></i>
-                                Descripción
-                            </label>
-                            <textarea id="descripcion" 
-                                      class="modal-textarea" 
-                                      rows="2" 
-                                      placeholder="Descripción de la prueba...">${data?.descripcion || ''}</textarea>
-                        </div>
-                    </div>
-                    
-                    <div class="form-section">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="modal-label">
-                                    <i class="bi bi-currency-dollar"></i>
-                                    Precio (Q)
-                                </label>
-                                <input type="number" 
-                                       step="0.01" 
-                                       id="precio" 
-                                       class="modal-input" 
-                                       placeholder="0.00"
-                                       value="${data?.precio || '0'}">
-                            </div>
-                            <div class="form-group">
-                                <label class="modal-label">
-                                    <i class="bi bi-droplet"></i>
-                                    Muestra Requerida
-                                </label>
-                                <input type="text" 
-                                       id="muestra" 
-                                       class="modal-input" 
-                                       placeholder="Sangre, Orina, etc." 
-                                       value="${data?.muestra_requerida || ''}">
-                            </div>
-                            <div class="form-group">
-                                <label class="modal-label">
-                                    <i class="bi bi-clock"></i>
-                                    Tiempo (Hrs)
-                                </label>
-                                <input type="number" 
-                                       id="tiempo" 
-                                       class="modal-input" 
-                                       placeholder="24"
-                                       value="${data?.tiempo_procesamiento_horas || '24'}">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-note">
-                        <i class="bi bi-info-circle"></i>
-                        Los campos marcados con * son obligatorios
-                    </div>
-                </div>
-            `,
-                showCancelButton: true,
-                confirmButtonText: '<i class="bi bi-check-circle"></i> Guardar',
-                cancelButtonText: '<i class="bi bi-x-circle"></i> Cancelar',
-                confirmButtonColor: '#0d6efd',
-                cancelButtonColor: '#6c757d',
-                width: '700px',
-                customClass: {
-                    popup: 'custom-modal-popup',
-                    title: 'custom-modal-title',
-                    htmlContainer: 'custom-modal-content',
-                    confirmButton: 'custom-modal-confirm',
-                    cancelButton: 'custom-modal-cancel'
-                },
-                didOpen: () => {
-                    // Enfocar el primer input
-                    document.getElementById('nombre_prueba')?.focus();
-                },
-                preConfirm: () => {
-                    const nombre = document.getElementById('nombre_prueba').value.trim();
-                    const codigo = document.getElementById('codigo_prueba').value.trim();
-
-                    if (!nombre || !codigo) {
-                        window.Swal.showValidationMessage(
-                            '<i class="bi bi-exclamation-triangle"></i> Nombre y Código son obligatorios'
-                        );
-                        return false;
-                    }
-
-                    return {
-                        id_prueba: document.getElementById('id_prueba').value,
-                        nombre: nombre,
-                        codigo: codigo,
-                        categoria: document.getElementById('categoria').value.trim(),
-                        descripcion: document.getElementById('descripcion').value.trim(),
-                        precio: document.getElementById('precio').value,
-                        muestra_requerida: document.getElementById('muestra').value.trim(),
-                        tiempo_procesamiento_horas: document.getElementById('tiempo').value
-                    };
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    saveTest(result.value);
-                }
-            });
-        }
-
-        function saveTest(data) {
-            const formData = new FormData();
-            for (const key in data) {
-                formData.append(key, data[key]);
+        function saveTest() {
+            const form = document.getElementById('testForm');
+            
+            // Validate required fields
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            const formData = new FormData(form);
+            
+            console.log('Saving test...');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
             }
 
             fetch('api/save_test.php', {
                 method: 'POST',
                 body: formData
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Éxito!',
-                            text: data.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload());
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data.message
-                        });
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error de conexión: ' + error.message
-                    });
-                });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('testModal'));
+                    modal.hide();
+                    
+                    // Show success message
+                    alert('✓ ' + data.message);
+                    
+                    // Reload page
+                    location.reload();
+                } else {
+                    alert('✗ Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('✗ Error de conexión: ' + error.message);
+            });
         }
 
         function editTest(data) {

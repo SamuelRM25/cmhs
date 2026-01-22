@@ -2530,7 +2530,171 @@ try {
                         </div>
                     </div>
                 </a>
+
+                <!-- Quick Lab Billing Button -->
+                <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#labBillingModal"
+                    style="text-decoration: none; border-left: 4px solid var(--color-info);">
+                    <div class="stat-header mb-0">
+                        <div>
+                            <div class="stat-title text-info fw-bold">Laboratorio</div>
+                            <div class="stat-value" style="font-size: 1.25rem;">Cobro Lab</div>
+                        </div>
+                        <div class="stat-icon info">
+                            <i class="bi bi-eyedropper"></i>
+                        </div>
+                    </div>
+                </a>
             </div>
+
+            <!-- Modal Cobro Laboratorio -->
+            <div class="modal fade" id="labBillingModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title"><i class="bi bi-eyedropper me-2"></i>Cobro de Orden de Laboratorio
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="labBillingForm">
+                                <div class="mb-3">
+                                    <label for="labOrderSelect" class="form-label">Seleccionar Orden Pendiente</label>
+                                    <select class="form-select" id="labOrderSelect" onchange="onLabOrderSelect(this)"
+                                        required>
+                                        <option value="">Cargando ordenes...</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="labPatientName" class="form-label">Paciente</label>
+                                    <input type="text" class="form-control" id="labPatientName" readonly>
+                                    <input type="hidden" id="labPatientId">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="labExamSummary" class="form-label">Exámenes (Detalle)</label>
+                                    <textarea class="form-control" id="labExamSummary" rows="3" readonly></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="labAmount" class="form-label">Total a Cobrar (Q)</label>
+                                    <input type="number" step="0.01" class="form-control" id="labAmount" readonly>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" onclick="saveLabBilling()">Cobrar
+                                Orden</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                // Initialize modal events
+                const labBillingModal = document.getElementById('labBillingModal');
+                if (labBillingModal) {
+                    labBillingModal.addEventListener('show.bs.modal', loadLabOrders);
+                }
+
+                function loadLabOrders() {
+                    const select = document.getElementById('labOrderSelect');
+                    select.innerHTML = '<option value="">Cargando...</option>';
+
+                    fetch('get_lab_orders_billing.php')
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                select.innerHTML = '<option value="">Seleccione una orden...</option>';
+                                if (data.orders.length === 0) {
+                                    select.innerHTML += '<option value="" disabled>No hay ordenes pendientes</option>';
+                                    return;
+                                }
+                                data.orders.forEach(order => {
+                                    const option = document.createElement('option');
+                                    option.value = order.id_orden;
+                                    checkDataAttributes(option, order);
+                                    option.textContent = `Orden #${order.numero_orden} - ${order.nombre_paciente} (${order.fecha_orden})`;
+                                    select.appendChild(option);
+                                });
+                            } else {
+                                select.innerHTML = '<option value="">Error al cargar</option>';
+                                console.error(data.error);
+                            }
+                        })
+                        .catch(e => {
+                            console.error(e);
+                            select.innerHTML = '<option value="">Error de conexión</option>';
+                        });
+                }
+
+                function checkDataAttributes(option, order) {
+                    // Store data in attributes to avoid re-fetching
+                    option.setAttribute('data-patient-name', order.nombre_paciente);
+                    option.setAttribute('data-patient-id', order.id_paciente);
+                    option.setAttribute('data-exams', order.lista_pruebas);
+                    option.setAttribute('data-total', order.total_estimado);
+                }
+
+                function onLabOrderSelect(select) {
+                    const option = select.options[select.selectedIndex];
+                    if (!option.value) {
+                        clearLabBillingFields();
+                        return;
+                    }
+
+                    document.getElementById('labPatientName').value = option.getAttribute('data-patient-name') || '';
+                    document.getElementById('labPatientId').value = option.getAttribute('data-patient-id') || '';
+                    document.getElementById('labExamSummary').value = option.getAttribute('data-exams') || '';
+                    document.getElementById('labAmount').value = option.getAttribute('data-total') || '0.00';
+                }
+
+                function clearLabBillingFields() {
+                    document.getElementById('labPatientName').value = '';
+                    document.getElementById('labPatientId').value = '';
+                    document.getElementById('labExamSummary').value = '';
+                    document.getElementById('labAmount').value = '';
+                }
+
+                function saveLabBilling() {
+                    const orderId = document.getElementById('labOrderSelect').value;
+                    const patientId = document.getElementById('labPatientId').value;
+                    const patientName = document.getElementById('labPatientName').value;
+                    const exams = document.getElementById('labExamSummary').value;
+                    const amount = document.getElementById('labAmount').value;
+
+                    if (!orderId || !patientId) {
+                        alert('Por favor seleccione una orden válida');
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('order_id', orderId);
+                    formData.append('patient_id', patientId);
+                    formData.append('patient_name', patientName);
+                    formData.append('exam_type', 'Orden #' + orderId + ': ' + exams); // Format as requested description
+                    formData.append('amount', amount);
+
+                    fetch('save_lab_charge.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Cobro registrado exitosamente');
+                                location.reload();
+                            } else {
+                                alert('Error: ' + data.error);
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            alert('Error de conexión');
+                        });
+                }
+            </script>
 
             <!-- Estadísticas principales -->
             <div class="stats-grid">
