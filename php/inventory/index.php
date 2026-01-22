@@ -30,9 +30,9 @@ try {
     $user_name = $_SESSION['nombre'];
     $user_specialty = $_SESSION['especialidad'] ?? 'Profesional Médico';
 
-    // Permiso de gestión: Solo el usuario jrivas_farmacia (ID 6) puede gestionar el inventario
+    // Permiso de gestión: Usuario jrivas_farmacia (ID 6) y administradores
     // Los demás usuarios solo tienen permiso de lectura
-    $can_manage_inventory = ($user_id == 6);
+    $can_manage_inventory = ($user_id == 6 || $user_type === 'admin');
 
     // ============ ESTADÍSTICAS DEL INVENTARIO ============
 

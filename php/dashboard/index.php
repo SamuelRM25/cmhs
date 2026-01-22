@@ -2339,7 +2339,123 @@ try {
                     </a>
                 </div>
             </div>
+            <!-- Botón Corte de Turno -->
+            <div style="position: absolute; right: 2rem; bottom: -3rem;">
+                <button type="button" class="action-btn" onclick="openShiftCutModal()">
+                    <i class="bi bi-receipt"></i>
+                    Corte de Turno
+                </button>
+            </div>
         </header>
+
+        <!-- Modal Corte de Turno -->
+        <div class="modal fade" id="shiftCutModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-receipt me-2"></i>Corte de Turno
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="shiftDate" class="form-label">Fecha del Turno</label>
+                            <input type="date" class="form-control" id="shiftDate" value="<?php echo date('Y-m-d'); ?>"
+                                onchange="loadShiftData()">
+                            <small class="text-muted">Turno: 08:00 AM - 08:00 AM (día siguiente)</small>
+                        </div>
+
+                        <div id="shiftLoading" class="text-center py-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Calculando totales...</p>
+                        </div>
+
+                        <div id="shiftContent" style="display: none;">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-capsule me-2 text-primary"></i>Farmacia</span>
+                                    <span class="fw-bold">Q<span id="cut-pharmacy">0.00</span></span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-person-video me-2 text-success"></i>Consultas</span>
+                                    <span class="fw-bold">Q<span id="cut-consultations">0.00</span></span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-eyedropper me-2 text-danger"></i>Laboratorio</span>
+                                    <span class="fw-bold">Q<span id="cut-lab">0.00</span></span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-bandaid me-2 text-warning"></i>Proc. Menores</span>
+                                    <span class="fw-bold">Q<span id="cut-procedures">0.00</span></span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-activity me-2 text-info"></i>Ultrasonidos</span>
+                                    <span class="fw-bold">Q<span id="cut-ultrasound">0.00</span></span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi- radioactive me-2 text-secondary"></i>Rayos X</span>
+                                    <span class="fw-bold">Q<span id="cut-xray">0.00</span></span>
+                                </li>
+                                <li
+                                    class="list-group-item list-group-item-dark d-flex justify-content-between align-items-center mt-2">
+                                    <span class="fw-bold">TOTAL</span>
+                                    <span class="fw-bold fs-5">Q<span id="cut-total">0.00</span></span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary" onclick="window.print()">Imprimir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Funciones para el Corte de Turno
+            function openShiftCutModal() {
+                const modal = new bootstrap.Modal(document.getElementById('shiftCutModal'));
+                modal.show();
+                loadShiftData();
+            }
+
+            function loadShiftData() {
+                const date = document.getElementById('shiftDate').value;
+                const loading = document.getElementById('shiftLoading');
+                const content = document.getElementById('shiftContent');
+
+                loading.style.display = 'block';
+                content.style.display = 'none';
+
+                fetch('get_shift_cut_data.php?date=' + date)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('cut-pharmacy').textContent = data.data.pharmacy;
+                            document.getElementById('cut-consultations').textContent = data.data.consultations;
+                            document.getElementById('cut-lab').textContent = data.data.laboratory;
+                            document.getElementById('cut-procedures').textContent = data.data.min_procedures;
+                            document.getElementById('cut-ultrasound').textContent = data.data.ultrasound;
+                            document.getElementById('cut-xray').textContent = data.data.xray;
+                            document.getElementById('cut-total').textContent = data.data.total;
+
+                            loading.style.display = 'none';
+                            content.style.display = 'block';
+                        } else {
+                            alert('Error al cargar datos: ' + (data.error || 'Desconocido'));
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Error de conexión');
+                        loading.style.display = 'none';
+                    });
+            }
+        </script>
 
         <!-- Botón para colapsar/expandir sidebar (solo escritorio) -->
         <button class="sidebar-toggle" id="sidebarToggle" aria-label="Colapsar/expandir menú">
