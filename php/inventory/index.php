@@ -2779,6 +2779,127 @@ try {
             }
 
             // ==========================================================================
+            // GESTOR DE BORRADORES (AUTO-SAVE)
+            // ==========================================================================
+            class FormDraftManager {
+                constructor(formId, storageKey) {
+                    this.form = document.getElementById(formId);
+                    this.storageKey = storageKey;
+                    this.ignoreFields = ['password', 'file', 'hidden'];
+
+                    if (this.form) {
+                        this.setupEventListeners();
+                        this.restoreDraft();
+                    }
+                }
+
+                setupEventListeners() {
+                    // Escuchar cambios en inputs
+                    this.form.addEventListener('input', (e) => {
+                        this.saveDraft();
+                    });
+
+                    this.form.addEventListener('change', (e) => {
+                        this.saveDraft();
+                    });
+
+                    // Limpiar al enviar exitosamente
+                    this.form.addEventListener('submit', () => {
+                        // Esperar un momento para asegurar que no hubo error de validación
+                        // En un caso real, esto debería llamarse solo si el submit es exitoso
+                        // Pero como es un form POST normal, se recargará la página
+                        this.clearDraft();
+                    });
+                }
+
+                saveDraft() {
+                    const formData = {};
+                    const elements = this.form.elements;
+
+                    for (let i = 0; i < elements.length; i++) {
+                        const el = elements[i];
+
+                        if (!el.name || this.ignoreFields.includes(el.type)) continue;
+
+                        if (el.type === 'checkbox' || el.type === 'radio') {
+                            if (el.checked) {
+                                formData[el.name] = el.value;
+                            }
+                        } else {
+                            formData[el.name] = el.value;
+                        }
+                    }
+
+                    localStorage.setItem(this.storageKey, JSON.stringify(formData));
+                }
+
+                restoreDraft() {
+                    const savedData = localStorage.getItem(this.storageKey);
+                    if (!savedData) return;
+
+                    try {
+                        const formData = JSON.parse(savedData);
+                        const elements = this.form.elements;
+                        let hasData = false;
+
+                        for (const name in formData) {
+                            if (this.form.elements[name]) {
+                                const el = this.form.elements[name];
+
+                                // Manejar diferentes tipos de inputs
+                                if (el instanceof RadioNodeList) {
+                                    for (let i = 0; i < el.length; i++) {
+                                        if (el[i].value === formData[name]) {
+                                            el[i].checked = true;
+                                        }
+                                    }
+                                } else if (el.type === 'checkbox') {
+                                    el.checked = true;
+                                } else {
+                                    el.value = formData[name];
+                                }
+                                hasData = true;
+                            }
+                        }
+
+                        if (hasData) {
+                            this.showDraftNotification();
+                        }
+                    } catch (e) {
+                        console.error('Error al restaurar borrador:', e);
+                    }
+                }
+
+                clearDraft() {
+                    localStorage.removeItem(this.storageKey);
+                }
+
+                showDraftNotification() {
+                    // Crear notificación toast si no existe
+                    if (!document.getElementById('draftToast')) {
+                        const toastContainer = document.createElement('div');
+                        toastContainer.className = 'position-fixed bottom-0 end-0 p-3';
+                        toastContainer.style.zIndex = '1100';
+                        toastContainer.innerHTML = `
+                            <div id="draftToast" class="toast align-items-center text-white bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        <i class="bi bi-save me-2"></i>
+                                        Borrador recuperado automáticamente
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(toastContainer);
+                    }
+
+                    const toast = new bootstrap.Toast(document.getElementById('draftToast'));
+                    toast.show();
+                }
+            }
+
+            // ==========================================================================
             // INICIALIZACIÓN DE LA APLICACIÓN
             // ==========================================================================
             document.addEventListener('DOMContentLoaded', () => {
@@ -2788,6 +2909,9 @@ try {
                 const animationManager = new AnimationManager();
                 const formValidator = new FormValidator();
                 const verifierManager = new VerifierManager();
+
+                // Inicializar gestor de borradores para nuevo medicamento
+                const draftManager = new FormDraftManager('addMedicineForm', 'inventory_new_medicine_draft');
 
                 // Exponer APIs necesarias globalmente
                 window.inventory = {

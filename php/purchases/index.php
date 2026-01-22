@@ -2589,6 +2589,18 @@ try {
 
             // Mostrar modal de nueva compra
             window.showNewPurchaseModal = function () {
+                const modal = new bootstrap.Modal(document.getElementById('newPurchaseModal'));
+                const hasDraft = window.purchaseDraftManager && window.purchaseDraftManager.hasDraft();
+
+                if (hasDraft) {
+                    // Si hay borrador, restaurarlo
+                    window.purchaseDraftManager.restoreDraft();
+                    window.purchaseDraftManager.showDraftNotification();
+                    modal.show();
+                    return;
+                }
+
+                // SI NO HAY BORRADOR: Flujo norma de reset
                 // Resetear formulario
                 const form = document.getElementById('purchaseForm');
                 if (form) form.reset();
@@ -2606,7 +2618,6 @@ try {
                 renderItems();
 
                 // Mostrar modal
-                const modal = new bootstrap.Modal(document.getElementById('newPurchaseModal'));
                 modal.show();
             };
 
@@ -2667,7 +2678,7 @@ try {
             };
 
             // Renderizar items en la tabla
-            function renderItems() {
+            window.renderItems = function () {
                 const tbody = document.querySelector('#itemsTable tbody');
                 if (!tbody) return;
 
@@ -2703,6 +2714,12 @@ try {
                 const totalAmount = document.getElementById('totalAmount');
                 if (totalAmount) {
                     totalAmount.textContent = total.toFixed(2);
+                }
+
+                // Guardar borrador automáticamente al cambiar la lista
+                // (Solo si el draftManager ya está inicializado)
+                if (window.purchaseDraftManager) {
+                    window.purchaseDraftManager.saveDraft();
                 }
             }
 
@@ -2757,6 +2774,10 @@ try {
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
+                            if (window.purchaseDraftManager) {
+                                window.purchaseDraftManager.clearDraft();
+                            }
+
                             Swal.fire({
                                 title: '¡Compra Registrada!',
                                 text: 'La compra se ha registrado correctamente. Los productos se han agregado al inventario como pendientes.',
@@ -3057,6 +3078,140 @@ try {
             };
 
             // ==========================================================================
+            // GESTOR DE BORRADORES (AUTO-SAVE) PARA COMPRAS
+            // ==========================================================================
+            class PurchaseDraftManager {
+                constructor(formId, storageKey) {
+                    this.form = document.getElementById(formId);
+                    this.storageKey = storageKey;
+                    this.ignoreFields = ['password', 'file', 'hidden'];
+
+                    if (this.form) {
+                        this.setupEventListeners();
+                    }
+                }
+
+                setupEventListeners() {
+                    // Escuchar cambios en inputs del formulario
+                    this.form.addEventListener('input', (e) => {
+                        this.saveDraft();
+                    });
+
+                    this.form.addEventListener('change', (e) => {
+                        this.saveDraft();
+                    });
+                }
+
+                saveDraft() {
+                    // 1. Guardar campos del formulario
+                    const formData = {};
+                    const elements = this.form.elements;
+
+                    for (let i = 0; i < elements.length; i++) {
+                        const el = elements[i];
+                        // Ignorar campos de "Agregar item" para no ensuciar el draft con valores temporales
+                        if (!el.name ||
+                            this.ignoreFields.includes(el.type) ||
+                            el.id.startsWith('item_')) continue;
+
+                        if (el.type === 'checkbox' || el.type === 'radio') {
+                            if (el.checked) {
+                                formData[el.name] = el.value;
+                            }
+                        } else {
+                            formData[el.name] = el.value;
+                        }
+                    }
+
+                    // 2. Guardar lista de items (global purchaseItems)
+                    // Nota: purchaseItems es una variable global definida en este script
+
+                    const draftData = {
+                        form: formData,
+                        items: window.purchaseItems || []
+                    };
+
+                    localStorage.setItem(this.storageKey, JSON.stringify(draftData));
+                }
+
+                hasDraft() {
+                    return localStorage.getItem(this.storageKey) !== null;
+                }
+
+                restoreDraft() {
+                    const savedData = localStorage.getItem(this.storageKey);
+                    if (!savedData) return false;
+
+                    try {
+                        const data = JSON.parse(savedData);
+
+                        // 1. Restaurar formulario
+                        const formData = data.form;
+                        for (const name in formData) {
+                            if (this.form.elements[name]) {
+                                const el = this.form.elements[name];
+                                if (el instanceof RadioNodeList) {
+                                    for (let i = 0; i < el.length; i++) {
+                                        if (el[i].value === formData[name]) el[i].checked = true;
+                                    }
+                                } else if (el.type === 'checkbox') {
+                                    el.checked = true;
+                                } else {
+                                    el.value = formData[name];
+                                }
+                            }
+                        }
+
+                        // 2. Restaurar items
+                        if (data.items && Array.isArray(data.items)) {
+                            window.purchaseItems = data.items;
+                            // Llamar renderItems global
+                            if (typeof window.renderItems === 'function') {
+                                window.renderItems();
+                            } else {
+                                // Fallback si renderItems no está expuesto (aunque debería estarlo por ser función global o de clase)
+                                // En este script, renderItems es una función interna, necesitamos exponerla o moverla.
+                                // La modificaremos más abajo para asegurar acceso.
+                            }
+                        }
+
+                        return true;
+
+                    } catch (e) {
+                        console.error('Error al restaurar borrador de compra:', e);
+                        return false;
+                    }
+                }
+
+                clearDraft() {
+                    localStorage.removeItem(this.storageKey);
+                }
+
+                showDraftNotification() {
+                    if (!document.getElementById('draftToast')) {
+                        const toastContainer = document.createElement('div');
+                        toastContainer.className = 'position-fixed bottom-0 end-0 p-3';
+                        toastContainer.style.zIndex = '1100';
+                        toastContainer.innerHTML = `
+                            <div id="draftToast" class="toast align-items-center text-white bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        <i class="bi bi-save me-2"></i>
+                                        Borrador de compra recuperado
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(toastContainer);
+                    }
+
+                    const toast = new bootstrap.Toast(document.getElementById('draftToast'));
+                    toast.show();
+                }
+            }
+
+            // ==========================================================================
             // INICIALIZACIÓN DE LA APLICACIÓN
             // ==========================================================================
             document.addEventListener('DOMContentLoaded', () => {
@@ -3064,6 +3219,9 @@ try {
                 const themeManager = new ThemeManager();
                 const tabManager = new TabManager();
                 const purchasesManager = new PurchasesManager();
+
+                // Inicializar gestor de borradores (hacerlo accesible globalmente)
+                window.purchaseDraftManager = new PurchaseDraftManager('purchaseForm', 'purchases_new_draft');
 
                 // Exponer APIs necesarias globalmente
                 window.purchasesApp = {
