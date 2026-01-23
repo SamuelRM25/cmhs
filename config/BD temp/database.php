@@ -3,11 +3,11 @@
 date_default_timezone_set('America/Guatemala');
 
 class Database {
-    private $host = "buyvuolarphibfd4i5ie-mysql.services.clever-cloud.com";
-    private $db_name = "buyvuolarphibfd4i5ie";
-    private $username = "uebyutsweyo11mee"; // Tus credenciales reales
-    private $password = "7sVDIlXBSrSGUDS4R1J"; // Tus credenciales reales
-    private $port = "20926";
+    private $host = "bzlwnzdfwf8n1tct7ebf-mysql.services.clever-cloud.com";
+    private $db_name = "bzlwnzdfwf8n1tct7ebf";
+    private $username = "uiewshfkax9viaaw"; // Tus credenciales reales
+    private $password = "ecxBIcUMIBgaN3SX0h6X"; // Tus credenciales reales
+    private $port = "3306";
     private $conn = null; // Inicializar a null
 
     public function getConnection() {
@@ -21,9 +21,10 @@ class Database {
                     $this->password,
                     array(
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC // Para que fetchAll devuelva arrays asociativos por defecto
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
                     )
                 );
+                $this->conn->exec("SET time_zone = '-06:00'"); // Fix Guatemala timezone
             }
             return $this->conn;
         } catch(PDOException $e) {
