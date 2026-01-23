@@ -938,26 +938,27 @@ try {
                         <?php if ($prueba['estado'] !== 'Pendiente'): ?>
                             <div class="result-display-area p-4 text-center">
                                 <?php
-                                // Fetch the file for this test
-                                $stmt_file = $conn->prepare("SELECT archivo_resultados FROM orden_pruebas WHERE id_orden_prueba = ?");
+                                // Fetch the file metadata from DB
+                                $stmt_file = $conn->prepare("SELECT id_archivo, nombre_archivo, tipo_contenido FROM archivos_orden WHERE id_orden_prueba = ? ORDER BY id_archivo DESC LIMIT 1");
                                 $stmt_file->execute([$prueba['id_orden_prueba']]);
                                 $file_data = $stmt_file->fetch(PDO::FETCH_ASSOC);
-                                $file_path = $file_data['archivo_resultados'] ?? '';
 
-                                if ($file_path):
-                                    $extension = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
-                                    if (in_array($extension, ['jpg', 'jpeg', 'png'])): ?>
+                                if ($file_data):
+                                    $file_url = "api/get_file.php?id=" . $file_data['id_archivo'];
+                                    $mime_type = $file_data['tipo_contenido'];
+
+                                    if (strpos($mime_type, 'image') !== false): ?>
                                         <div class="mb-3">
-                                            <img src="<?php echo htmlspecialchars($file_path); ?>" class="img-fluid rounded border"
+                                            <img src="<?php echo htmlspecialchars($file_url); ?>" class="img-fluid rounded border"
                                                 style="max-height: 600px;" alt="Resultado">
                                         </div>
-                                    <?php elseif ($extension === 'pdf'): ?>
+                                    <?php elseif (strpos($mime_type, 'pdf') !== false): ?>
                                         <div class="ratio ratio-16x9">
-                                            <iframe src="<?php echo htmlspecialchars($file_path); ?>" frameborder="0"></iframe>
+                                            <iframe src="<?php echo htmlspecialchars($file_url); ?>" frameborder="0"></iframe>
                                         </div>
                                     <?php endif; ?>
                                     <div class="mt-3">
-                                        <a href="<?php echo htmlspecialchars($file_path); ?>" target="_blank"
+                                        <a href="<?php echo htmlspecialchars($file_url); ?>" target="_blank"
                                             class="btn btn-primary">
                                             <i class="bi bi-arrows-fullscreen me-1"></i> Ver en Pantalla Completa
                                         </a>

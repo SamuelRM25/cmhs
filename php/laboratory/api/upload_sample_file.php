@@ -28,61 +28,55 @@ try {
 
     // Handle file upload
     if (isset($_FILES['archivo_muestra']) && $_FILES['archivo_muestra']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = '../../../uploads/samples/';
-        if (!file_exists($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
 
-        $fileInfo = pathinfo($_FILES['archivo_muestra']['name']);
-        $extension = strtolower($fileInfo['extension']);
-        $newFileName = 'sample_' . $id_orden_prueba . '_' . uniqid() . '.' . $extension;
-        $targetPath = $uploadDir . $newFileName;
+        $fileTmpPath = $_FILES['archivo_muestra']['tmp_name'];
+        $fileName = $_FILES['archivo_muestra']['name'];
+        $fileSize = $_FILES['archivo_muestra']['size'];
+        $fileType = $_FILES['archivo_muestra']['type'];
+        $fileNameCmps = explode(".", $fileName);
+        $fileExtension = strtolower(end($fileNameCmps));
 
-        $allowedExts = ['pdf', 'jpg', 'jpeg', 'png'];
+        $allowedfileExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
 
-        if (!in_array($extension, $allowedExts)) {
-            echo json_encode(['success' => false, 'message' => 'Tipo de archivo no permitido']);
+        if (!in_array($fileExtension, $allowedfileExtensions)) {
+            echo json_encode(['success' => false, 'message' => 'Tipo de archivo no permitido. Solo PDF, JPG, PNG.']);
             exit;
         }
 
-        if (move_uploaded_file($_FILES['archivo_muestra']['tmp_name'], $targetPath)) {
-            // Save relative path to DB
-            $dbPath = '../../uploads/samples/' . $newFileName;
+        // Read file content
+        $content = file_get_contents($fileTmpPath);
 
-            $conn->beginTransaction();
+        $conn->beginTransaction();
 
-            // Update orden_pruebas status and add file reference
-            $stmt = $conn->prepare("
-                UPDATE orden_pruebas 
-                SET estado = 'Muestra_Recibida', 
-                    fecha_muestra_recibida = NOW(),
-                    notas_tecnico = ?,
-                    archivo_resultados = ?
-                WHERE id_orden_prueba = ?
-            ");
-            $stmt->execute([$notas, $dbPath, $id_orden_prueba]);
+        // 1. Insert file into archivos_orden
+        $stmt = $conn->prepare("INSERT INTO archivos_orden (id_orden_prueba, nombre_archivo, tipo_contenido, tamano, contenido) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$id_orden_prueba, $fileName, $fileType, $fileSize, $content]);
 
-            // Update order status if it was Pendiente
-            $stmt = $conn->prepare("
-                UPDATE ordenes_laboratorio 
-                SET estado = 'Muestra_Recibida', fecha_muestra_recibida = NOW()
-                WHERE id_orden = ? AND estado = 'Pendiente'
-            ");
-            $stmt->execute([$id_orden]);
+        // 2. Update orden_pruebas status
+        $stmt = $conn->prepare("
+            UPDATE orden_pruebas 
+            SET estado = 'Muestra_Recibida', 
+                fecha_muestra_recibida = NOW(),
+                notas_tecnico = ?
+            WHERE id_orden_prueba = ?
+        ");
+        $stmt->execute([$notas, $id_orden_prueba]);
 
-            // You might want to store the file path in a dedicated column
-            // For now, we'll add it to notas_tecnico or you can add a new column
+        // 3. Update order status if it was Pendiente
+        $stmt = $conn->prepare("
+            UPDATE ordenes_laboratorio 
+            SET estado = 'Muestra_Recibida', fecha_muestra_recibida = NOW()
+            WHERE id_orden = ? AND estado = 'Pendiente'
+        ");
+        $stmt->execute([$id_orden]);
 
-            $conn->commit();
+        $conn->commit();
 
-            echo json_encode([
-                'success' => true,
-                'message' => 'Archivo cargado y muestra recibida correctamente',
-                'file_path' => $dbPath
-            ]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Error al guardar el archivo']);
-        }
+        echo json_encode([
+            'success' => true,
+            'message' => 'Archivo cargado y guardado en base de datos correctamente',
+        ]);
+
     } else {
         $error = $_FILES['archivo_muestra']['error'] ?? 'Archivo no recibido';
         echo json_encode(['success' => false, 'message' => 'Error en la carga: ' . $error]);
