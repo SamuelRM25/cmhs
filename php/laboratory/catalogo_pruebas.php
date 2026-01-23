@@ -61,6 +61,12 @@ try {
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
     <!-- CSS Crítico (mismo que index.php) -->
     <style>
         /* ==========================================================================
@@ -1167,6 +1173,8 @@ try {
 
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Bootstrap CSS/JS (Required for Modal) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
 <body>
@@ -1609,10 +1617,10 @@ try {
             const modal = new bootstrap.Modal(document.getElementById('testModal'));
             const form = document.getElementById('testForm');
             const modalTitle = document.getElementById('testModalLabel');
-            
+
             // Reset form
             form.reset();
-            
+
             if (data) {
                 // Edit mode
                 modalTitle.textContent = 'Editar Prueba';
@@ -1628,21 +1636,21 @@ try {
                 // Create mode
                 modalTitle.textContent = 'Nueva Prueba de Laboratorio';
             }
-            
+
             modal.show();
         }
 
         function saveTest() {
             const form = document.getElementById('testForm');
-            
+
             // Validate required fields
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;
             }
-            
+
             const formData = new FormData(form);
-            
+
             console.log('Saving test...');
             for (let [key, value] of formData.entries()) {
                 console.log(`${key}: ${value}`);
@@ -1652,26 +1660,26 @@ try {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Close modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('testModal'));
-                    modal.hide();
-                    
-                    // Show success message
-                    alert('✓ ' + data.message);
-                    
-                    // Reload page
-                    location.reload();
-                } else {
-                    alert('✗ Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('✗ Error de conexión: ' + error.message);
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('testModal'));
+                        modal.hide();
+
+                        // Show success message
+                        alert('✓ ' + data.message);
+
+                        // Reload page
+                        location.reload();
+                    } else {
+                        alert('✗ Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('✗ Error de conexión: ' + error.message);
+                });
         }
 
         function editTest(data) {
@@ -1939,6 +1947,8 @@ try {
     `;
         document.head.appendChild(style);
     </script>
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

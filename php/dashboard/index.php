@@ -2198,6 +2198,14 @@ try {
                         <span class="nav-text">Dashboard</span>
                     </a>
                 </li>
+                <?php if ($user_type === 'admin' || $user_type === 'user'): ?>
+                    <li class="nav-item">
+                        <a href="../dispensary/index.php" class="nav-link">
+                            <span class="nav-icon" style="font-weight: 900; font-family: serif; font-size: 1.5rem;">Q</span>
+                            <span class="nav-text">Punto de Venta</span>
+                        </a>
+                    </li>
+                <?php endif; ?>
                 <li class="nav-item">
                     <a href="../appointments/index.php" class="nav-link">
                         <i class="bi bi-calendar-check nav-icon"></i>
@@ -2220,18 +2228,6 @@ try {
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="../minor_procedures/index.php" class="nav-link">
-                            <i class="bi bi-bandaid nav-icon"></i>
-                            <span class="nav-text">Procedimientos</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="../examinations/index.php" class="nav-link">
-                            <i class="bi bi-file-earmark-medical nav-icon"></i>
-                            <span class="nav-text">Exámenes</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a href="../laboratory/index.php" class="nav-link">
                             <i class="bi bi-virus nav-icon"></i>
                             <span class="nav-text">Laboratorio</span>
@@ -2250,6 +2246,18 @@ try {
 
                 <?php if ($user_type === 'admin'): ?>
                     <li class="nav-item">
+                        <a href="../minor_procedures/index.php" class="nav-link">
+                            <i class="bi bi-bandaid nav-icon"></i>
+                            <span class="nav-text">Procedimientos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="../examinations/index.php" class="nav-link">
+                            <i class="bi bi-file-earmark-medical nav-icon"></i>
+                            <span class="nav-text">Exámenes</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="../purchases/index.php" class="nav-link">
                             <i class="bi bi-cart nav-icon"></i>
                             <span class="nav-text">Compras</span>
@@ -2263,22 +2271,13 @@ try {
                     </li>
                 <?php endif; ?>
 
-                <?php if ($user_type === 'admin' || $user_type === 'user'): ?>
+                <?php if ($user_type === 'admin'): ?>
                     <li class="nav-item">
                         <a href="../billing/index.php" class="nav-link">
                             <i class="bi bi-cash-coin nav-icon"></i>
                             <span class="nav-text">Cobros</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="../dispensary/index.php" class="nav-link">
-                            <i class="bi bi-capsule nav-icon"></i>
-                            <span class="nav-text">Dispensario</span>
-                        </a>
-                    </li>
-                <?php endif; ?>
-
-                <?php if ($user_type === 'admin'): ?>
                     <li class="nav-item">
                         <a href="../reports/index.php" class="nav-link">
                             <i class="bi bi-graph-up nav-icon"></i>
@@ -2340,76 +2339,90 @@ try {
                 </div>
             </div>
             <!-- Botón Corte de Turno -->
-            <div style="position: absolute; right: 2rem; bottom: -3rem;">
-                <button type="button" class="action-btn" onclick="openShiftCutModal()">
-                    <i class="bi bi-receipt"></i>
-                    Corte de Turno
-                </button>
-            </div>
+            <?php if ($user_type === 'admin'): ?>
+                <div style="position: absolute; right: 2rem; bottom: -3.5rem;">
+                    <button type="button" class="btn btn-warning shadow-sm border-0 px-4 py-2 fw-bold"
+                        style="border-radius: 50px; background: linear-gradient(135deg, #ffc107, #ff9800); color: #fff;"
+                        onclick="verifyShiftCode()">
+                        <i class="bi bi-receipt-cutoff me-2"></i>
+                        Corte de Turno
+                    </button>
+                </div>
+            <?php endif; ?>
         </header>
 
         <!-- Modal Corte de Turno -->
         <div class="modal fade" id="shiftCutModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="bi bi-receipt me-2"></i>Corte de Turno
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-warning text-white border-0">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-receipt-cutoff me-2"></i>Resumen de Corte de Turno
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="shiftDate" class="form-label">Fecha del Turno</label>
-                            <input type="date" class="form-control" id="shiftDate" value="<?php echo date('Y-m-d'); ?>"
-                                onchange="loadShiftData()">
-                            <small class="text-muted">Turno: 08:00 AM - 08:00 AM (día siguiente)</small>
+                    <div class="modal-body p-4">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="shiftDate" class="form-label fw-semibold">Fecha del Turno</label>
+                                <input type="date" class="form-control" id="shiftDate"
+                                    value="<?php echo date('Y-m-d'); ?>" onchange="loadShiftData()">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="shiftType" class="form-label fw-semibold">Jornada</label>
+                                <select class="form-select" id="shiftType" onchange="loadShiftData()">
+                                    <option value="morning">Mañana (08:00 AM - 05:00 PM)</option>
+                                    <option value="night">Tarde/Noche (05:00 PM - 08:00 AM)</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div id="shiftLoading" class="text-center py-3">
-                            <div class="spinner-border text-primary" role="status">
+                        <div id="shiftLoading" class="text-center py-5">
+                            <div class="spinner-grow text-warning" role="status" style="width: 3rem; height: 3rem;">
                                 <span class="visually-hidden">Cargando...</span>
                             </div>
-                            <p class="mt-2 text-muted">Calculando totales...</p>
+                            <p class="mt-3 text-muted tracking-tight">Calculando totales y desgloses...</p>
                         </div>
 
                         <div id="shiftContent" style="display: none;">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="bi bi-capsule me-2 text-primary"></i>Farmacia</span>
-                                    <span class="fw-bold">Q<span id="cut-pharmacy">0.00</span></span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="bi bi-person-video me-2 text-success"></i>Consultas</span>
-                                    <span class="fw-bold">Q<span id="cut-consultations">0.00</span></span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="bi bi-eyedropper me-2 text-danger"></i>Laboratorio</span>
-                                    <span class="fw-bold">Q<span id="cut-lab">0.00</span></span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="bi bi-bandaid me-2 text-warning"></i>Proc. Menores</span>
-                                    <span class="fw-bold">Q<span id="cut-procedures">0.00</span></span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="bi bi-activity me-2 text-info"></i>Ultrasonidos</span>
-                                    <span class="fw-bold">Q<span id="cut-ultrasound">0.00</span></span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="bi bi- radioactive me-2 text-secondary"></i>Rayos X</span>
-                                    <span class="fw-bold">Q<span id="cut-xray">0.00</span></span>
-                                </li>
-                                <li
-                                    class="list-group-item list-group-item-dark d-flex justify-content-between align-items-center mt-2">
-                                    <span class="fw-bold">TOTAL</span>
-                                    <span class="fw-bold fs-5">Q<span id="cut-total">0.00</span></span>
-                                </li>
-                            </ul>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle border-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>Categoría</th>
+                                            <th class="text-center">Efectivo</th>
+                                            <th class="text-center">Tarjeta</th>
+                                            <th class="text-center">Transf.</th>
+                                            <th class="text-end">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="shiftTableBody">
+                                        <!-- Data will be injected here -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-dark">
+                                            <th class="fw-bold">TOTAL GENERAL</th>
+                                            <td colspan="3"></td>
+                                            <td class="text-end fw-bold fs-5">Q<span id="cut-grand-total">0.00</span>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <div id="consultationBreakdown" class="mt-4" style="display:none;">
+                                <h6 class="fw-bold text-muted border-bottom pb-2 mb-3">Detalle de Consultas por Médico
+                                </h6>
+                                <div id="doctorsList"></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        <button type="button" class="btn btn-primary" onclick="window.print()">Imprimir</button>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-warning px-4 text-white" onclick="window.print()">
+                            <i class="bi bi-printer me-2"></i>Imprimir Reporte
+                        </button>
                     </div>
                 </div>
             </div>
@@ -2417,6 +2430,31 @@ try {
 
         <script>
             // Funciones para el Corte de Turno
+            async function verifyShiftCode() {
+                const { value: code } = await Swal.fire({
+                    title: 'Código de Seguridad',
+                    text: 'Ingrese el código para autorizar el corte de turno',
+                    input: 'password',
+                    confirmButtonColor: '#ffc107',
+                    inputPlaceholder: 'Ingrese su código',
+                    inputAttributes: {
+                        autocapitalize: 'off',
+                        autocorrect: 'off'
+                    }
+                });
+
+                if (code === 'cmhs') {
+                    openShiftCutModal();
+                } else if (code) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Código Incorrecto',
+                        text: 'El código ingresado no es válido para esta operación.',
+                        confirmButtonColor: '#ffc107'
+                    });
+                }
+            }
+
             function openShiftCutModal() {
                 const modal = new bootstrap.Modal(document.getElementById('shiftCutModal'));
                 modal.show();
@@ -2425,33 +2463,85 @@ try {
 
             function loadShiftData() {
                 const date = document.getElementById('shiftDate').value;
+                const shift = document.getElementById('shiftType').value;
                 const loading = document.getElementById('shiftLoading');
                 const content = document.getElementById('shiftContent');
+                const tableBody = document.getElementById('shiftTableBody');
 
                 loading.style.display = 'block';
                 content.style.display = 'none';
 
-                fetch('get_shift_cut_data.php?date=' + date)
+                fetch(`get_shift_cut_data.php?date=${date}&shift=${shift}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            document.getElementById('cut-pharmacy').textContent = data.data.pharmacy;
-                            document.getElementById('cut-consultations').textContent = data.data.consultations;
-                            document.getElementById('cut-lab').textContent = data.data.laboratory;
-                            document.getElementById('cut-procedures').textContent = data.data.min_procedures;
-                            document.getElementById('cut-ultrasound').textContent = data.data.ultrasound;
-                            document.getElementById('cut-xray').textContent = data.data.xray;
-                            document.getElementById('cut-total').textContent = data.data.total;
+                            const d = data.data;
+
+                            // Build main table
+                            const categories = [
+                                { label: 'Farmacia', data: d.pharmacy, icon: 'bi-capsule text-primary' },
+                                { label: 'Consultas', data: d.consultations, icon: 'bi-person-video text-success' },
+                                { label: 'Laboratorio', data: d.laboratory, icon: 'bi-eyedropper text-danger' },
+                                { label: 'Procedimientos', data: d.procedures, icon: 'bi-bandaid text-warning' },
+                                { label: 'Ultrasonido', data: d.ultrasound, icon: 'bi-activity text-info' },
+                                { label: 'Rayos X', data: d.xray, icon: 'bi-radioactive text-secondary' }
+                            ];
+
+                            let html = '';
+                            categories.forEach(cat => {
+                                html += `
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi ${cat.icon} fs-5 me-2"></i>
+                                                <span class="fw-semibold">${cat.label}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">Q${cat.data.breakdown?.['Efectivo']?.toFixed(2) || '0.00'}</td>
+                                        <td class="text-center">Q${cat.data.breakdown?.['Tarjeta']?.toFixed(2) || '0.00'}</td>
+                                        <td class="text-center">Q${cat.data.breakdown?.['Transferencia']?.toFixed(2) || '0.00'}</td>
+                                        <td class="text-end fw-bold">Q${cat.data.total.toFixed(2)}</td>
+                                    </tr>
+                                `;
+                            });
+                            tableBody.innerHTML = html;
+                            document.getElementById('cut-grand-total').textContent = d.grand_total.toFixed(2);
+
+                            // Build doctors breakdown
+                            if (d.consultations.by_doctor && d.consultations.by_doctor.length > 0) {
+                                document.getElementById('consultationBreakdown').style.display = 'block';
+                                let docHtml = '<div class="row g-2">';
+                                d.consultations.by_doctor.forEach(doc => {
+                                    docHtml += `
+                                        <div class="col-md-6">
+                                            <div class="card bg-light border-0 p-3 h-100">
+                                                <div class="fw-bold text-primary mb-2">${doc.doctor}</div>
+                                                <div class="d-flex justify-content-between small text-muted">
+                                                    <span>Efectivo: Q${doc.breakdown.Efectivo.toFixed(2)}</span>
+                                                    <span>Tarjeta: Q${doc.breakdown.Tarjeta.toFixed(2)}</span>
+                                                    <span>Transf: Q${doc.breakdown.Transferencia.toFixed(2)}</span>
+                                                </div>
+                                                <div class="text-end fw-bold mt-1">Total: Q${doc.total.toFixed(2)}</div>
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                                docHtml += '</div>';
+                                document.getElementById('doctorsList').innerHTML = docHtml;
+                            } else {
+                                document.getElementById('consultationBreakdown').style.display = 'none';
+                            }
 
                             loading.style.display = 'none';
                             content.style.display = 'block';
                         } else {
-                            alert('Error al cargar datos: ' + (data.error || 'Desconocido'));
+                            Swal.fire('Error', 'Error al cargar datos: ' + (data.error || 'Desconocido'), 'error');
+                            loading.style.display = 'none';
                         }
                     })
                     .catch(err => {
                         console.error(err);
-                        alert('Error de conexión');
+                        Swal.fire('Error', 'Error de conexión', 'error');
                         loading.style.display = 'none';
                     });
             }
@@ -2465,7 +2555,7 @@ try {
         <!-- Contenido Principal -->
         <main class="main-content">
             <!-- Notificación de compras pendientes -->
-            <?php if ($pending_purchases > 0): ?>
+            <?php if ($pending_purchases > 0 && $_SESSION['user_id'] == 6): ?>
                 <div class="alert-card mb-4 animate-in delay-1">
                     <div class="alert-header">
                         <div class="alert-icon warning">
@@ -2504,47 +2594,82 @@ try {
             </div>
 
             <!-- Acciones Rápidas -->
-            <div class="stats-grid mb-4 animate-in delay-1">
-                <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#newLabOrderModal"
-                    style="text-decoration: none; border-left: 4px solid var(--color-info);">
-                    <div class="stat-header mb-0">
-                        <div>
-                            <div class="stat-title text-info fw-bold">Laboratorio</div>
-                            <div class="stat-value" style="font-size: 1.25rem;">Nueva Orden</div>
+            <?php if ($_SESSION['user_id'] == 7): ?>
+                <div class="stats-grid mb-4 animate-in delay-1">
+                    <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#newBillingModal"
+                        style="text-decoration: none; border-left: 4px solid var(--color-success);">
+                        <div class="stat-header mb-0">
+                            <div>
+                                <div class="stat-title text-success fw-bold">Cobros</div>
+                                <div class="stat-value" style="font-size: 1.25rem;">Registrar Cobro</div>
+                            </div>
+                            <div class="stat-icon success">
+                                <i class="bi bi-cash-coin"></i>
+                            </div>
                         </div>
-                        <div class="stat-icon info">
-                            <i class="bi bi-virus"></i>
+                    </a>
+                    <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#newLabOrderModal"
+                        style="text-decoration: none; border-left: 4px solid var(--color-primary);">
+                        <div class="stat-header mb-0">
+                            <div>
+                                <div class="stat-title text-info fw-bold">Laboratorio</div>
+                                <div class="stat-value" style="font-size: 1.25rem;">Nueva Orden</div>
+                            </div>
+                            <div class="stat-icon info">
+                                <i class="bi bi-virus"></i>
+                            </div>
                         </div>
-                    </div>
-                </a>
-
-                <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#newBillingModal"
-                    style="text-decoration: none; border-left: 4px solid var(--color-success);">
-                    <div class="stat-header mb-0">
-                        <div>
-                            <div class="stat-title text-success fw-bold">Cobros</div>
-                            <div class="stat-value" style="font-size: 1.25rem;">Registrar Cobro</div>
+                    </a>
+                    <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#labBillingModal"
+                        style="text-decoration: none; border-left: 4px solid var(--color-info);">
+                        <div class="stat-header mb-0">
+                            <div>
+                                <div class="stat-title text-info fw-bold">Laboratorio</div>
+                                <div class="stat-value" style="font-size: 1.25rem;">Cobro Lab</div>
+                            </div>
+                            <div class="stat-icon info">
+                                <i class="bi bi-eyedropper"></i>
+                            </div>
                         </div>
-                        <div class="stat-icon success">
-                            <i class="bi bi-cash-coin"></i>
+                    </a>
+                    <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#procedureBillingModal"
+                        style="text-decoration: none; border-left: 4px solid var(--color-warning);">
+                        <div class="stat-header mb-0">
+                            <div>
+                                <div class="stat-title text-warning fw-bold">Procedimientos</div>
+                                <div class="stat-value" style="font-size: 1.25rem;">Cobro Proc.</div>
+                            </div>
+                            <div class="stat-icon warning">
+                                <i class="bi bi-bandaid"></i>
+                            </div>
                         </div>
-                    </div>
-                </a>
-
-                <!-- Quick Lab Billing Button -->
-                <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#labBillingModal"
-                    style="text-decoration: none; border-left: 4px solid var(--color-info);">
-                    <div class="stat-header mb-0">
-                        <div>
-                            <div class="stat-title text-info fw-bold">Laboratorio</div>
-                            <div class="stat-value" style="font-size: 1.25rem;">Cobro Lab</div>
+                    </a>
+                    <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#xrayBillingModal"
+                        style="text-decoration: none; border-left: 4px solid var(--color-secondary);">
+                        <div class="stat-header mb-0">
+                            <div>
+                                <div class="stat-title text-secondary fw-bold">Rayos X</div>
+                                <div class="stat-value" style="font-size: 1.25rem;">Cobro RX</div>
+                            </div>
+                            <div class="stat-icon secondary">
+                                <i class="bi bi-file-medical"></i>
+                            </div>
                         </div>
-                        <div class="stat-icon info">
-                            <i class="bi bi-eyedropper"></i>
+                    </a>
+                    <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#ultrasoundBillingModal"
+                        style="text-decoration: none; border-left: 4px solid var(--color-info);">
+                        <div class="stat-header mb-0">
+                            <div>
+                                <div class="stat-title text-info fw-bold">Ultrasonido</div>
+                                <div class="stat-value" style="font-size: 1.25rem;">Cobro US</div>
+                            </div>
+                            <div class="stat-icon info">
+                                <i class="bi bi-activity"></i>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
+                    </a>
+                </div>
+            <?php endif; ?>
 
             <!-- Modal Cobro Laboratorio -->
             <div class="modal fade" id="labBillingModal" tabindex="-1" aria-hidden="true">
@@ -2579,6 +2704,29 @@ try {
                                 <div class="mb-3">
                                     <label for="labAmount" class="form-label">Total a Cobrar (Q)</label>
                                     <input type="number" step="0.01" class="form-control" id="labAmount" readonly>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Tipo de Pago</label>
+                                    <div class="btn-group w-100" role="group">
+                                        <input type="radio" class="btn-check" name="lab_tipo_pago"
+                                            id="lab_pago_efectivo" value="Efectivo" checked autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="lab_pago_efectivo">
+                                            <i class="bi bi-cash me-1"></i>Efectivo
+                                        </label>
+
+                                        <input type="radio" class="btn-check" name="lab_tipo_pago"
+                                            id="lab_pago_transferencia" value="Transferencia" autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="lab_pago_transferencia">
+                                            <i class="bi bi-bank me-1"></i>Transferencia
+                                        </label>
+
+                                        <input type="radio" class="btn-check" name="lab_tipo_pago" id="lab_pago_tarjeta"
+                                            value="Tarjeta" autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="lab_pago_tarjeta">
+                                            <i class="bi bi-credit-card me-1"></i>Tarjeta
+                                        </label>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -2673,8 +2821,11 @@ try {
                     formData.append('order_id', orderId);
                     formData.append('patient_id', patientId);
                     formData.append('patient_name', patientName);
-                    formData.append('exam_type', 'Orden #' + orderId + ': ' + exams); // Format as requested description
+                    formData.append('exam_type', 'Orden #' + orderId + ': ' + exams);
                     formData.append('amount', amount);
+
+                    const tipoPago = document.querySelector('input[name="lab_tipo_pago"]:checked')?.value || 'Efectivo';
+                    formData.append('tipo_pago', tipoPago);
 
                     fetch('save_lab_charge.php', {
                         method: 'POST',
@@ -2683,89 +2834,90 @@ try {
                         .then(r => r.json())
                         .then(data => {
                             if (data.success) {
-                                alert('Cobro registrado exitosamente');
-                                location.reload();
+                                Swal.fire('Éxito', 'Cobro registrado exitosamente', 'success').then(() => location.reload());
                             } else {
-                                alert('Error: ' + data.error);
+                                Swal.fire('Error', data.error || 'Desconocido', 'error');
                             }
                         })
                         .catch(err => {
                             console.error(err);
-                            alert('Error de conexión');
+                            Swal.fire('Error', 'Error de conexión', 'error');
                         });
                 }
             </script>
 
             <!-- Estadísticas principales -->
-            <div class="stats-grid">
-                <!-- Citas de hoy -->
-                <div class="stat-card animate-in delay-1">
-                    <div class="stat-header">
-                        <div>
-                            <div class="stat-title">Citas Hoy</div>
-                            <div class="stat-value"><?php echo $today_appointments; ?></div>
+            <?php if ($user_type === 'admin'): ?>
+                <div class="stats-grid">
+                    <!-- Citas de hoy -->
+                    <div class="stat-card animate-in delay-1">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-title">Citas Hoy</div>
+                                <div class="stat-value"><?php echo $today_appointments; ?></div>
+                            </div>
+                            <div class="stat-icon primary">
+                                <i class="bi bi-calendar-check"></i>
+                            </div>
                         </div>
-                        <div class="stat-icon primary">
-                            <i class="bi bi-calendar-check"></i>
+                        <div class="stat-change positive">
+                            <i class="bi bi-arrow-up-right"></i>
+                            <span>Programadas para hoy</span>
                         </div>
                     </div>
-                    <div class="stat-change positive">
-                        <i class="bi bi-arrow-up-right"></i>
-                        <span>Programadas para hoy</span>
-                    </div>
-                </div>
 
-                <!-- Pacientes del año -->
-                <div class="stat-card animate-in delay-2">
-                    <div class="stat-header">
-                        <div>
-                            <div class="stat-title">Pacientes Año</div>
-                            <div class="stat-value"><?php echo $year_patients; ?></div>
+                    <!-- Pacientes del año -->
+                    <div class="stat-card animate-in delay-2">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-title">Pacientes Año</div>
+                                <div class="stat-value"><?php echo $year_patients; ?></div>
+                            </div>
+                            <div class="stat-icon success">
+                                <i class="bi bi-people"></i>
+                            </div>
                         </div>
-                        <div class="stat-icon success">
-                            <i class="bi bi-people"></i>
+                        <div class="stat-change positive">
+                            <i class="bi bi-person-plus"></i>
+                            <span>Año <?php echo date('Y'); ?></span>
                         </div>
                     </div>
-                    <div class="stat-change positive">
-                        <i class="bi bi-person-plus"></i>
-                        <span>Año <?php echo date('Y'); ?></span>
-                    </div>
-                </div>
 
-                <!-- Citas pendientes -->
-                <div class="stat-card animate-in delay-3">
-                    <div class="stat-header">
-                        <div>
-                            <div class="stat-title">Citas Pendientes</div>
-                            <div class="stat-value"><?php echo $pending_appointments; ?></div>
+                    <!-- Citas pendientes -->
+                    <div class="stat-card animate-in delay-3">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-title">Citas Pendientes</div>
+                                <div class="stat-value"><?php echo $pending_appointments; ?></div>
+                            </div>
+                            <div class="stat-icon warning">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
                         </div>
-                        <div class="stat-icon warning">
-                            <i class="bi bi-clock-history"></i>
+                        <div class="stat-change positive">
+                            <i class="bi bi-calendar-plus"></i>
+                            <span>Próximas citas</span>
                         </div>
                     </div>
-                    <div class="stat-change positive">
-                        <i class="bi bi-calendar-plus"></i>
-                        <span>Próximas citas</span>
-                    </div>
-                </div>
 
-                <!-- Consultas del mes -->
-                <div class="stat-card animate-in delay-4">
-                    <div class="stat-header">
-                        <div>
-                            <div class="stat-title">Consultas Mes</div>
-                            <div class="stat-value"><?php echo $month_consultations; ?></div>
+                    <!-- Consultas del mes -->
+                    <div class="stat-card animate-in delay-4">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-title">Consultas Mes</div>
+                                <div class="stat-value"><?php echo $month_consultations; ?></div>
+                            </div>
+                            <div class="stat-icon info">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
                         </div>
-                        <div class="stat-icon info">
-                            <i class="bi bi-graph-up-arrow"></i>
+                        <div class="stat-change positive">
+                            <i class="bi bi-calendar-month"></i>
+                            <span>Mes actual</span>
                         </div>
-                    </div>
-                    <div class="stat-change positive">
-                        <i class="bi bi-calendar-month"></i>
-                        <span>Mes actual</span>
                     </div>
                 </div>
-            </div>
+            <?php endif; ?>
 
             <!-- Sección de citas de hoy -->
             <section class="appointments-section animate-in delay-1">
@@ -3109,6 +3261,29 @@ try {
                             </div>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tipo de Pago</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="tipo_pago" id="pago_efectivo"
+                                    value="Efectivo" checked autocomplete="off">
+                                <label class="btn btn-outline-success" for="pago_efectivo">
+                                    <i class="bi bi-cash me-1"></i>Efectivo
+                                </label>
+
+                                <input type="radio" class="btn-check" name="tipo_pago" id="pago_transferencia"
+                                    value="Transferencia" autocomplete="off">
+                                <label class="btn btn-outline-success" for="pago_transferencia">
+                                    <i class="bi bi-bank me-1"></i>Transferencia
+                                </label>
+
+                                <input type="radio" class="btn-check" name="tipo_pago" id="pago_tarjeta" value="Tarjeta"
+                                    autocomplete="off">
+                                <label class="btn btn-outline-success" for="pago_tarjeta">
+                                    <i class="bi bi-credit-card me-1"></i>Tarjeta
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="small text-muted mb-0">
                             <i class="bi bi-info-circle me-1"></i> El monto se calcula automáticamente al seleccionar
                             médico y tipo.
@@ -3128,26 +3303,38 @@ try {
     <!-- Modal para Nueva Orden de Laboratorio -->
     <div class="modal fade" id="newLabOrderModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-virus text-primary"></i>
-                        Nueva Orden de Laboratorio
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white py-3">
+                    <h5 class="modal-title d-flex align-items-center">
+                        <div class="icon-shape bg-white bg-opacity-20 rounded-3 p-2 me-3">
+                            <i class="bi bi-virus fs-4"></i>
+                        </div>
+                        <div>
+                            <span class="d-block fw-bold">Nueva Orden de Laboratorio</span>
+                            <small class="text-white text-opacity-75 fw-normal">Seleccione pruebas para el
+                                paciente</small>
+                        </div>
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0">
-                    <div class="d-flex h-100 flex-column flex-lg-row">
-                        <!-- Panel Izquierdo: Formulario -->
-                        <div class="p-4 flex-grow-1 overflow-auto">
+                <div class="modal-body p-0 bg-light bg-opacity-50">
+                    <div class="d-flex h-100 flex-column flex-lg-row" style="min-height: 600px;">
+                        <!-- Panel Izquierdo: Selección -->
+                        <div class="p-4 flex-grow-1 overflow-auto bg-white">
                             <form id="newLabOrderForm">
                                 <!-- Datos del Paciente -->
-                                <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Datos Generales</h6>
-                                <div class="row g-3 mb-4">
+                                <div class="row g-3 mb-4 p-3 bg-light rounded-3 border">
                                     <div class="col-md-6">
-                                        <label class="form-label">Paciente</label>
-                                        <input class="form-control" list="labDatalistOptions" id="lab_paciente_input"
-                                            placeholder="Buscar nombre..." required autocomplete="off">
+                                        <label
+                                            class="form-label fw-bold small text-uppercase text-muted">Paciente</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white border-end-0"><i
+                                                    class="bi bi-person text-primary"></i></span>
+                                            <input class="form-control border-start-0 ps-0" list="labDatalistOptions"
+                                                id="lab_paciente_input" placeholder="Buscar por nombre..." required
+                                                autocomplete="off">
+                                        </div>
                                         <datalist id="labDatalistOptions">
                                             <?php foreach ($pacientes as $paciente): ?>
                                                 <option data-id="<?php echo $paciente['id_paciente']; ?>"
@@ -3157,58 +3344,84 @@ try {
                                         <input type="hidden" id="lab_id_paciente" name="id_paciente">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Doctor Referente</label>
-                                        <select class="form-select" id="lab_id_doctor" name="id_doctor" required>
-                                            <option value="">Seleccionar doctor...</option>
-                                            <?php foreach ($doctores as $doctor): ?>
-                                                <option value="<?php echo $doctor['idUsuario']; ?>">
-                                                    Dr(a).
-                                                    <?php echo htmlspecialchars($doctor['nombre'] . ' ' . $doctor['apellido']); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Doctor
+                                            Referente</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white border-end-0"><i
+                                                    class="bi bi-person-badge text-primary"></i></span>
+                                            <select class="form-select border-start-0 ps-0" id="lab_id_doctor"
+                                                name="id_doctor" required>
+                                                <option value="">Seleccionar doctor...</option>
+                                                <?php foreach ($doctores as $doctor): ?>
+                                                    <option value="<?php echo $doctor['idUsuario']; ?>">
+                                                        Dr(a).
+                                                        <?php echo htmlspecialchars($doctor['nombre'] . ' ' . $doctor['apellido']); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="col-md-12">
-                                        <label class="form-label">Observaciones</label>
-                                        <input type="text" class="form-control" name="observaciones"
-                                            placeholder="Notas adicionales...">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Indicaciones u
+                                            Observaciones</label>
+                                        <textarea class="form-control" name="observaciones" rows="1"
+                                            placeholder="Nota para el analista..."></textarea>
                                     </div>
                                 </div>
 
-                                <!-- Selección de Pruebas -->
-                                <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Selección de Pruebas</h6>
-                                <div class="accordion" id="testsAccordion">
+                                <!-- Buscador de Pruebas -->
+                                <div class="sticky-top bg-white py-2 mb-3">
+                                    <div class="input-group shadow-sm">
+                                        <span class="input-group-text bg-white border-end-0"><i
+                                                class="bi bi-search text-primary"></i></span>
+                                        <input type="text" id="labTestSearch"
+                                            class="form-control border-start-0 ps-0 py-2"
+                                            placeholder="Filtrar pruebas por nombre o categoría...">
+                                    </div>
+                                </div>
+
+                                <!-- Listado de Pruebas -->
+                                <div class="accordion accordion-flush" id="testsAccordion">
                                     <?php foreach ($pruebas_por_categoria as $categoria => $pruebas): ?>
-                                        <?php $catID = 'cat_' . md5($categoria); ?>
-                                        <div class="accordion-item">
+                                        <?php $catID = 'cat_v2_' . md5($categoria); ?>
+                                        <div class="accordion-item border rounded-3 mb-2 category-container"
+                                            data-category="<?php echo htmlspecialchars($categoria); ?>">
                                             <h2 class="accordion-header" id="heading_<?php echo $catID; ?>">
-                                                <button class="accordion-button collapsed" type="button"
+                                                <button class="accordion-button rounded-3 fw-bold" type="button"
                                                     data-bs-toggle="collapse"
-                                                    data-bs-target="#collapse_<?php echo $catID; ?>" aria-expanded="false">
+                                                    data-bs-target="#collapse_<?php echo $catID; ?>" aria-expanded="true">
+                                                    <i class="bi bi-tags me-2 text-primary"></i>
                                                     <?php echo htmlspecialchars($categoria); ?>
+                                                    <span
+                                                        class="badge bg-light text-primary ms-2 border"><?php echo count($pruebas); ?></span>
                                                 </button>
                                             </h2>
-                                            <div id="collapse_<?php echo $catID; ?>" class="accordion-collapse collapse"
-                                                data-bs-parent="#testsAccordion">
-                                                <div class="accordion-body">
+                                            <div id="collapse_<?php echo $catID; ?>"
+                                                class="accordion-collapse collapse show" data-bs-parent="#testsAccordion">
+                                                <div class="accordion-body p-2">
                                                     <div class="row g-2">
                                                         <?php foreach ($pruebas as $prueba): ?>
-                                                            <div class="col-md-6 col-lg-4">
-                                                                <div class="form-check p-2 border rounded hover-bg">
-                                                                    <input class="form-check-input test-checkbox"
-                                                                        type="checkbox" name="pruebas[]"
-                                                                        value="<?php echo $prueba['id_prueba']; ?>"
-                                                                        id="test_<?php echo $prueba['id_prueba']; ?>"
-                                                                        data-price="<?php echo $prueba['precio']; ?>"
-                                                                        data-name="<?php echo htmlspecialchars($prueba['nombre_prueba']); ?>">
-                                                                    <label class="form-check-label w-100 stretched-link"
-                                                                        for="test_<?php echo $prueba['id_prueba']; ?>">
-                                                                        <div class="d-flex justify-content-between small">
-                                                                            <span><?php echo htmlspecialchars($prueba['nombre_prueba']); ?></span>
-                                                                            <span
-                                                                                class="fw-bold text-success">Q<?php echo number_format($prueba['precio'], 2); ?></span>
+                                                            <div class="col-md-6 test-item"
+                                                                data-name="<?php echo strtolower(htmlspecialchars($prueba['nombre_prueba'])); ?>">
+                                                                <div class="test-card-v2 p-2 border rounded-3 position-relative transition-all d-flex align-items-center gap-3 h-100 hover-shadow cursor-pointer"
+                                                                    onclick="toggleLabCheckbox('test_v2_<?php echo $prueba['id_prueba']; ?>')">
+                                                                    <div class="check-indicator">
+                                                                        <input
+                                                                            class="form-check-input test-checkbox stretched-link"
+                                                                            type="checkbox" name="pruebas[]"
+                                                                            value="<?php echo $prueba['id_prueba']; ?>"
+                                                                            id="test_v2_<?php echo $prueba['id_prueba']; ?>"
+                                                                            data-price="<?php echo $prueba['precio']; ?>"
+                                                                            data-name="<?php echo htmlspecialchars($prueba['nombre_prueba']); ?>">
+                                                                    </div>
+                                                                    <div class="flex-grow-1">
+                                                                        <div class="fw-semibold small lh-1 mb-1">
+                                                                            <?php echo htmlspecialchars($prueba['nombre_prueba']); ?>
                                                                         </div>
-                                                                    </label>
+                                                                        <div class="text-success fw-bold small">
+                                                                            Q<?php echo number_format($prueba['precio'], 2); ?>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         <?php endforeach; ?>
@@ -3222,20 +3435,39 @@ try {
                         </div>
 
                         <!-- Panel Derecho: Resumen -->
-                        <div class="bg-light border-start p-4" style="min-width: 300px;">
-                            <h6 class="fw-bold mb-3">Resumen de Orden</h6>
-                            <div id="selectedTestsList" class="mb-3 small text-muted"
-                                style="max-height: 200px; overflow-y: auto;">
-                                <p class="fst-italic text-center py-2">Ninguna prueba seleccionada</p>
-                            </div>
-                            <div class="border-top pt-3 mt-auto">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span class="fw-bold">Total:</span>
-                                    <span class="fs-4 fw-bold text-primary" id="orderTotal">Q0.00</span>
+                        <div class="bg-light border-start p-4 d-flex flex-column" style="min-width: 350px;">
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold d-flex justify-content-between align-items-center mb-3">
+                                    <span>Resumen de Selección</span>
+                                    <span class="badge bg-primary rounded-pill pruebas-count">0</span>
+                                </h6>
+                                <div id="selectedTestsList" class="mb-3 custom-scrollbar"
+                                    style="max-height: 400px; overflow-y: auto;">
+                                    <div class="text-center py-5 text-muted empty-summary">
+                                        <i class="bi bi-cart-x fs-1 opacity-25"></i>
+                                        <p class="mt-2 small">No hay pruebas seleccionadas</p>
+                                    </div>
                                 </div>
-                                <button type="button" class="btn btn-primary w-100 py-2" id="saveLabOrderBtn" disabled>
-                                    <i class="bi bi-save me-2"></i>Crear Orden
+                            </div>
+
+                            <div class="border-top pt-3 bg-light">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted small fw-bold text-uppercase">Subtotal:</span>
+                                    <span class="fw-bold text-dark" id="orderSubtotal">Q0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <span class="fw-bold text-uppercase">Total a Pagar:</span>
+                                    <span class="fs-3 fw-bold text-primary" id="orderTotal">Q0.00</span>
+                                </div>
+                                <button type="button"
+                                    class="btn btn-primary w-100 py-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center gap-2"
+                                    id="saveLabOrderBtn" disabled>
+                                    <i class="bi bi-printer fs-5"></i>
+                                    <span class="fw-bold">Generar Orden</span>
                                 </button>
+                                <p class="text-center small text-muted mt-2">
+                                    <i class="bi bi-shield-check me-1"></i> Se generará cobro automático
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -3243,6 +3475,54 @@ try {
             </div>
         </div>
     </div>
+
+    <style>
+        .test-card-v2 {
+            background: #fff;
+        }
+
+        .test-card-v2:hover {
+            background: #f8f9ff;
+            border-color: var(--color-primary);
+        }
+
+        .test-card-v2.active {
+            background: #eff6ff;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 1px var(--color-primary);
+        }
+
+        .hover-shadow:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .icon-shape {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+
+    <script>
+        function toggleLabCheckbox(id) {
+            const cb = document.getElementById(id);
+            if (cb) {
+                cb.checked = !cb.checked;
+                cb.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+    </script>
 
     <!-- JavaScript Optimizado -->
     <script>
@@ -3468,6 +3748,7 @@ try {
                     this.setupLabOrderHandlers();
                     this.setupAnimations();
                     this.setupAdminNotifications();
+                    this.setupUltrasoundHandlers();
                 }
 
                 setupGreeting() {
@@ -3641,38 +3922,200 @@ try {
                 setupLabOrderHandlers() {
                     const checkboxes = document.querySelectorAll('.test-checkbox');
                     const selectedList = document.getElementById('selectedTestsList');
+                    const subtotalElement = document.getElementById('orderSubtotal');
                     const totalElement = document.getElementById('orderTotal');
+                    const countElements = document.querySelectorAll('.pruebas-count');
                     const saveBtn = document.getElementById('saveLabOrderBtn');
+                    const searchInput = document.getElementById('labTestSearch');
 
-                    if (!checkboxes.length || !selectedList) return;
+                    if (!selectedList) return;
 
                     const updateSummary = () => {
-                        selectedList.innerHTML = '';
+                        const emptySummary = selectedList.querySelector('.empty-summary');
+                        const fragment = document.createDocumentFragment();
                         let total = 0, count = 0;
+
                         checkboxes.forEach(cb => {
+                            const card = cb.closest('.test-card-v2');
                             if (cb.checked) {
                                 count++;
                                 const price = parseFloat(cb.getAttribute('data-price'));
                                 total += price;
+                                if (card) card.classList.add('active');
+
                                 const item = document.createElement('div');
-                                item.className = 'd-flex justify-content-between align-items-center mb-2 small border-bottom pb-1';
-                                item.innerHTML = `<span>${cb.getAttribute('data-name')}</span><div class="d-flex align-items-center gap-2"><span class="fw-bold">Q${price.toFixed(2)}</span><i class="bi bi-x-circle text-danger cursor-pointer" onclick="document.getElementById('${cb.id}').click()"></i></div>`;
-                                selectedList.appendChild(item);
+                                item.className = 'd-flex justify-content-between align-items-center p-2 mb-2 bg-white border rounded shadow-sm animate-in';
+                                item.innerHTML = `
+                                    <div class="small">
+                                        <div class="fw-bold text-dark">${cb.getAttribute('data-name')}</div>
+                                        <div class="text-primary fw-bold">Q${price.toFixed(2)}</div>
+                                    </div>
+                                    <button type="button" class="btn btn-link text-danger p-0" onclick="document.getElementById('${cb.id}').click()">
+                                        <i class="bi bi-trash"></i>
+                                    </button>`;
+                                fragment.appendChild(item);
+                            } else {
+                                if (card) card.classList.remove('active');
                             }
                         });
-                        if (count === 0) selectedList.innerHTML = '<p class="fst-italic text-center py-2">Ninguna prueba seleccionada</p>';
+
+                        // Actualizar lista
+                        selectedList.innerHTML = '';
+                        if (count > 0) {
+                            selectedList.appendChild(fragment);
+                        } else {
+                            selectedList.innerHTML = `
+                                <div class="text-center py-5 text-muted empty-summary">
+                                    <i class="bi bi-cart-x fs-1 opacity-25"></i>
+                                    <p class="mt-2 small">No hay pruebas seleccionadas</p>
+                                </div>`;
+                        }
+
+                        // Actualizar totales
+                        const totalStr = `Q${total.toFixed(2)}`;
+                        if (subtotalElement) subtotalElement.textContent = totalStr;
+                        if (totalElement) totalElement.textContent = totalStr;
+                        countElements.forEach(el => el.textContent = count);
                         if (saveBtn) saveBtn.disabled = (count === 0);
-                        if (totalElement) totalElement.textContent = `Q${total.toFixed(2)}`;
                     };
 
-                    checkboxes.forEach(cb => cb.addEventListener('change', updateSummary));
+                    checkboxes.forEach(cb => {
+                        cb.addEventListener('change', updateSummary);
+                    });
 
                     if (saveBtn) {
                         saveBtn.addEventListener('click', async () => {
                             const form = document.getElementById('newLabOrderForm');
-                            const patientInput = document.getElementById('lab_paciente_input');
                             const patientHidden = document.getElementById('lab_id_paciente');
+                            const patientInput = document.getElementById('lab_paciente_input');
+
+                            if (!form || !patientHidden) return;
+
+                            if (!patientHidden.value) {
+                                Swal.fire('Aviso', 'Seleccione un paciente de la lista', 'warning');
+                                return;
+                            }
+
+                            if (!document.getElementById('lab_id_doctor').value) {
+                                Swal.fire('Aviso', 'Seleccione un doctor referente', 'warning');
+                                return;
+                            }
+
+                            const pruebas = [];
+                            document.querySelectorAll('.test-checkbox:checked').forEach(cb => pruebas.push(cb.value));
+
+                            if (pruebas.length === 0) {
+                                Swal.fire('Aviso', 'Seleccione al menos una prueba', 'warning');
+                                return;
+                            }
+
+                            const data = {
+                                id_paciente: patientHidden.value,
+                                id_doctor: document.getElementById('lab_id_doctor').value,
+                                observaciones: form.observaciones.value,
+                                pruebas: pruebas
+                            };
+
+                            const originalText = saveBtn.innerHTML;
+                            saveBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Procesando...';
+                            saveBtn.disabled = true;
+
+                            try {
+                                const response = await fetch('../laboratory/save_order.php', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(data)
+                                });
+                                const result = await response.json();
+                                if (result.status === 'success') {
+                                    Swal.fire({
+                                        title: '¡Orden Creada!',
+                                        text: 'La orden y el cobro se han generado correctamente.',
+                                        icon: 'success',
+                                        showCancelButton: true,
+                                        cancelButtonText: 'Cerrar',
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    throw new Error(result.message);
+                                }
+                            } catch (e) {
+                                Swal.fire('Error', e.message || 'Error al guardar orden', 'error');
+                            } finally {
+                                saveBtn.innerHTML = originalText;
+                                saveBtn.disabled = false;
+                            }
+                        });
+                    }
+
+                    // Lab test search filter optimizado
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function () {
+                            const term = this.value.toLowerCase().trim();
+                            const items = document.querySelectorAll('.test-item');
+                            const categories = document.querySelectorAll('.category-container');
+
+                            items.forEach(item => {
+                                const name = item.getAttribute('data-name');
+                                item.classList.toggle('d-none', !name.includes(term));
+                            });
+
+                            categories.forEach(cat => {
+                                const visibleItems = cat.querySelectorAll('.test-item:not(.d-none)');
+                                cat.classList.toggle('d-none', visibleItems.length === 0);
+                            });
+                        });
+                    }
+
+                    // Auxiliar para el datalist de pacientes
+                    const labPatientInput = document.getElementById('lab_paciente_input');
+                    if (labPatientInput) {
+                        labPatientInput.addEventListener('change', function () {
                             const datalist = document.getElementById('labDatalistOptions');
+                            const val = this.value;
+                            const hidden = document.getElementById('lab_id_paciente');
+                            hidden.value = '';
+
+                            for (let option of datalist.options) {
+                                if (option.value === val) {
+                                    hidden.value = option.getAttribute('data-id');
+                                    break;
+                                }
+                            }
+                        });
+                    }
+                }
+
+                setupUltrasoundHandlers() {
+                    const select = document.getElementById('ultrasoundSelect');
+                    const amountInput = document.getElementById('ultrasound_amount');
+                    const saveBtn = document.getElementById('saveUltrasoundBtn');
+
+                    if (!select || !amountInput) return;
+
+                    // Update price on select
+                    select.addEventListener('change', () => {
+                        const option = select.options[select.selectedIndex];
+                        const price = option.getAttribute('data-price');
+                        if (price === 'Manual') {
+                            amountInput.value = '';
+                            amountInput.readOnly = false;
+                            amountInput.placeholder = 'Ingrese monto...';
+                        } else if (price) {
+                            amountInput.value = parseFloat(price).toFixed(2);
+                            amountInput.readOnly = true;
+                        } else {
+                            amountInput.value = '';
+                        }
+                    });
+
+                    if (saveBtn) {
+                        saveBtn.addEventListener('click', async () => {
+                            const form = document.getElementById('ultrasoundBillingForm');
+                            const patientInput = document.getElementById('ultrasound_patient_input');
+                            const patientHidden = document.getElementById('ultrasound_patient_id');
+                            const datalist = document.getElementById('ultrasoundPatientDatalist');
 
                             if (!form || !patientInput || !datalist) return;
 
@@ -3696,44 +4139,26 @@ try {
                                 return;
                             }
 
-                            const pruebas = [];
-                            document.querySelectorAll('.test-checkbox:checked').forEach(cb => pruebas.push(cb.value));
-
-                            const data = {
-                                id_paciente: patientHidden.value,
-                                id_doctor: document.getElementById('lab_id_doctor').value,
-                                observaciones: form.observaciones.value,
-                                pruebas: pruebas
-                            };
-
                             const originalText = saveBtn.innerHTML;
-                            saveBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Creando...';
+                            saveBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Guardando...';
                             saveBtn.disabled = true;
 
+                            const formData = new FormData(form);
+                            formData.append('patient_name', patientInput.value);
+
                             try {
-                                const response = await fetch('../laboratory/save_order.php', {
+                                const response = await fetch('api/save_ultrasound_charge.php', {
                                     method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(data)
+                                    body: formData
                                 });
                                 const result = await response.json();
-                                if (result.status === 'success') {
-                                    Swal.fire({
-                                        title: '¡Orden Creada!',
-                                        text: 'La orden se ha generado exitosamente.',
-                                        icon: 'success',
-                                        showCancelButton: true,
-                                        confirmButtonText: 'Ver PDF',
-                                        cancelButtonText: 'Cerrar'
-                                    }).then((res) => {
-                                        if (res.isConfirmed) window.open('../laboratory/print_order.php?id=' + result.id_orden, '_blank');
-                                        location.reload();
-                                    });
+                                if (result.success) {
+                                    Swal.fire('Éxito', 'Cobro registrado', 'success').then(() => location.reload());
                                 } else {
-                                    throw new Error(result.message);
+                                    throw new Error(result.error);
                                 }
                             } catch (e) {
-                                Swal.fire('Error', e.message || 'Error al guardar orden', 'error');
+                                Swal.fire('Error', e.message || 'Error de conexión', 'error');
                             } finally {
                                 saveBtn.innerHTML = originalText;
                                 saveBtn.disabled = false;
@@ -3935,6 +4360,307 @@ try {
 
     <!-- Inyectar script de mantenimiento de sesión activo (Global) -->
     <?php output_keep_alive_script(); ?>
+    <!-- Modal Cobro Procedimientos -->
+    <div class="modal fade" id="procedureBillingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-bandaid me-2"></i>Cobro de Procedimiento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="procedureBillingForm">
+                        <div class="mb-3">
+                            <label class="form-label">Paciente</label>
+                            <input class="form-control" list="procedurePatientDatalist" id="procedure_patient_input"
+                                placeholder="Buscar paciente..." required autocomplete="off">
+                            <datalist id="procedurePatientDatalist">
+                                <?php foreach ($pacientes as $paciente): ?>
+                                    <option data-id="<?php echo $paciente['id_paciente']; ?>"
+                                        value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
+                                    <?php endforeach; ?>
+                            </datalist>
+                            <input type="hidden" id="procedure_patient_id" name="patient_id">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Procedimiento</label>
+                            <select class="form-select" id="procedureSelect" name="procedure" required
+                                onchange="updateProcedurePrice()">
+                                <option value="">Seleccione...</option>
+                                <option value="Inyeccion">Inyección</option>
+                                <option value="Toma de Presion">Toma de Presión</option>
+                                <option value="Glucometria">Glucometría</option>
+                                <option value="Unicotomia">Unicotomía</option>
+                                <option value="Lavado de Oido">Lavado de Oído</option>
+                                <option value="Colacacion de Sonda Foley">Colocación de Sonda Foley</option>
+                                <option value="Canalizacion con Solucion">Canalización con Solución</option>
+                                <option value="Canalizacion con Stopper">Canalización con Stopper</option>
+                                <option value="Sutura 1-5 pts">Sutura 1-5 pts</option>
+                                <option value="Sutura 6-10 pts">Sutura 6-10 pts</option>
+                                <option value="Sutura 11-15 pts">Sutura 11-15 pts</option>
+                                <option value="Nebulizacion">Nebulización</option>
+                                <option value="Curacion de herida">Curación de Herida</option>
+                                <option value="Retiro de Puntos">Retiro de Puntos</option>
+                                <option value="Suero Vitaminado">Suero Vitaminado</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Horario</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="schedule_type" id="scheduleHabil"
+                                    value="habil" checked onchange="updateProcedurePrice()">
+                                <label class="btn btn-outline-primary" for="scheduleHabil">Hábil</label>
+
+                                <input type="radio" class="btn-check" name="schedule_type" id="scheduleInhabil"
+                                    value="inhabil" onchange="updateProcedurePrice()">
+                                <label class="btn btn-outline-primary" for="scheduleInhabil">Inhábil</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Precio (Q)</label>
+                            <input type="number" class="form-control" name="amount" id="procedurePrice" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tipo de Pago</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="proc_tipo_pago" id="proc_pago_efectivo"
+                                    value="Efectivo" checked autocomplete="off">
+                                <label class="btn btn-outline-primary" for="proc_pago_efectivo">
+                                    <i class="bi bi-cash me-1"></i>Efectivo
+                                </label>
+
+                                <input type="radio" class="btn-check" name="proc_tipo_pago" id="proc_pago_transferencia"
+                                    value="Transferencia" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="proc_pago_transferencia">
+                                    <i class="bi bi-bank me-1"></i>Transferencia
+                                </label>
+
+                                <input type="radio" class="btn-check" name="proc_tipo_pago" id="proc_pago_tarjeta"
+                                    value="Tarjeta" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="proc_pago_tarjeta">
+                                    <i class="bi bi-credit-card me-1"></i>Tarjeta
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="submitProcedureBilling()">Cobrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Ultrasonido -->
+    <div class="modal fade" id="ultrasoundBillingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-activity me-2"></i>Cobro de Ultrasonido</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="ultrasoundBillingForm">
+                        <div class="mb-3">
+                            <label class="form-label">Paciente</label>
+                            <input class="form-control" list="ultrasoundPatientDatalist" id="ultrasound_patient_input"
+                                placeholder="Buscar paciente..." required autocomplete="off">
+                            <datalist id="ultrasoundPatientDatalist">
+                                <?php foreach ($pacientes as $paciente): ?>
+                                    <option data-id="<?php echo $paciente['id_paciente']; ?>"
+                                        value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
+                                    <?php endforeach; ?>
+                            </datalist>
+                            <input type="hidden" id="ultrasound_patient_id" name="patient_id">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Ultrasonido</label>
+                            <select class="form-select" id="ultrasoundSelect" name="ultrasound_type" required>
+                                <option value="">Seleccione...</option>
+                                <option value="ABDOMINAL SUPERIOR" data-price="300.00">ABDOMINAL SUPERIOR
+                                </option>
+                                <option value="CADERA" data-price="500.00">CADERA</option>
+                                <option value="CUELLO O TIROIDEO" data-price="500.00">CUELLO O TIROIDEO
+                                </option>
+                                <option value="HOMBRO" data-price="500.00">HOMBRO</option>
+                                <option value="MUÑECA" data-price="500.00">MUÑECA</option>
+                                <option value="INGUINAL" data-price="500.00">INGUINAL</option>
+                                <option value="OBSTETRICO" data-price="300.00">OBSTETRICO</option>
+                                <option value="ABDOMINAL SUPERIOR (PELVICO)" data-price="300.00">ABDOMINAL SUPERIOR
+                                    (PELVICO)</option>
+                                <option value="ABDOMEN INFERIOR + FID" data-price="300.00">ABDOMEN INFERIOR + FID
+                                </option>
+                                <option value="ABDOMINAL COMPLETO" data-price="300.00">ABDOMINAL COMPLETO
+                                </option>
+                                <option value="ABDOMINAL PEDIATRICO MENORES A 2" data-price="600.00">ABDOMINAL
+                                    PEDIATRICO MENORES A 2</option>
+                                <option value="ABDOMINAL PEDIATRICO" data-price="450.00">ABDOMINAL PEDIATRICO
+                                </option>
+                                <option value="ABDOMINAL SUPERIOR + FID" data-price="350.00">ABDOMINAL SUPERIOR + FID
+                                </option>
+                                <option value="AMBAS RODILLAS" data-price="1000.00">AMBAS RODILLAS</option>
+                                <option value="RODILLA" data-price="500.00">RODILLA</option>
+                                <option value="DOPPLER ARTERIAL UNA EXTREMIDAD" data-price="700.00">DOPPLER ARTERIAL UNA
+                                    EXTREMIDAD</option>
+                                <option value="DOPPLER CAROTIDEO" data-price="700.00">DOPPLER CAROTIDEO</option>
+                                <option value="DOPPLER VENOSO UNA EXTREMIDAD" data-price="700.00">DOPPLER VENOSO UNA
+                                    EXTREMIDAD</option>
+                                <option value="ENDOVAGINAL" data-price="350.00">ENDOVAGINAL</option>
+                                <option value="GUIA ECOGRAFICA PARA BIOPSIA" data-price="590.00">GUIA ECOGRAFICA PARA
+                                    BIOPSIA</option>
+                                <option value="GUIA ECOGRAFICA PARA DRENAJE DE A" data-price="500.00">GUIA ECOGRAFICA
+                                    PARA DRENAJE DE A</option>
+                                <option value="GUIA PARA PARACENTESIS" data-price="400.00">GUIA PARA PARACENTESIS
+                                </option>
+                                <option value="HEPATICO Y VIAS BILIARES" data-price="380.00">HEPATICO Y VIAS BILIARES
+                                </option>
+                                <option value="HEPATICO Y VIAS BILIARES PEDIATRICO" data-price="350.00">HEPATICO Y VIAS
+                                    BILIARES PEDIATRICO</option>
+                                <option value="RIÑON- ESCROTAL" data-price="350.00">RIÑON- ESCROTAL</option>
+                                <option value="MAMARIO" data-price="500.00">MAMARIO</option>
+                                <option value="MUSCULAR PARTES BLANDAS" data-price="500.00">MUSCULAR PARTES BLANDAS
+                                </option>
+                                + <option value="obstetrico" data-price="250.00">obstetrico</option>
+                                <option value="OBSTETRICO GEMELAR" data-price="400.00">OBSTETRICO GEMELAR</option>
+                                <option value="PARED ABDOMINAL E INGUINAL" data-price="500.00">PARED ABDOMINAL E
+                                    INGUINAL</option>
+                                <option value="PERICARDIO" data-price="350.00">PERICARDIO</option>
+                                <option value="PILORO" data-price="250.00">PILORO</option>
+                                <option value="PROSTATICO" data-price="250.00">PROSTATICO</option>
+                                <option value="PROSTATICO ENDORECTAL" data-price="350.00">PROSTATICO ENDORECTAL
+                                </option>
+                                <option value="RENAL PEDIATRICO MENORA 2 AÑOS" data-price="300.00">RENAL PEDIATRICO
+                                    MENORA 2 AÑOS</option>
+                                <option value="RENAL" data-price="250.00">RENAL</option>
+                                <option value="renal y vias urinarias" data-price="450.00">renal y vias urinarias
+                                </option>
+                                <option value="TEJIDOS BLANDOS - MUSCULAR" data-price="Manual">TEJIDOS BLANDOS -
+                                    MUSCULAR</option>
+                                <option value="TENDON DE AQUILES" data-price="500.00">TENDON DE AQUILES</option>
+                                <option value="TESTICULAR O ESCROTAL" data-price="500.00">TESTICULAR O ESCROTAL
+                                </option>
+                                <option value="TRANSFONELAR" data-price="Manual">TRANSFONELAR</option>
+                                <option value="6D" data-price="Manual">6D</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Monto a Cobrar (Q)</label>
+                            <input type="number" class="form-control" id="ultrasound_amount" name="amount" readonly
+                                step="0.01" placeholder="0.00">
+                            <small class="text-muted">El monto se actualiza al seleccionar el tipo</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Pago</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="tipo_pago" id="ultrasound_pago_efectivo"
+                                    value="Efectivo" checked autocomplete="off">
+                                <label class="btn btn-outline-info" for="ultrasound_pago_efectivo">
+                                    <i class="bi bi-cash me-1"></i>Efectivo
+                                </label>
+                                <input type="radio" class="btn-check" name="tipo_pago"
+                                    id="ultrasound_pago_transferencia" value="Transferencia" autocomplete="off">
+                                <label class="btn btn-outline-info" for="ultrasound_pago_transferencia">
+                                    <i class="bi bi-bank me-1"></i>Transferencia
+                                </label>
+                                <input type="radio" class="btn-check" name="ultrasound_tipo_pago"
+                                    id="ultrasound_pago_tarjeta" value="Tarjeta" autocomplete="off">
+                                <label class="btn btn-outline-info" for="ultrasound_pago_tarjeta">
+                                    <i class="bi bi-credit-card me-1"></i>Tarjeta
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-info" id="saveUltrasoundBtn">Guardar Cobro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const procedurePrices = {
+            'Inyeccion': { habil: 5, inhabil: 10 },
+            'Toma de Presion': { habil: 5, inhabil: 10 },
+            'Glucometria': { habil: 25, inhabil: 30 },
+            'Unicotomia': { habil: 125, inhabil: 150 },
+            'Lavado de Oido': { habil: 100, inhabil: 150 },
+            'Colacacion de Sonda Foley': { habil: 200, inhabil: 250 },
+            'Canalizacion con Solucion': { habil: 175, inhabil: 250 },
+            'Canalizacion con Stopper': { habil: 75, inhabil: 125 },
+            'Sutura 1-5 pts': { habil: 300, inhabil: 400 },
+            'Sutura 6-10 pts': { habil: 500, inhabil: 650 },
+            'Sutura 11-15 pts': { habil: 750, inhabil: 900 },
+            'Nebulizacion': { habil: 40, inhabil: 65 },
+            'Curacion de herida': { habil: 100, inhabil: 150 },
+            'Retiro de Puntos': { habil: 50, inhabil: 100 },
+            'Suero Vitaminado': { habil: 800, inhabil: 1100 }
+        };
+
+        function updateProcedurePrice() {
+            const procedure = document.getElementById('procedureSelect').value;
+            const isHabil = document.getElementById('scheduleHabil').checked;
+            const priceField = document.getElementById('procedurePrice');
+
+            if (procedure && procedurePrices[procedure]) {
+                const price = isHabil ? procedurePrices[procedure].habil : procedurePrices[procedure].inhabil;
+                priceField.value = price.toFixed(2);
+            } else {
+                priceField.value = '';
+            }
+        }
+
+        function submitProcedureBilling() {
+            const form = document.getElementById('procedureBillingForm');
+            const patientInput = document.getElementById('procedure_patient_input');
+            const patientHidden = document.getElementById('procedure_patient_id');
+            const datalist = document.getElementById('procedurePatientDatalist');
+            const procedure = document.getElementById('procedureSelect').value;
+
+            // Validar paciente seleccionado del datalist
+            patientHidden.value = '';
+            const val = patientInput.value;
+            const options = datalist.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === val) {
+                    patientHidden.value = options[i].getAttribute('data-id');
+                    break;
+                }
+            }
+
+            if (!patientHidden.value) {
+                Swal.fire('Aviso', 'Por favor seleccione un paciente válido de la lista', 'warning');
+                return;
+            }
+
+            if (!procedure) {
+                Swal.fire('Aviso', 'Por favor seleccione un procedimiento', 'warning');
+                return;
+            }
+
+            const formData = new FormData(form);
+
+            fetch('api/save_procedure_charge.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Éxito', 'Cobro registrado exitosamente', 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', data.message || 'Error desconocido', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Error al procesar el cobro', 'error');
+                });
+        }
+    </script>
 </body>
 
 </html>

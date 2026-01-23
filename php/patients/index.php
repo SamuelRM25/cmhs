@@ -1532,75 +1532,77 @@ try {
             </div>
 
             <!-- Estadísticas principales -->
-            <div class="stats-grid">
-                <!-- Total de pacientes -->
-                <div class="stat-card animate-in delay-1" onclick="filterPatients('all')">
-                    <div class="stat-header">
-                        <div>
-                            <div class="stat-title">Total Pacientes</div>
-                            <div class="stat-value"><?php echo $total_patients; ?></div>
+            <?php if ($user_type === 'admin'): ?>
+                <div class="stats-grid">
+                    <!-- Total de pacientes -->
+                    <div class="stat-card animate-in delay-1" onclick="filterPatients('all')">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-title">Total Pacientes</div>
+                                <div class="stat-value"><?php echo $total_patients; ?></div>
+                            </div>
+                            <div class="stat-icon primary">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
                         </div>
-                        <div class="stat-icon primary">
-                            <i class="bi bi-people-fill"></i>
+                        <div class="stat-change positive">
+                            <i class="bi bi-arrow-up-right"></i>
+                            <span>Registrados en sistema</span>
                         </div>
                     </div>
-                    <div class="stat-change positive">
-                        <i class="bi bi-arrow-up-right"></i>
-                        <span>Registrados en sistema</span>
-                    </div>
-                </div>
 
-                <!-- Pacientes con citas -->
-                <div class="stat-card animate-in delay-2" onclick="filterPatients('with_appointments')">
-                    <div class="stat-header">
-                        <div>
-                            <div class="stat-title">Con Citas</div>
-                            <div class="stat-value"><?php echo $patients_with_appointments; ?></div>
+                    <!-- Pacientes con citas -->
+                    <div class="stat-card animate-in delay-2" onclick="filterPatients('with_appointments')">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-title">Con Citas</div>
+                                <div class="stat-value"><?php echo $patients_with_appointments; ?></div>
+                            </div>
+                            <div class="stat-icon success">
+                                <i class="bi bi-calendar-check"></i>
+                            </div>
                         </div>
-                        <div class="stat-icon success">
-                            <i class="bi bi-calendar-check"></i>
+                        <div class="stat-change positive">
+                            <i class="bi bi-person-check"></i>
+                            <span>Con historial de citas</span>
                         </div>
                     </div>
-                    <div class="stat-change positive">
-                        <i class="bi bi-person-check"></i>
-                        <span>Con historial de citas</span>
-                    </div>
-                </div>
 
-                <!-- Pacientes sin historial -->
-                <div class="stat-card animate-in delay-3" onclick="filterPatients('without_history')">
-                    <div class="stat-header">
-                        <div>
-                            <div class="stat-title">Sin Historial</div>
-                            <div class="stat-value"><?php echo $patients_without_history; ?></div>
+                    <!-- Pacientes sin historial -->
+                    <div class="stat-card animate-in delay-3" onclick="filterPatients('without_history')">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-title">Sin Historial</div>
+                                <div class="stat-value"><?php echo $patients_without_history; ?></div>
+                            </div>
+                            <div class="stat-icon warning">
+                                <i class="bi bi-person-x"></i>
+                            </div>
                         </div>
-                        <div class="stat-icon warning">
-                            <i class="bi bi-person-x"></i>
+                        <div class="stat-change positive">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <span>Requieren primera consulta</span>
                         </div>
                     </div>
-                    <div class="stat-change positive">
-                        <i class="bi bi-exclamation-triangle"></i>
-                        <span>Requieren primera consulta</span>
-                    </div>
-                </div>
 
-                <!-- Activos hoy -->
-                <div class="stat-card animate-in delay-4" onclick="filterPatients('active_today')">
-                    <div class="stat-header">
-                        <div>
-                            <div class="stat-title">Activos Hoy</div>
-                            <div class="stat-value"><?php echo $active_today; ?></div>
+                    <!-- Activos hoy -->
+                    <div class="stat-card animate-in delay-4" onclick="filterPatients('active_today')">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-title">Activos Hoy</div>
+                                <div class="stat-value"><?php echo $active_today; ?></div>
+                            </div>
+                            <div class="stat-icon info">
+                                <i class="bi bi-activity"></i>
+                            </div>
                         </div>
-                        <div class="stat-icon info">
-                            <i class="bi bi-activity"></i>
+                        <div class="stat-change positive">
+                            <i class="bi bi-calendar-day"></i>
+                            <span>Atendidos hoy</span>
                         </div>
-                    </div>
-                    <div class="stat-change positive">
-                        <i class="bi bi-calendar-day"></i>
-                        <span>Atendidos hoy</span>
                     </div>
                 </div>
-            </div>
+            <?php endif; ?>
 
             <!-- Barra de búsqueda y acciones -->
             <section class="appointments-section animate-in delay-1">
@@ -1764,10 +1766,12 @@ try {
                                         </td>
                                         <td>
                                             <div class="action-buttons">
-                                                <a href="medical_history.php?id=<?php echo $patient['id_paciente']; ?>"
-                                                    class="btn-icon history" title="Historial Clínico">
-                                                    <i class="bi bi-clipboard2-pulse"></i>
-                                                </a>
+                                                <?php if ($user_type === 'admin'): ?>
+                                                    <a href="medical_history.php?id=<?php echo $patient['id_paciente']; ?>"
+                                                        class="btn-icon history" title="Historial Clínico">
+                                                        <i class="bi bi-clipboard2-pulse"></i>
+                                                    </a>
+                                                <?php endif; ?>
                                                 <button type="button" class="btn-icon appointment" title="Nueva Cita"
                                                     onclick="quickAppointment(<?php echo $patient['id_paciente']; ?>, '<?php echo htmlspecialchars($patient['nombre']); ?>', '<?php echo htmlspecialchars($patient['apellido']); ?>')">
                                                     <i class="bi bi-calendar-plus"></i>
@@ -1825,8 +1829,14 @@ try {
 
                         <div class="form-group">
                             <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento *</label>
-                            <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" class="form-input"
-                                required>
+                            <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" class="form-input" required
+                                onchange="calculateAge(this.value)">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edad_display" class="form-label">Edad Actual</label>
+                            <input type="text" id="edad_display" class="form-input" readonly
+                                placeholder="Calculada automáticamente...">
                         </div>
 
                         <div class="form-group">
@@ -2214,6 +2224,18 @@ try {
             window.closeModal = function (modalId) {
                 document.getElementById(modalId).classList.remove('active');
                 document.body.style.overflow = '';
+            };
+
+            window.calculateAge = function (birthDate) {
+                if (!birthDate) return;
+                const today = new Date();
+                const birth = new Date(birthDate);
+                let age = today.getFullYear() - birth.getFullYear();
+                const m = today.getMonth() - birth.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                    age--;
+                }
+                document.getElementById('edad_display').value = age + (age === 1 ? ' año' : ' años');
             };
 
             window.filterPatients = function (filterType) {

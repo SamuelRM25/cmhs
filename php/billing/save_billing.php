@@ -53,9 +53,11 @@ try {
     }
 
     // 2. Insertar el cobro
+    $tipo_pago = !empty($data['tipo_pago']) ? $data['tipo_pago'] : 'Efectivo';
+
     $stmt = $conn->prepare("
-        INSERT INTO cobros (paciente_cobro, cantidad_consulta, fecha_consulta, id_doctor, tipo_consulta) 
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO cobros (paciente_cobro, cantidad_consulta, fecha_consulta, id_doctor, tipo_consulta, tipo_pago) 
+        VALUES (?, ?, ?, ?, ?, ?)
     ");
 
     $stmt->execute([
@@ -63,7 +65,8 @@ try {
         $cantidad,
         $fecha,
         $id_doctor,
-        $tipo_consulta
+        $tipo_consulta,
+        $tipo_pago
     ]);
 
     echo json_encode(['status' => 'success', 'message' => 'Cobro guardado correctamente']);

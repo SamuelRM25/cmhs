@@ -1570,7 +1570,7 @@ try {
         <!-- Contenido Principal -->
         <main class="main-content">
             <!-- Notificación de compras pendientes -->
-            <?php if ($pending_receipt > 0): ?>
+            <?php if ($pending_purchases > 0 && $_SESSION['user_id'] == 6): ?>
                 <div class="alert-card mb-4 animate-in delay-1">
                     <div class="alert-header">
                         <div class="alert-icon warning">
@@ -1608,6 +1608,7 @@ try {
             </div>
 
             <!-- Estadísticas principales -->
+            <?php if ($user_type === 'admin'): ?>
             <div class="stats-grid">
                 <!-- Total de items -->
                 <div class="stat-card animate-in delay-1">
@@ -1677,6 +1678,7 @@ try {
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
             <!-- Barra de búsqueda y acciones -->
             <div class="appointments-section animate-in delay-1">
@@ -1741,6 +1743,7 @@ try {
             </div>
 
             <!-- Verificador de Precios -->
+            <?php if ($user_type === 'user'): ?>
             <div class="appointments-section animate-in delay-1 mb-4">
                 <div class="section-header mb-0">
                     <h3 class="section-title">
@@ -1790,6 +1793,7 @@ try {
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
             <!-- Tabla de inventario -->
             <section class="appointments-section animate-in delay-2">
