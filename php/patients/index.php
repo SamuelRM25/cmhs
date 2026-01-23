@@ -31,6 +31,14 @@ try {
     // Título de la página
     $page_title = "Gestión de Pacientes - Centro Médico Herrera Saenz";
 
+    // Obtener parámetros de ordenamiento
+    $sort = $_GET['sort'] ?? 'name';
+    $order_clause = "p.nombre, p.apellido"; // Default
+
+    if ($sort === 'recent') {
+        $order_clause = "p.id_paciente DESC";
+    }
+
     // Consulta optimizada según tipo de usuario
     if ($user_type === 'doc') {
         // Pacientes atendidos por este médico
@@ -45,7 +53,7 @@ try {
                 WHERE medico_responsable LIKE ?
             )
             GROUP BY p.id_paciente
-            ORDER BY p.apellido, p.nombre
+            ORDER BY $order_clause
         ");
         $doctor_name = $_SESSION['nombre'] . ' ' . $_SESSION['apellido'];
         $stmt->execute([$user_id, '%' . $doctor_name . '%']);
@@ -58,7 +66,7 @@ try {
             FROM pacientes p
             LEFT JOIN citas c ON (p.nombre = c.nombre_pac AND p.apellido = c.apellido_pac)
             GROUP BY p.id_paciente
-            ORDER BY p.apellido, p.nombre
+            ORDER BY $order_clause
         ");
         $stmt->execute();
     }
@@ -803,6 +811,54 @@ try {
             background: var(--color-info);
             color: white;
             border-color: var(--color-info);
+        }
+
+        .btn-icon.edit:hover {
+            background: var(--color-warning);
+            color: white;
+            border-color: var(--color-warning);
+        }
+
+        /* Sort buttons */
+        .sort-controls {
+            display: flex;
+            gap: var(--space-sm);
+            align-items: center;
+        }
+
+        .sort-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-sm) var(--space-md);
+            background: var(--color-surface);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            font-size: var(--font-size-sm);
+            text-decoration: none;
+            transition: all var(--transition-base);
+            cursor: pointer;
+        }
+
+        .sort-btn:hover {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .sort-btn.active {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .sort-btn i {
+            font-size: 1rem;
         }
 
         /* Estado vacío */
@@ -1611,10 +1667,23 @@ try {
                         <i class="bi bi-search section-title-icon"></i>
                         Buscar Pacientes
                     </h3>
-                    <button type="button" class="action-btn" id="newPatientButton">
-                        <i class="bi bi-person-plus"></i>
-                        Nuevo Paciente
-                    </button>
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                        <div class="sort-controls">
+                            <span class="text-muted" style="font-size: 0.875rem; font-weight: 500;">Ordenar:</span>
+                            <a href="?sort=name" class="sort-btn <?php echo $sort === 'name' || !isset($_GET['sort']) ? 'active' : ''; ?>">
+                                <i class="bi bi-sort-alpha-down"></i>
+                                Alfabético
+                            </a>
+                            <a href="?sort=recent" class="sort-btn <?php echo $sort === 'recent' ? 'active' : ''; ?>">
+                                <i class="bi bi-clock-history"></i>
+                                Recientes
+                            </a>
+                        </div>
+                        <button type="button" class="action-btn" id="newPatientButton">
+                            <i class="bi bi-person-plus"></i>
+                            Nuevo Paciente
+                        </button>
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -1689,12 +1758,16 @@ try {
                                     ?>
                                     <tr class="patient-row" data-id="<?php echo $patient['id_paciente']; ?>"
                                         data-name="<?php echo htmlspecialchars(strtolower(($patient['nombre'] ?? '') . ' ' . ($patient['apellido'] ?? ''))); ?>"
+                                        data-raw-nombre="<?php echo htmlspecialchars($patient['nombre'] ?? ''); ?>"
+                                        data-raw-apellido="<?php echo htmlspecialchars($patient['apellido'] ?? ''); ?>"
                                         data-phone="<?php echo htmlspecialchars(strtolower($patient['telefono'] ?? '')); ?>"
                                         data-email="<?php echo htmlspecialchars(strtolower($patient['correo'] ?? '')); ?>"
+                                        data-direction="<?php echo htmlspecialchars($patient['direccion'] ?? ''); ?>"
                                         data-has-appointments="<?php echo $has_appointments ? 'true' : 'false'; ?>"
                                         data-has-history="<?php echo $has_history ? 'true' : 'false'; ?>"
                                         data-active-today="<?php echo $active_today ? 'true' : 'false'; ?>"
-                                        data-gender="<?php echo htmlspecialchars(strtolower($patient['genero'] ?? '')); ?>">
+                                        data-gender="<?php echo htmlspecialchars($patient['genero'] ?? ''); ?>"
+                                        data-birth="<?php echo htmlspecialchars($patient['fecha_nacimiento'] ?? ''); ?>">
                                         <td>
                                             <div class="patient-cell">
                                                 <div class="patient-avatar">
@@ -1766,6 +1839,10 @@ try {
                                         </td>
                                         <td>
                                             <div class="action-buttons">
+                                                <button type="button" class="btn-icon edit" title="Editar Información"
+                                                    onclick="editPatient(this)">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
                                                 <?php if ($user_type === 'admin'): ?>
                                                     <a href="medical_history.php?id=<?php echo $patient['id_paciente']; ?>"
                                                         class="btn-icon history" title="Historial Clínico">
@@ -1813,6 +1890,7 @@ try {
                 </button>
             </div>
             <form id="newPatientForm" action="save_patient.php" method="POST">
+                <input type="hidden" id="edit_id_paciente" name="id_paciente">
                 <div class="custom-modal-body">
                     <div class="form-grid">
                         <div class="form-group">
@@ -1877,7 +1955,7 @@ try {
                     <button type="button" class="btn-outline" onclick="closeModal('newPatientModal')">
                         Cancelar
                     </button>
-                    <button type="submit" class="action-btn">
+                    <button type="submit" class="action-btn" id="modalSubmitBtn">
                         Guardar Paciente
                     </button>
                 </div>
@@ -2182,9 +2260,41 @@ try {
                     if (modal) {
                         modal.classList.remove('active');
                         document.body.style.overflow = '';
+                        // Reset form if it was editing
+                        if (modalId === 'newPatientModal') {
+                            document.getElementById('edit_id_paciente').value = '';
+                            document.querySelector('#newPatientModal .custom-modal-title').innerHTML = '<i class="bi bi-person-plus"></i> Nuevo Paciente';
+                            document.getElementById('modalSubmitBtn').textContent = 'Guardar Paciente';
+                            document.getElementById('newPatientForm').reset();
+                            document.getElementById('edad_display').value = '';
+                        }
                     }
                 }
             }
+
+            window.editPatient = function (btn) {
+                const row = btn.closest('tr');
+                const p = row.dataset;
+
+                document.getElementById('edit_id_paciente').value = p.id;
+                document.getElementById('nombre').value = p.rawNombre;
+                document.getElementById('apellido').value = p.rawApellido;
+                document.getElementById('fecha_nacimiento').value = p.birth;
+                document.getElementById('genero').value = p.gender;
+                document.getElementById('telefono').value = p.phone;
+                document.getElementById('correo').value = p.email;
+                document.getElementById('direccion').value = p.direction;
+
+                // Actualizar UI del modal
+                document.querySelector('#newPatientModal .custom-modal-title').innerHTML = '<i class="bi bi-pencil-square"></i> Editar Paciente';
+                document.getElementById('modalSubmitBtn').textContent = 'Actualizar Paciente';
+
+                // Calcular edad
+                if (p.birth) window.calculateAge(p.birth);
+
+                // Abrir modal
+                window.dashboard.components.openModal('newPatientModal');
+            };
 
             // ==========================================================================
             // INICIALIZACIÓN DE LA APLICACIÓN
