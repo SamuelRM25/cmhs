@@ -30,13 +30,33 @@ try {
 
     $methods = ['Efectivo', 'Tarjeta', 'Transferencia'];
 
-    // Function to get totals by payment method from any table
-    $getTotals = function ($conn, $table, $column_amount, $column_date, $start, $end, $column_pago = 'tipo_pago') use ($methods) {
+    // Updated helper to get totals with optional where clause and DATE support
+    $getTotals = function ($conn, $table, $column_amount, $column_date, $start, $end, $column_pago = 'tipo_pago', $extra_where = '') use ($methods, $shift, $date) {
         $results = [];
         $total = 0;
         foreach ($methods as $method) {
-            $stmt = $conn->prepare("SELECT SUM($column_amount) FROM $table WHERE $column_date BETWEEN ? AND ? AND $column_pago = ?");
-            $stmt->execute([$start, $end, $method]);
+            $sql = "SELECT SUM($column_amount) FROM $table WHERE $column_pago = ?";
+            $params = [$method];
+
+            // If it's a morning shift, we also include records that are DATE only (interpreted as 00:00:00) 
+            // matching the selected day, to handle legacy or non-timestamped data.
+            if ($shift === 'morning') {
+                $sql .= " AND ($column_date BETWEEN ? AND ? OR DATE($column_date) = ?)";
+                $params[] = $start;
+                $params[] = $end;
+                $params[] = $date;
+            } else {
+                $sql .= " AND $column_date BETWEEN ? AND ?";
+                $params[] = $start;
+                $params[] = $end;
+            }
+
+            if ($extra_where) {
+                $sql .= " AND $extra_where";
+            }
+
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($params);
             $val = (float) ($stmt->fetchColumn() ?: 0);
             $results[$method] = $val;
             $total += $val;
@@ -52,15 +72,23 @@ try {
     $consultations_total = 0;
 
     // Get all doctors who made charges in this period
-    $stmt_docs = $conn->prepare("
-        SELECT DISTINCT u.idUsuario, u.nombre, u.apellido 
-        FROM cobros c
-        JOIN usuarios u ON c.id_doctor = u.idUsuario
-        WHERE c.fecha_consulta BETWEEN ? AND ?
-    ");
-    // For cobros, it seems it might be date only or datetime depending on implementation. 
-    // We'll use the same range but cast to date if needed, or assume it stores datetime now.
-    $stmt_docs->execute([$start_datetime, $end_datetime]);
+    // We use the same DATE() fallback for morning shift to find doctors with legacy entries
+    $doc_query = "SELECT DISTINCT u.idUsuario, u.nombre, u.apellido 
+                  FROM cobros c
+                  JOIN usuarios u ON c.id_doctor = u.idUsuario
+                  WHERE ";
+    $doc_params = [];
+
+    if ($shift === 'morning') {
+        $doc_query .= "(c.fecha_consulta BETWEEN ? AND ? OR DATE(c.fecha_consulta) = ?)";
+        $doc_params = [$start_datetime, $end_datetime, $date];
+    } else {
+        $doc_query .= "c.fecha_consulta BETWEEN ? AND ?";
+        $doc_params = [$start_datetime, $end_datetime];
+    }
+
+    $stmt_docs = $conn->prepare($doc_query);
+    $stmt_docs->execute($doc_params);
     $doctors = $stmt_docs->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($doctors as $doc) {
@@ -68,8 +96,22 @@ try {
         $doc_data = [];
         $doc_total = 0;
         foreach ($methods as $method) {
-            $stmt = $conn->prepare("SELECT SUM(cantidad_consulta) FROM cobros WHERE fecha_consulta BETWEEN ? AND ? AND id_doctor = ? AND tipo_pago = ?");
-            $stmt->execute([$start_datetime, $end_datetime, $doc['idUsuario'], $method]);
+            $q = "SELECT SUM(cantidad_consulta) FROM cobros WHERE id_doctor = ? AND tipo_pago = ?";
+            $p = [$doc['idUsuario'], $method];
+
+            if ($shift === 'morning') {
+                $q .= " AND (fecha_consulta BETWEEN ? AND ? OR DATE(fecha_consulta) = ?)";
+                $p[] = $start_datetime;
+                $p[] = $end_datetime;
+                $p[] = $date;
+            } else {
+                $q .= " AND fecha_consulta BETWEEN ? AND ?";
+                $p[] = $start_datetime;
+                $p[] = $end_datetime;
+            }
+
+            $stmt = $conn->prepare($q);
+            $stmt->execute($p);
             $val = (float) ($stmt->fetchColumn() ?: 0);
             $doc_data[$method] = $val;
             $doc_total += $val;
@@ -83,15 +125,18 @@ try {
     }
 
     // 3. Laboratories (examenes_realizados)
-    $lab = $getTotals($conn, 'examenes_realizados', 'cobro', 'fecha_examen', $start_datetime, $end_datetime);
+    // Filter out Ultrasound and X-Ray from general laboratory
+    $lab_extra = "tipo_examen NOT LIKE '%ultrasonido%' AND tipo_examen NOT LIKE '%rayos x%' AND tipo_examen NOT LIKE '%rx%'";
+    $lab = $getTotals($conn, 'examenes_realizados', 'cobro', 'fecha_examen', $start_datetime, $end_datetime, 'tipo_pago', $lab_extra);
 
     // 4. Minor Procedures (procedimientos_menores)
     $procedures = $getTotals($conn, 'procedimientos_menores', 'cobro', 'fecha_procedimiento', $start_datetime, $end_datetime);
 
-    // 5. Ultrasound & 6. X-Rays (Placeholder tables if they exist, or using cobros with special flags)
-    // For now we use the same structure even if 0
-    $ultrasound = $getTotals($conn, 'cobros', '0', 'fecha_consulta', $start_datetime, $end_datetime); // Placeholder
-    $xray = $getTotals($conn, 'cobros', '0', 'fecha_consulta', $start_datetime, $end_datetime); // Placeholder
+    // 5. Ultrasound
+    $ultrasound = $getTotals($conn, 'examenes_realizados', 'cobro', 'fecha_examen', $start_datetime, $end_datetime, 'tipo_pago', "tipo_examen LIKE '%ultrasonido%'");
+
+    // 6. X-Rays
+    $xray = $getTotals($conn, 'examenes_realizados', 'cobro', 'fecha_examen', $start_datetime, $end_datetime, 'tipo_pago', "(tipo_examen LIKE '%rayos x%' OR tipo_examen LIKE '%rx%')");
 
     $grand_total = $pharmacy['total'] + $consultations_total + $lab['total'] + $procedures['total'] + $ultrasound['total'] + $xray['total'];
 
