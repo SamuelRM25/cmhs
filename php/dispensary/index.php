@@ -39,7 +39,8 @@ try {
     // Obtener items de inventario para venta, restando items reservados
     $stmt = $conn->prepare("
         SELECT i.id_inventario, i.codigo_barras, i.nom_medicamento, i.mol_medicamento, 
-               i.presentacion_med, i.casa_farmaceutica, i.cantidad_med,
+               i.presentacion_med, i.casa_farmaceutica, i.cantidad_med, i.stock_hospital,
+               i.precio_venta, i.precio_hospital, i.precio_medico,
                (i.cantidad_med - COALESCE((SELECT SUM(cantidad) FROM reservas_inventario WHERE id_inventario = i.id_inventario), 0)) as disponible,
                ph.document_type
         FROM inventario i
@@ -106,6 +107,9 @@ try {
 
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -667,7 +671,8 @@ try {
             border: 1px solid var(--color-border);
             border-radius: var(--radius-lg);
             transition: all var(--transition-base);
-            padding: 4px; /* Space for inner float */
+            padding: 4px;
+            /* Space for inner float */
             box-shadow: var(--shadow-sm);
         }
 
@@ -1384,10 +1389,26 @@ try {
             <div class="pos-container">
                 <!-- Panel izquierdo: Búsqueda y selección -->
                 <div class="pos-selection-area animate-in">
-                    <h3 class="section-title">
-                        <i class="bi bi-search section-title-icon"></i>
-                        Buscar Medicamentos
-                    </h3>
+                    <div class="selection-header">
+                        <h2 class="section-title">
+                            <i class="bi bi-search section-title-icon"></i>
+                            Buscar Producto
+                        </h2>
+                        <div class="mode-toggles btn-group mb-3">
+                            <button class="btn btn-primary active" id="btnModePublic"
+                                onclick="window.dashboard.pos.setMode('public')">
+                                <i class="bi bi-shop me-1"></i> Público
+                            </button>
+                            <button class="btn btn-outline-info" id="btnModeHospital"
+                                onclick="window.dashboard.pos.requestAuth('hospital')">
+                                <i class="bi bi-hospital me-1"></i> Hospitalario
+                            </button>
+                            <button class="btn btn-outline-success" id="btnModeMedical"
+                                onclick="window.dashboard.pos.requestAuth('medical')">
+                                <i class="bi bi-person-badge me-1"></i> Médico
+                            </button>
+                        </div>
+                    </div>
 
                     <!-- Búsqueda -->
                     <div class="search-container">
@@ -1419,7 +1440,7 @@ try {
                                 <div class="d-flex align-items-center">
                                     <span class="me-2">Q</span>
                                     <input type="number" class="form-input" id="unitPrice" step="0.01" min="0" required
-                                        style="flex: 1;">
+                                        style="flex: 1;" readonly>
                                 </div>
                             </div>
 
@@ -1459,7 +1480,6 @@ try {
                                     <option value="Efectivo">Efectivo</option>
                                     <option value="Tarjeta">Tarjeta</option>
                                     <option value="Transferencia">Transferencia</option>
-                                    <option value="Seguro">Seguro Médico</option>
                                 </select>
                             </div>
                         </div>
@@ -1513,6 +1533,29 @@ try {
             </div>
         </main>
     </div>
+
+    <!-- Auth Modal -->
+    <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Autorización Requerida</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="authCodeInput" class="form-label">Código de Acceso</label>
+                        <input type="password" class="form-control" id="authCodeInput" placeholder="Ingrese código">
+                    </div>
+                    <button type="button" class="btn btn-primary w-100"
+                        onclick="window.dashboard.pos.verifyAuth()">Verificar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- JavaScript Optimizado (mismo que dashboard con funcionalidad POS) -->
     <script>
@@ -1570,6 +1613,7 @@ try {
             let cartItems = [];
             let currentInventory = <?php echo json_encode($inventario); ?>;
             let selectedItem = null;
+            let currentMode = 'public'; // public, hospital, medical
 
             // ==========================================================================
             // MANEJO DE TEMA (DÍA/NOCHE)
@@ -1676,6 +1720,81 @@ try {
                 setupPOS() {
                     this.setupSearch();
                     this.setupCart();
+                    this.setupAuth();
+                }
+
+                setupAuth() {
+                    const input = document.getElementById('authCodeInput');
+                    if (input) {
+                        input.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') this.verifyAuth();
+                        });
+                    }
+                }
+
+                requestAuth(mode) {
+                    this.pendingMode = mode;
+                    const modal = new bootstrap.Modal(document.getElementById('authModal'));
+                    document.getElementById('authCodeInput').value = '';
+                    modal.show();
+                    setTimeout(() => document.getElementById('authCodeInput').focus(), 500);
+                }
+
+                verifyAuth() {
+                    const code = document.getElementById('authCodeInput').value;
+                    const btn = document.querySelector('#authModal .btn-primary');
+                    const originalText = btn.innerHTML;
+
+                    if (!code) {
+                        this.showAlert('Ingrese el código', 'warning');
+                        return;
+                    }
+
+                    btn.disabled = true;
+                    btn.innerHTML = 'Verificando...';
+
+                    fetch('check_auth.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code: code })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                bootstrap.Modal.getInstance(document.getElementById('authModal')).hide();
+                                this.setMode(this.pendingMode);
+                                this.showAlert('Modo habilitado correctamente', 'success');
+                            } else {
+                                this.showAlert(data.message || 'Código incorrecto', 'error');
+                                document.getElementById('authCodeInput').value = '';
+                                document.getElementById('authCodeInput').focus();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            this.showAlert('Error de conexión', 'error');
+                        })
+                        .finally(() => {
+                            btn.disabled = false;
+                            btn.innerHTML = originalText;
+                        });
+                }
+
+                setMode(mode) {
+                    currentMode = mode;
+
+                    // Update buttons
+                    document.getElementById('btnModePublic').className = `btn ${mode === 'public' ? 'btn-primary' : 'btn-outline-primary'}`;
+                    document.getElementById('btnModeHospital').className = `btn ${mode === 'hospital' ? 'btn-info text-white' : 'btn-outline-info'}`;
+                    document.getElementById('btnModeMedical').className = `btn ${mode === 'medical' ? 'btn-success' : 'btn-outline-success'}`;
+
+                    // Update UI if item selected
+                    if (selectedItem) {
+                        this.selectProduct(selectedItem);
+                    }
+                    // Clear search to avoid confusion
+                    DOM.searchMedication.value = '';
+                    DOM.searchResults.style.display = 'none';
                 }
 
                 setupSearch() {
@@ -1727,9 +1846,16 @@ try {
                             resultItem.className = 'search-result-item';
 
                             // Determinar clase de stock
+                            // Filter logic based on mode
+                            // Use available stock depending on mode
+                            let stockAvailable = item.disponible;
+                            if (currentMode === 'hospital') {
+                                stockAvailable = item.stock_hospital || 0;
+                            }
+
                             let stockClass = 'text-success';
-                            if (item.disponible <= 0) stockClass = 'text-danger';
-                            else if (item.disponible <= 5) stockClass = 'text-warning';
+                            if (stockAvailable <= 0) stockClass = 'text-danger';
+                            else if (stockAvailable <= 5) stockClass = 'text-warning';
 
                             resultItem.innerHTML = `
                             <div style="font-weight: 600;">${item.nom_medicamento}</div>
@@ -1737,7 +1863,7 @@ try {
                                 ${item.mol_medicamento} • ${item.presentacion_med}
                             </div>
                             <div class="${stockClass}" style="font-size: 0.875rem; font-weight: 600;">
-                                ${item.disponible} disponible${item.disponible !== 1 ? 's' : ''}
+                                ${stockAvailable} disponible${stockAvailable !== 1 ? 's' : ''} ${currentMode === 'hospital' ? '(Hosp)' : ''}
                             </div>
                         `;
 
@@ -1756,20 +1882,26 @@ try {
                     // Actualizar interfaz
                     DOM.selectedProductName.textContent = `${item.nom_medicamento} (${item.presentacion_med})`;
                     DOM.selectedProductDetails.textContent = `${item.mol_medicamento} • ${item.casa_farmaceutica}`;
-                    DOM.availableStock.textContent = item.disponible;
+                    // Determine stock based on mode
+                    let stock = item.disponible;
+                    if (currentMode === 'hospital') stock = item.stock_hospital || 0;
+
+                    DOM.availableStock.textContent = stock;
 
                     // Display document type
                     if (DOM.documentType) {
                         DOM.documentType.textContent = item.document_type || 'N/A';
                     }
 
-                    DOM.quantity.max = item.disponible;
+                    DOM.quantity.max = stock;
                     DOM.quantity.value = 1;
 
-                    // Obtener precio de venta
-                    this.getSalePrice(item.id_inventario).then(price => {
-                        DOM.unitPrice.value = price.toFixed(2);
-                    });
+                    // Obtener precio de venta según modo
+                    let price = parseFloat(item.precio_venta) || 0;
+                    if (currentMode === 'hospital') price = parseFloat(item.precio_hospital) || 0;
+                    if (currentMode === 'medical') price = parseFloat(item.precio_medico) || 0;
+
+                    DOM.unitPrice.value = price.toFixed(2);
 
                     // Mostrar detalles de selección
                     DOM.selectionDetails.style.display = 'block';

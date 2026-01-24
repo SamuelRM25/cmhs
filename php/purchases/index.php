@@ -1708,6 +1708,15 @@ try {
                                 <i class="bi bi-search search-icon"></i>
                                 <input type="text" id="searchRecent" placeholder="Buscar compra...">
                             </div>
+                            <a href="export_purchases.php" class="action-btn" style="background: var(--color-success);">
+                                <i class="bi bi-file-earmark-spreadsheet"></i>
+                                Excel
+                            </a>
+                            <a href="export_purchases_pdf.php" target="_blank" class="action-btn"
+                                style="background: var(--color-danger);">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                                PDF
+                            </a>
                             <button class="action-btn" onclick="showNewPurchaseModal()">
                                 <i class="bi bi-plus-lg"></i>
                                 Nueva Compra
