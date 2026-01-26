@@ -62,7 +62,7 @@ try {
     $stmtUpd = $conn->prepare("
         UPDATE cuenta_hospitalaria 
         SET total_pagado = (SELECT COALESCE(SUM(monto),0) FROM abonos_hospitalarios WHERE id_cuenta = ?),
-            saldo_pendiente = total_general - (SELECT COALESCE(SUM(monto),0) FROM abonos_hospitalarios WHERE id_cuenta = ?)
+            monto_pagado = (SELECT COALESCE(SUM(monto),0) FROM abonos_hospitalarios WHERE id_cuenta = ?)
         WHERE id_cuenta = ?
     ");
     $stmtUpd->execute([$id_cuenta, $id_cuenta, $id_cuenta]);

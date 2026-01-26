@@ -139,7 +139,8 @@ try {
                 subtotal_laboratorios = (SELECT COALESCE(SUM(subtotal), 0) FROM cargos_hospitalarios WHERE id_cuenta = ch.id_cuenta AND tipo_cargo = 'Laboratorio' AND cancelado = FALSE),
                 subtotal_honorarios = (SELECT COALESCE(SUM(subtotal), 0) FROM cargos_hospitalarios WHERE id_cuenta = ch.id_cuenta AND tipo_cargo = 'Honorario' AND cancelado = FALSE),
                 subtotal_otros = (SELECT COALESCE(SUM(subtotal), 0) FROM cargos_hospitalarios WHERE id_cuenta = ch.id_cuenta AND tipo_cargo NOT IN ('Habitación','Medicamento','Procedimiento','Laboratorio','Honorario') AND cancelado = FALSE),
-                total_pagado = (SELECT COALESCE(SUM(monto), 0) FROM abonos_hospitalarios WHERE id_cuenta = ch.id_cuenta)
+                total_pagado = (SELECT COALESCE(SUM(monto), 0) FROM abonos_hospitalarios WHERE id_cuenta = ch.id_cuenta),
+                monto_pagado = (SELECT COALESCE(SUM(monto), 0) FROM abonos_hospitalarios WHERE id_cuenta = ch.id_cuenta)
             WHERE ch.id_cuenta = ?
         ");
         $stmt_sync->execute([$id_cuenta]);
