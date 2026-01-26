@@ -1827,7 +1827,7 @@ try {
                                             <?php else: ?>
                                                 <span class="status-badge status-inactive">
                                                     <i class="bi bi-clock-history"></i>
-                                                    Sin Visitas
+                                                    Externo
                                                 </span>
                                             <?php endif; ?>
                                             <?php if ($has_appointments): ?>
