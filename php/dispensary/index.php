@@ -1578,6 +1578,10 @@ try {
                                     onclick="window.dashboard.pos.requestAuth('special')">
                                     <i class="bi bi-tag me-1"></i> Precio Esp
                                 </button>
+                                <button class="btn btn-outline-danger" id="btnModeTransfer"
+                                    onclick="window.dashboard.pos.requestAuth('transfer')">
+                                    <i class="bi bi-arrow-left-right me-1"></i> Traslado
+                                </button>
                             </div>
                         </div>
 
@@ -2000,6 +2004,7 @@ try {
                     document.getElementById('btnModeHospital').className = `btn ${mode === 'hospital' ? 'btn-info text-white' : 'btn-outline-info'}`;
                     document.getElementById('btnModeMedical').className = `btn ${mode === 'medical' ? 'btn-success' : 'btn-outline-success'}`;
                     document.getElementById('btnModeSpecial').className = `btn ${mode === 'special' ? 'btn-warning text-white' : 'btn-outline-warning'}`;
+                    document.getElementById('btnModeTransfer').className = `btn ${mode === 'transfer' ? 'btn-danger text-white' : 'btn-outline-danger'}`;
 
                     // Update UI if item selected
                     if (selectedItem) {
@@ -2075,6 +2080,7 @@ try {
                             if (currentMode === 'hospital') price = parseFloat(item.precio_hospital) || 0;
                             if (currentMode === 'medical') price = parseFloat(item.precio_medico) || 0;
                             if (currentMode === 'special') price = parseFloat(item.precio_compra) || 0;
+                            if (currentMode === 'transfer') price = 0;
 
                             const expiryDate = item.fecha_vencimiento ? new Date(item.fecha_vencimiento).toLocaleDateString('es-GT', { day: '2-digit', month: '2-digit', year: '2-digit' }) : 'N/A';
 
@@ -2151,6 +2157,7 @@ try {
                     if (currentMode === 'hospital') price = parseFloat(item.precio_hospital) || 0;
                     if (currentMode === 'medical') price = parseFloat(item.precio_medico) || 0;
                     if (currentMode === 'special') price = parseFloat(item.precio_compra) || 0;
+                    if (currentMode === 'transfer') price = 0;
 
                     DOM.unitPrice.value = price.toFixed(2);
 
@@ -2224,8 +2231,8 @@ try {
                     const qty = parseInt(DOM.quantity.value);
                     const stock = parseInt(DOM.availableStock.textContent);
 
-                    // Validaciones
-                    if (isNaN(price) || price <= 0) {
+                    // Validaciones (Allow 0 price only for transfer)
+                    if (isNaN(price) || (price <= 0 && currentMode !== 'transfer')) {
                         this.showAlert('Precio inválido', 'error');
                         return;
                     }
@@ -2368,9 +2375,9 @@ try {
                     const saleData = {
                         nombre_cliente: DOM.clientName.value.trim(),
                         nit_cliente: document.getElementById('clientNIT').value.trim() || 'C/F',
-                        tipo_pago: DOM.paymentMethod.value,
+                        tipo_pago: currentMode === 'transfer' ? 'Traslado' : DOM.paymentMethod.value,
                         total: cartItems.reduce((sum, item) => sum + item.subtotal, 0),
-                        estado: 'Pagado',
+                        estado: currentMode === 'transfer' ? 'Pagado' : 'Pagado',
                         items: cartItems.map(item => ({
                             id_inventario: item.id,
                             nombre: item.name,

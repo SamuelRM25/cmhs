@@ -876,7 +876,7 @@ try {
             padding: 0.75rem 1.5rem;
             background: transparent;
             border: none;
-            color: var(--color-text-light);
+            color: var(--color-text-secondary);
             font-weight: 500;
             font-size: 0.95rem;
             cursor: pointer;
@@ -921,6 +921,7 @@ try {
             border: 1px solid var(--color-border);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-xl);
+            color: var(--color-text);
         }
 
         .modal-header {
@@ -1110,8 +1111,9 @@ try {
         }
 
         .badge-secondary {
-            background: var(--color-text-light);
-            color: white;
+            background: var(--color-surface);
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border);
         }
 
         /* ==========================================================================
