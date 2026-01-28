@@ -84,12 +84,11 @@ try {
     $stmt_actual_profit = $conn->prepare("
         SELECT 
             SUM(dv.cantidad_vendida * dv.precio_unitario) as revenue,
-            SUM(dv.cantidad_vendida * COALESCE(pi.unit_cost, c.precio_unidad, 0)) as cost
+            SUM(dv.cantidad_vendida * COALESCE(pi.unit_cost, 0)) as cost
         FROM detalle_ventas dv
         JOIN ventas v ON dv.id_venta = v.id_venta
         JOIN inventario i ON dv.id_inventario = i.id_inventario
         LEFT JOIN purchase_items pi ON i.id_purchase_item = pi.id
-        LEFT JOIN compras c ON i.id_purchase_item = c.id_compras
         WHERE v.fecha_venta BETWEEN ? AND ?
     ");
     $stmt_actual_profit->execute([$start_datetime, $end_datetime]);
