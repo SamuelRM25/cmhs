@@ -26,7 +26,7 @@ try {
     $orden = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$orden)
-        die("Orden no encontrada");
+        die("Orden no encontrada (ID: " . htmlspecialchars($id_examen) . ")");
 
     $fecha = new DateTime($orden['fecha_examen']);
     $fecha_formateada = $fecha->format('d/m/Y');
@@ -44,9 +44,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recibo Laboratorio #
-        <?php echo $id_orden; ?>
-    </title>
+    <title>Recibo Laboratorio #<?php echo $id_examen; ?></title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
 
@@ -154,29 +152,18 @@ try {
         <div class="clinic-header text-center">
             <h2 class="fw-bold">CENTRO MÉDICO HERRERA SAENZ</h2>
             <div class="clinic-info">
-                <p>Dirección de la Clínica</p>
-                <p>Tel: (502) 1234-5678</p>
+                <p>7a Av 7-25 Zona 1 HH</p>
+                <p>Tel: (+502) (+502) 5214-8836</p>
             </div>
         </div>
         <div class="divider"></div>
         <div class="receipt-details">
             <div style="display:flex; justify-content:space-between">
-                <span>Fecha:
-                    <?php echo $fecha_formateada; ?>
-                </span>
-                <span class="text-right">
-                    <?php echo $hora_formateada; ?>
-                </span>
+                <span>Fecha: <?php echo $fecha_formateada; ?></span>
+                <span class="text-right"><?php echo $hora_formateada; ?></span>
             </div>
-            <div>Recibo #:
-                <?php echo str_pad($id_orden, 5, '0', STR_PAD_LEFT); ?>
-            </div>
-            <div>Paciente:
-                <?php echo htmlspecialchars($paciente); ?>
-            </div>
-            <div>Orden:
-                <?php echo htmlspecialchars($orden['tipo_examen']); ?>
-            </div>
+            <div>Recibo #: <?php echo str_pad($id_examen, 5, '0', STR_PAD_LEFT); ?></div>
+            <div>Paciente: <?php echo htmlspecialchars($paciente); ?></div>
         </div>
         <div class="divider"></div>
         <table class="items-table">
@@ -188,30 +175,22 @@ try {
             </thead>
             <tbody>
                 <tr>
-                    <td>
+                    <td style="font-size: 9px;">
                         <?php echo htmlspecialchars($orden['tipo_examen']); ?>
                     </td>
-                    <td class="text-right">Q
-                        <?php echo number_format($orden['cobro'], 2); ?>
-                    </td>
+                    <td class="text-right">Q<?php echo number_format($orden['cobro'], 2); ?></td>
                 </tr>
             </tbody>
         </table>
         <div class="divider"></div>
         <div class="total-section">
             <span>TOTAL</span>
-            <span>Q
-                <?php echo number_format($orden['cobro'], 2); ?>
-            </span>
+            <span>Q<?php echo number_format($orden['cobro'], 2); ?></span>
         </div>
         <div class="footer">
-            <p>Pago:
-                <?php echo htmlspecialchars($orden['tipo_pago']); ?>
-            </p>
+            <p>Pago: <?php echo htmlspecialchars($orden['tipo_pago']); ?></p>
             <p>¡Gracias por su visita!</p>
-            <p>Atendió:
-                <?php echo htmlspecialchars($user_name); ?>
-            </p>
+            <p>Atendió: <?php echo htmlspecialchars($user_name); ?></p>
         </div>
     </div>
     <script>

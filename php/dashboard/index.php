@@ -2632,18 +2632,6 @@ try {
                             </div>
                         </div>
                     </a>
-                    <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#labBillingModal"
-                        style="text-decoration: none; border-left: 4px solid var(--color-info);">
-                        <div class="stat-header mb-0">
-                            <div>
-                                <div class="stat-title text-info fw-bold">Laboratorio</div>
-                                <div class="stat-value" style="font-size: 1.25rem;">Cobro Lab</div>
-                            </div>
-                            <div class="stat-icon info">
-                                <i class="bi bi-eyedropper"></i>
-                            </div>
-                        </div>
-                    </a>
                     <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#procedureBillingModal"
                         style="text-decoration: none; border-left: 4px solid var(--color-warning);">
                         <div class="stat-header mb-0">
@@ -2682,76 +2670,6 @@ try {
                     </a>
                 </div>
             <?php endif; ?>
-
-            <!-- Modal Cobro Laboratorio -->
-            <div class="modal fade" id="labBillingModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title"><i class="bi bi-eyedropper me-2"></i>Cobro de Orden de Laboratorio
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="labBillingForm">
-                                <div class="mb-3">
-                                    <label for="labOrderSelect" class="form-label">Seleccionar Orden Pendiente</label>
-                                    <select class="form-select" id="labOrderSelect" onchange="onLabOrderSelect(this)"
-                                        required>
-                                        <option value="">Cargando ordenes...</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="labPatientName" class="form-label">Paciente</label>
-                                    <input type="text" class="form-control" id="labPatientName" readonly>
-                                    <input type="hidden" id="labPatientId">
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="labExamSummary" class="form-label">Exámenes (Detalle)</label>
-                                    <textarea class="form-control" id="labExamSummary" rows="3" readonly></textarea>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="labAmount" class="form-label">Total a Cobrar (Q)</label>
-                                    <input type="number" step="0.01" class="form-control" id="labAmount" readonly>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Tipo de Pago</label>
-                                    <div class="btn-group w-100" role="group">
-                                        <input type="radio" class="btn-check" name="lab_tipo_pago"
-                                            id="lab_pago_efectivo" value="Efectivo" checked autocomplete="off">
-                                        <label class="btn btn-outline-primary" for="lab_pago_efectivo">
-                                            <i class="bi bi-cash me-1"></i>Efectivo
-                                        </label>
-
-                                        <input type="radio" class="btn-check" name="lab_tipo_pago"
-                                            id="lab_pago_transferencia" value="Transferencia" autocomplete="off">
-                                        <label class="btn btn-outline-primary" for="lab_pago_transferencia">
-                                            <i class="bi bi-bank me-1"></i>Transferencia
-                                        </label>
-
-                                        <input type="radio" class="btn-check" name="lab_tipo_pago" id="lab_pago_tarjeta"
-                                            value="Tarjeta" autocomplete="off">
-                                        <label class="btn btn-outline-primary" for="lab_pago_tarjeta">
-                                            <i class="bi bi-credit-card me-1"></i>Tarjeta
-                                        </label>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="button" class="btn btn-primary" onclick="saveLabBilling()">Cobrar
-                                Orden</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
 
             <!-- Estadísticas principales -->
             <?php if ($user_type === 'admin'): ?>
@@ -3366,21 +3284,45 @@ try {
                                     <span class="fw-bold text-uppercase">Total a Pagar:</span>
                                     <span class="fs-3 fw-bold text-primary" id="orderTotal">Q0.00</span>
                                 </div>
-                                <button type="button"
-                                    class="btn btn-primary w-100 py-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center gap-2"
-                                    id="saveLabOrderBtn" disabled>
-                                    <i class="bi bi-printer fs-5"></i>
-                                    <span class="fw-bold">Generar Orden</span>
-                                </button>
-                                <p class="text-center small text-muted mt-2">
-                                    <i class="bi bi-shield-check me-1"></i> Se generará cobro automático
-                                </p>
+
+                                <!-- Payment Method Selection -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Método de
+                                        Pago</label>
+                                    <div class="btn-group w-100" role="group">
+                                        <input type="radio" class="btn-check" name="order_tipo_pago"
+                                            id="order_pago_efectivo" value="Efectivo" checked autocomplete="off">
+                                        <label class="btn btn-outline-primary"
+                                            for="order_pago_efectivo">Efectivo</label>
+
+                                        <input type="radio" class="btn-check" name="order_tipo_pago"
+                                            id="order_pago_transferencia" value="Transferencia" autocomplete="off">
+                                        <label class="btn btn-outline-primary"
+                                            for="order_pago_transferencia">Transf.</label>
+
+                                        <input type="radio" class="btn-check" name="order_tipo_pago"
+                                            id="order_pago_tarjeta" value="Tarjeta" autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="order_pago_tarjeta">Tarjeta</label>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Sólo aplica si el paciente no está
+                                        hospitalizado.</small>
+                                </div>
                             </div>
+                            <button type="button"
+                                class="btn btn-primary w-100 py-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center gap-2"
+                                id="saveLabOrderBtn" disabled>
+                                <i class="bi bi-printer fs-5"></i>
+                                <span class="fw-bold">Generar Orden</span>
+                            </button>
+                            <p class="text-center small text-muted mt-2">
+                                <i class="bi bi-shield-check me-1"></i> Se generará cobro automático
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <style>
@@ -3654,7 +3596,6 @@ try {
                     this.setupBillingHandlers();
                     this.setupElectroHandlers();
                     this.setupLabOrderHandlers();
-                    this.setupLabBillingHandlers();
                     this.setupXrayHandlers();
                     this.setupUltrasoundHandlers();
                     this.setupAnimations();
@@ -4001,7 +3942,8 @@ try {
                                 id_paciente: patientHidden.value,
                                 id_doctor: document.getElementById('lab_id_doctor').value,
                                 observaciones: form.observaciones.value,
-                                pruebas: pruebas
+                                pruebas: pruebas,
+                                tipo_pago: document.querySelector('input[name="order_tipo_pago"]:checked')?.value || 'Efectivo'
                             };
 
                             const originalText = saveBtn.innerHTML;
@@ -4023,6 +3965,9 @@ try {
                                         showConfirmButton: false,
                                         timer: 1500
                                     }).then(() => {
+                                        if (result.id_pago) {
+                                            window.open(`../laboratory/print_lab_receipt.php?id=${result.id_pago}`, '_blank');
+                                        }
                                         location.reload();
                                     });
                                 } else {
@@ -4073,103 +4018,8 @@ try {
                     }
                 }
 
-                setupLabBillingHandlers() {
-                    const labBillingModal = document.getElementById('labBillingModal');
-                    if (labBillingModal) {
-                        labBillingModal.addEventListener('show.bs.modal', function () {
-                            const select = document.getElementById('labOrderSelect');
-                            if (select) {
-                                select.innerHTML = '<option value="">Cargando...</option>';
-                                fetch('get_lab_orders_billing.php')
-                                    .then(r => r.json())
-                                    .then(data => {
-                                        if (data.success) {
-                                            select.innerHTML = '<option value="">Seleccione una orden...</option>';
-                                            if (!data.orders || data.orders.length === 0) {
-                                                select.innerHTML += '<option value="" disabled>No hay ordenes pendientes</option>';
-                                                return;
-                                            }
-                                            data.orders.forEach(order => {
-                                                const option = document.createElement('option');
-                                                option.value = order.id_orden;
-                                                option.setAttribute('data-patient-name', order.nombre_paciente);
-                                                option.setAttribute('data-patient-id', order.id_paciente);
-                                                option.setAttribute('data-exams', order.lista_pruebas);
-                                                option.setAttribute('data-total', order.total_estimado);
-                                                option.textContent = `Orden #${order.numero_orden} - ${order.nombre_paciente} (${order.fecha_orden})`;
-                                                select.appendChild(option);
-                                            });
-                                        } else {
-                                            select.innerHTML = '<option value="">Error al cargar</option>';
-                                        }
-                                    });
-                            }
-                        });
-                    }
-
-                    window.onLabOrderSelect = function (select) {
-                        const option = select.options[select.selectedIndex];
-                        if (!option.value) {
-                            document.getElementById('labPatientName').value = '';
-                            document.getElementById('labPatientId').value = '';
-                            document.getElementById('labExamSummary').value = '';
-                            document.getElementById('labAmount').value = '';
-                            return;
-                        }
-
-                        document.getElementById('labPatientName').value = option.getAttribute('data-patient-name') || '';
-                        document.getElementById('labPatientId').value = option.getAttribute('data-patient-id') || '';
-                        document.getElementById('labExamSummary').value = option.getAttribute('data-exams') || '';
-                        document.getElementById('labAmount').value = option.getAttribute('data-total') || '0.00';
-                    };
-
-                    window.saveLabBilling = async function () {
-                        const select = document.getElementById('labOrderSelect');
-                        if (!select || !select.value) {
-                            Swal.fire('Error', 'Seleccione una orden', 'error');
-                            return;
-                        }
-
-                        const option = select.options[select.selectedIndex];
-                        const data = {
-                            id_paciente: option.getAttribute('data-patient-id'),
-                            cobro: document.getElementById('labAmount').value,
-                            descripcion: "Cobro Laboratorio Orden #" + option.text,
-                            tipo_pago: document.querySelector('input[name="lab_tipo_pago"]:checked')?.value || 'Efectivo'
-                        };
-
-                        try {
-                            const response = await fetch('api/save_lab_charge.php', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                                body: new URLSearchParams(data)
-                            });
-                            const result = await response.json();
-
-                            if (result.status === 'success') {
-                                Swal.fire({
-                                    title: 'Éxito',
-                                    text: 'Cobro registrado correctamente',
-                                    icon: 'success',
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                }).then(() => {
-                                    if (result.id) {
-                                        window.open(`../laboratory/print_lab_receipt.php?id=${result.id}`, '_blank');
-                                    }
-                                    setTimeout(() => location.reload(), 500);
-                                });
-                            } else {
-                                throw new Error(result.message);
-                            }
-                        } catch (e) {
-                            Swal.fire('Error', e.message, 'error');
-                        }
-                    };
-                }
-
-
-
+                
+                
 
                 setupUltrasoundHandlers() {
                     const select = document.getElementById('ultrasoundSelect');

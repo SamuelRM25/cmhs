@@ -31,7 +31,8 @@ fputcsv($output, array(
     'Fecha Adquisicion',
     'Fecha Vencimiento',
     'Estado',
-    'Precio Compra',
+    'P. Compra (Item)',
+    'Factura Compra',
     'Precio Venta',
     'Precio Hospital',
     'Precio Medico',
@@ -42,8 +43,15 @@ try {
     $database = new Database();
     $conn = $database->getConnection();
 
-    // Obtener todo el inventario
-    $stmt = $conn->query("SELECT * FROM inventario ORDER BY nom_medicamento ASC");
+    // Obtener todo el inventario con datos de compra si existen
+    $query = "
+        SELECT i.*, ph.document_number, pi.unit_cost 
+        FROM inventario i
+        LEFT JOIN purchase_items pi ON i.id_purchase_item = pi.id
+        LEFT JOIN purchase_headers ph ON pi.purchase_header_id = ph.id
+        ORDER BY i.nom_medicamento ASC
+    ";
+    $stmt = $conn->query($query);
 
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         fputcsv($output, array(
@@ -57,7 +65,8 @@ try {
             $row['fecha_adquisicion'],
             $row['fecha_vencimiento'],
             $row['estado'],
-            $row['precio_compra'],
+            $row['unit_cost'] ?? $row['precio_compra'],
+            $row['document_number'] ?? 'N/A',
             $row['precio_venta'],
             $row['precio_hospital'],
             $row['precio_medico'],

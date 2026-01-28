@@ -40,9 +40,9 @@ try {
     $stmt = $conn->prepare("
         SELECT i.id_inventario, i.codigo_barras, i.nom_medicamento, i.mol_medicamento, 
                i.presentacion_med, i.casa_farmaceutica, i.cantidad_med, i.stock_hospital,
-               i.precio_venta, i.precio_hospital, i.precio_medico,
+               i.precio_venta, i.precio_hospital, i.precio_medico, i.precio_compra, i.fecha_vencimiento,
                (i.cantidad_med - COALESCE((SELECT SUM(cantidad) FROM reservas_inventario WHERE id_inventario = i.id_inventario), 0)) as disponible,
-               ph.document_type
+               ph.document_type, ph.document_number
         FROM inventario i
         LEFT JOIN purchase_items pi ON i.id_purchase_item = pi.id
         LEFT JOIN purchase_headers ph ON pi.purchase_header_id = ph.id
@@ -622,8 +622,8 @@ try {
         /* Punto de Venta */
         .pos-container {
             display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: var(--space-lg);
+            grid-template-columns: 1.5fr 450px;
+            gap: var(--space-xl);
             margin-bottom: var(--space-xl);
         }
 
@@ -658,6 +658,94 @@ try {
 
         .section-title-icon {
             color: var(--color-primary);
+        }
+
+        /* Selection header and mode buttons */
+        .selection-header {
+            margin-bottom: var(--space-lg);
+        }
+
+        .mode-toggles.btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .mode-toggles .btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 0.625rem 1rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: var(--radius-md);
+            border: 2px solid;
+            transition: all var(--transition-base);
+        }
+
+        .mode-toggles .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .mode-toggles .btn-primary {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
+        }
+
+        .mode-toggles .btn-outline-primary {
+            background: transparent;
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        .mode-toggles .btn-outline-primary:hover {
+            background: rgba(var(--color-primary-rgb), 0.1);
+        }
+
+        .mode-toggles .btn-info {
+            background: var(--color-info);
+            border-color: var(--color-info);
+        }
+
+        .mode-toggles .btn-outline-info {
+            background: transparent;
+            border-color: var(--color-info);
+            color: var(--color-info);
+        }
+
+        .mode-toggles .btn-outline-info:hover {
+            background: rgba(var(--color-info-rgb), 0.1);
+        }
+
+        .mode-toggles .btn-success {
+            background: var(--color-success);
+            border-color: var(--color-success);
+        }
+
+        .mode-toggles .btn-outline-success {
+            background: transparent;
+            border-color: var(--color-success);
+            color: var(--color-success);
+        }
+
+        .mode-toggles .btn-outline-success:hover {
+            background: rgba(var(--color-success-rgb), 0.1);
+        }
+
+        .mode-toggles .btn-warning {
+            background: var(--color-warning);
+            border-color: var(--color-warning);
+        }
+
+        .mode-toggles .btn-outline-warning {
+            background: transparent;
+            border-color: var(--color-warning);
+            color: var(--color-warning);
+        }
+
+        .mode-toggles .btn-outline-warning:hover {
+            background: rgba(var(--color-warning-rgb), 0.1);
         }
 
         .search-container {
@@ -723,38 +811,115 @@ try {
             overflow-y: auto;
             z-index: 100;
             display: none;
+            margin-top: 0.5rem;
         }
 
         .search-result-item {
-            padding: var(--space-md);
+            padding: 1rem;
             border-bottom: 1px solid var(--color-border);
             cursor: pointer;
-            transition: background-color var(--transition-base);
+            transition: all var(--transition-base);
+            background: var(--color-card);
         }
 
         .search-result-item:hover {
-            background: var(--color-surface);
+            background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.08), rgba(var(--color-info-rgb), 0.05));
+            padding-left: 1.25rem;
+            border-left: 4px solid var(--color-primary);
         }
 
         .search-result-item:last-child {
             border-bottom: none;
         }
 
+        .search-result-item .row {
+            align-items: center;
+        }
+
+        .search-result-item .fw-bold {
+            font-size: 1.1rem;
+        }
+
         /* Detalles de selección */
         .selection-details {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            padding: var(--space-lg);
-            margin-top: var(--space-lg);
             display: none;
+            margin-top: var(--space-lg);
+        }
+
+        .selected-product {
+            background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.05), rgba(var(--color-info-rgb), 0.05));
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            border: 1px solid var(--color-border);
+        }
+
+        .selected-product-name {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: var(--color-text);
+            margin: 0;
+        }
+
+        .selected-product-details {
+            font-size: var(--font-size-sm);
+            margin: 0;
+        }
+
+        /* Tarjetas de información del producto */
+        .row.g-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .row.g-2 .col-12 {
+            grid-column: span 2;
+        }
+
+        .row.g-2 .col-6 {
+            grid-column: span 1;
+        }
+
+        .p-2.bg-light {
+            background: var(--color-surface);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            transition: all var(--transition-base);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .p-2.bg-light:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-primary);
+        }
+
+        .p-2.bg-light .small {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+        .p-2.bg-light .fw-bold {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .p-2.bg-light .fw-bold.fs-5 {
+            font-size: 1.75rem;
         }
 
         .selection-form {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: var(--space-md);
-            margin-top: var(--space-md);
+            margin-top: var(--space-lg);
+            padding-top: var(--space-lg);
+            border-top: 2px dashed var(--color-border);
         }
 
         .form-group {
@@ -1387,50 +1552,90 @@ try {
 
             <!-- Punto de Venta -->
             <div class="pos-container">
-                <!-- Panel izquierdo: Búsqueda y selección -->
-                <div class="pos-selection-area animate-in">
-                    <div class="selection-header">
-                        <h2 class="section-title">
-                            <i class="bi bi-search section-title-icon"></i>
-                            Buscar Producto
-                        </h2>
-                        <div class="mode-toggles btn-group mb-3">
-                            <button class="btn btn-primary active" id="btnModePublic"
-                                onclick="window.dashboard.pos.setMode('public')">
-                                <i class="bi bi-shop me-1"></i> Público
-                            </button>
-                            <button class="btn btn-outline-info" id="btnModeHospital"
-                                onclick="window.dashboard.pos.requestAuth('hospital')">
-                                <i class="bi bi-hospital me-1"></i> Hospitalario
-                            </button>
-                            <button class="btn btn-outline-success" id="btnModeMedical"
-                                onclick="window.dashboard.pos.requestAuth('medical')">
-                                <i class="bi bi-person-badge me-1"></i> Médico
-                            </button>
+                <!-- Columna Izquierda: Búsqueda y Selección -->
+                <div class="pos-left-column">
+                    <!-- Panel de Búsqueda -->
+                    <div class="pos-selection-area animate-in">
+                        <div class="selection-header">
+                            <h2 class="section-title">
+                                <i class="bi bi-search section-title-icon"></i>
+                                Buscar Producto
+                            </h2>
+                            <div class="mode-toggles btn-group mb-3">
+                                <button class="btn btn-primary active" id="btnModePublic"
+                                    onclick="window.dashboard.pos.setMode('public')">
+                                    <i class="bi bi-shop me-1"></i> Público
+                                </button>
+                                <button class="btn btn-outline-info" id="btnModeHospital"
+                                    onclick="window.dashboard.pos.requestAuth('hospital')">
+                                    <i class="bi bi-hospital me-1"></i> Hospitalario
+                                </button>
+                                <button class="btn btn-outline-success" id="btnModeMedical"
+                                    onclick="window.dashboard.pos.requestAuth('medical')">
+                                    <i class="bi bi-person-badge me-1"></i> Médico
+                                </button>
+                                <button class="btn btn-outline-warning" id="btnModeSpecial"
+                                    onclick="window.dashboard.pos.requestAuth('special')">
+                                    <i class="bi bi-tag me-1"></i> Precio Esp
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Búsqueda -->
-                    <div class="search-container">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">
-                                <i class="bi bi-upc-scan text-primary"></i>
-                            </span>
-                            <input type="text" class="form-control border-start-0 ps-2" id="searchMedication"
-                                placeholder="Escanee código o busque por nombre/molécula..." autocomplete="off">
+                        <div class="d-flex justify-content-end mb-3">
+                            <button class="btn btn-warning btn-sm fw-bold shadow-sm"
+                                onclick="window.dashboard.pos.openShiftReport()">
+                                <i class="bi bi-receipt-cutoff me-1"></i> Corte de Jornada
+                            </button>
                         </div>
-                        <div class="search-results" id="searchResults"></div>
+
+                        <!-- Búsqueda -->
+                        <div class="search-container">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0 ps-2" id="searchMedication"
+                                    placeholder="Escanee código o busque por nombre/molécula..." autocomplete="off">
+                            </div>
+
+                            <div class="search-results-header mt-2 px-2 d-none" id="searchResultsHeader">
+                                <div class="row g-0 fw-bold small text-muted text-uppercase">
+                                    <div class="col-5">Medicamento</div>
+                                    <div class="col-2 text-center">Precio</div>
+                                    <div class="col-3 text-center">Doc/Env</div>
+                                    <div class="col-2 text-end">Vence</div>
+                                </div>
+                            </div>
+                            <div class="search-results" id="searchResults"></div>
+                        </div>
                     </div>
 
                     <!-- Detalles de selección -->
                     <div class="selection-details" id="selectionDetails">
-                        <div class="selected-product mb-3">
-                            <h4 class="selected-product-name" id="selectedProductName">---</h4>
-                            <p class="selected-product-details" id="selectedProductDetails">---</p>
-                            <div class="d-flex justify-content-between text-muted">
-                                <div>Disponible: <span id="availableStock" class="fw-bold text-primary">0</span>
-                                    unidades</div>
-                                <div>Doc: <span id="documentType" class="fw-bold text-info">---</span></div>
+                        <div class="selected-product mb-4">
+                            <h4 class="selected-product-name mb-2" id="selectedProductName">---</h4>
+                            <p class="selected-product-details text-muted mb-3" id="selectedProductDetails">---</p>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <div class="p-2 bg-light rounded text-center">
+                                        <div class="small text-muted">Disponible</div>
+                                        <div class="fw-bold text-primary fs-5" id="availableStock">0</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2 bg-light rounded text-center">
+                                        <div class="small text-muted">Documento</div>
+                                        <div class="fw-bold text-info" id="documentType">---</div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="p-2 bg-light rounded text-center">
+                                        <div class="small text-muted">Fecha de Vencimiento</div>
+                                        <div class="fw-bold" id="expiryDate" style="color: var(--color-warning);">---
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1471,7 +1676,13 @@ try {
                             <div class="form-group">
                                 <label class="form-label">Nombre del Cliente</label>
                                 <input type="text" class="form-input" id="clientName"
-                                    placeholder="Nombre completo del cliente...">
+                                    placeholder="Nombre completo del cliente..." autocomplete="off">
+                            </div>
+
+                            <div class="form-group mt-2">
+                                <label class="form-label">NIT</label>
+                                <input type="text" class="form-input" id="clientNIT" value="C/F"
+                                    placeholder="NIT o C/F...">
                             </div>
 
                             <div class="form-group mt-2">
@@ -1594,6 +1805,7 @@ try {
                 selectedProductDetails: document.getElementById('selectedProductDetails'),
                 availableStock: document.getElementById('availableStock'),
                 documentType: document.getElementById('documentType'),
+                expiryDate: document.getElementById('expiryDate'),
                 unitPrice: document.getElementById('unitPrice'),
                 quantity: document.getElementById('quantity'),
                 addToCartBtn: document.getElementById('addToCartBtn'),
@@ -1787,6 +1999,7 @@ try {
                     document.getElementById('btnModePublic').className = `btn ${mode === 'public' ? 'btn-primary' : 'btn-outline-primary'}`;
                     document.getElementById('btnModeHospital').className = `btn ${mode === 'hospital' ? 'btn-info text-white' : 'btn-outline-info'}`;
                     document.getElementById('btnModeMedical').className = `btn ${mode === 'medical' ? 'btn-success' : 'btn-outline-success'}`;
+                    document.getElementById('btnModeSpecial').className = `btn ${mode === 'special' ? 'btn-warning text-white' : 'btn-outline-warning'}`;
 
                     // Update UI if item selected
                     if (selectedItem) {
@@ -1816,6 +2029,7 @@ try {
 
                     if (searchTerm.length < 2) {
                         DOM.searchResults.style.display = 'none';
+                        document.getElementById('searchResultsHeader').classList.add('d-none');
                         return;
                     }
 
@@ -1840,14 +2054,13 @@ try {
 
                     if (results.length > 0) {
                         DOM.searchResults.style.display = 'block';
+                        document.getElementById('searchResultsHeader').classList.remove('d-none');
 
                         results.forEach(item => {
                             const resultItem = document.createElement('div');
                             resultItem.className = 'search-result-item';
 
                             // Determinar clase de stock
-                            // Filter logic based on mode
-                            // Use available stock depending on mode
                             let stockAvailable = item.disponible;
                             if (currentMode === 'hospital') {
                                 stockAvailable = item.stock_hospital || 0;
@@ -1857,21 +2070,37 @@ try {
                             if (stockAvailable <= 0) stockClass = 'text-danger';
                             else if (stockAvailable <= 5) stockClass = 'text-warning';
 
+                            // Get price based on mode
+                            let price = parseFloat(item.precio_venta) || 0;
+                            if (currentMode === 'hospital') price = parseFloat(item.precio_hospital) || 0;
+                            if (currentMode === 'medical') price = parseFloat(item.precio_medico) || 0;
+                            if (currentMode === 'special') price = parseFloat(item.precio_compra) || 0;
+
+                            const expiryDate = item.fecha_vencimiento ? new Date(item.fecha_vencimiento).toLocaleDateString('es-GT', { day: '2-digit', month: '2-digit', year: '2-digit' }) : 'N/A';
+
                             resultItem.innerHTML = `
-                            <div style="font-weight: 600;">${item.nom_medicamento}</div>
-                            <div style="font-size: 0.875rem; color: var(--color-text-secondary);">
-                                ${item.mol_medicamento} • ${item.presentacion_med}
-                            </div>
-                            <div class="${stockClass}" style="font-size: 0.875rem; font-weight: 600;">
-                                ${stockAvailable} disponible${stockAvailable !== 1 ? 's' : ''} ${currentMode === 'hospital' ? '(Hosp)' : ''}
-                            </div>
-                        `;
+                                <div class="row g-0 align-items-center">
+                                    <div class="col-5">
+                                        <div style="font-weight: 600;">${item.nom_medicamento}</div>
+                                        <div style="font-size: 0.75rem; color: var(--color-text-secondary);">
+                                            ${item.mol_medicamento} • ${item.presentacion_med}
+                                        </div>
+                                        <div class="${stockClass}" style="font-size: 0.75rem; font-weight: 600;">
+                                            ${stockAvailable} disp. ${currentMode === 'hospital' ? '(H)' : ''}
+                                        </div>
+                                    </div>
+                                    <div class="col-2 text-center fw-bold">Q${price.toFixed(2)}</div>
+                                    <div class="col-3 text-center small text-info">${item.document_number || (item.document_type || 'N/A')}</div>
+                                    <div class="col-2 text-end small text-muted">${expiryDate}</div>
+                                </div>
+                            `;
 
                             resultItem.addEventListener('click', () => this.selectProduct(item));
                             DOM.searchResults.appendChild(resultItem);
                         });
                     } else {
                         DOM.searchResults.style.display = 'block';
+                        document.getElementById('searchResultsHeader').classList.add('d-none');
                         DOM.searchResults.innerHTML = '<div class="search-result-item text-center text-muted">No se encontraron resultados</div>';
                     }
                 }
@@ -1890,7 +2119,28 @@ try {
 
                     // Display document type
                     if (DOM.documentType) {
-                        DOM.documentType.textContent = item.document_type || 'N/A';
+                        DOM.documentType.textContent = item.document_number || item.document_type || 'N/A';
+                    }
+
+                    // Display expiry date
+                    if (DOM.expiryDate && item.fecha_vencimiento) {
+                        const expiryDate = new Date(item.fecha_vencimiento);
+                        const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                        DOM.expiryDate.textContent = expiryDate.toLocaleDateString('es-GT', options);
+
+                        // Color code based on expiry
+                        const today = new Date();
+                        const daysToExpiry = Math.floor((expiryDate - today) / (1000 * 60 * 60 * 24));
+                        if (daysToExpiry < 0) {
+                            DOM.expiryDate.style.color = 'var(--color-danger)';
+                        } else if (daysToExpiry < 90) {
+                            DOM.expiryDate.style.color = 'var(--color-warning)';
+                        } else {
+                            DOM.expiryDate.style.color = 'var(--color-success)';
+                        }
+                    } else {
+                        DOM.expiryDate.textContent = 'N/A';
+                        DOM.expiryDate.style.color = 'var(--color-text-secondary)';
                     }
 
                     DOM.quantity.max = stock;
@@ -1900,6 +2150,7 @@ try {
                     let price = parseFloat(item.precio_venta) || 0;
                     if (currentMode === 'hospital') price = parseFloat(item.precio_hospital) || 0;
                     if (currentMode === 'medical') price = parseFloat(item.precio_medico) || 0;
+                    if (currentMode === 'special') price = parseFloat(item.precio_compra) || 0;
 
                     DOM.unitPrice.value = price.toFixed(2);
 
@@ -2116,6 +2367,7 @@ try {
                     // Preparar datos de la venta
                     const saleData = {
                         nombre_cliente: DOM.clientName.value.trim(),
+                        nit_cliente: document.getElementById('clientNIT').value.trim() || 'C/F',
                         tipo_pago: DOM.paymentMethod.value,
                         total: cartItems.reduce((sum, item) => sum + item.subtotal, 0),
                         estado: 'Pagado',
@@ -2198,6 +2450,23 @@ try {
                         timerProgressBar: true,
                         background: 'var(--color-card)',
                         color: 'var(--color-text)'
+                    });
+                }
+
+                openShiftReport() {
+                    Swal.fire({
+                        title: '¿Generar Corte de Jornada?',
+                        text: "Se generará un reporte PDF con las ventas del turno actual.",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ffc107',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Sí, generar PDF',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.open('export_shift_pdf.php', '_blank');
+                        }
                     });
                 }
 

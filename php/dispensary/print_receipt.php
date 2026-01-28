@@ -27,13 +27,21 @@ try {
     $conn = $database->getConnection();
 
     // Obtener datos de la venta
-    $stmt = $conn->prepare("SELECT * FROM ventas WHERE id_venta = ?");
+    $stmt = $conn->prepare("
+        SELECT v.*, u.nombre as Cajero
+        FROM ventas v
+        LEFT JOIN usuarios u ON v.id_usuario = u.idUsuario
+        WHERE v.id_venta = ?
+    ");
     $stmt->execute([$id_venta]);
     $venta = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$venta) {
         die("Venta no encontrada");
     }
+
+    $nit_cliente = $venta['nit_cliente'] ?? 'C/F';
+    $cajero = $venta['Cajero'] ?? $user_name;
 
     // Obtener items de la venta
     $stmt = $conn->prepare("
@@ -223,8 +231,8 @@ $hora_formateada = $fecha->format('H:i');
         <div class="clinic-header text-center">
             <h2 class="fw-bold">CENTRO MÉDICO HERRERA SAENZ</h2>
             <div class="clinic-info">
-                <p>Dirección de la Clínica</p>
-                <p>Tel: (502) 1234-5678</p>
+                <p>7a Av 7-25 Zona 1 HH</p>
+                <p>Tel: (+502) 5214-8836</p>
             </div>
         </div>
 
@@ -237,6 +245,7 @@ $hora_formateada = $fecha->format('H:i');
             </div>
             <div>Recibo #: <?php echo str_pad($id_venta, 5, '0', STR_PAD_LEFT); ?></div>
             <div>Cliente: <?php echo htmlspecialchars($venta['nombre_cliente']); ?></div>
+            <div>NIT: <?php echo htmlspecialchars($nit_cliente); ?></div>
         </div>
 
         <div class="divider"></div>
@@ -272,7 +281,7 @@ $hora_formateada = $fecha->format('H:i');
 
         <div class="footer">
             <p>¡Gracias por su compra!</p>
-            <p class="mt-2">Usuario: <?php echo htmlspecialchars($user_name); ?></p>
+            <p class="mt-2">Atendió: <?php echo htmlspecialchars($cajero); ?></p>
         </div>
     </div>
 
@@ -289,4 +298,5 @@ $hora_formateada = $fecha->format('H:i');
         };
     </script>
 </body>
+
 </html>

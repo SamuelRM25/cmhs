@@ -470,7 +470,7 @@ CREATE TABLE `evoluciones_medicas` (
 --
 
 CREATE TABLE `examenes_realizados` (
-  `id_examen_realizado` int DEFAULT NULL,
+  `id_examen_realizado` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `id_paciente` int NOT NULL,
   `nombre_paciente` varchar(255) NOT NULL,
   `tipo_examen` varchar(255) NOT NULL COMMENT 'Nombre del examen (ej. Electrocardiograma, Ultrasonido)',
@@ -1658,7 +1658,8 @@ CREATE TABLE `ventas` (
   `id_usuario` int DEFAULT NULL,
   `fecha_venta` datetime DEFAULT CURRENT_TIMESTAMP,
   `nombre_cliente` varchar(100) DEFAULT NULL,
-  `tipo_pago` enum('Efectivo','Tarjeta','Seguro Médico') DEFAULT NULL,
+  `nit_cliente` varchar(50) DEFAULT 'C/F',
+  `tipo_pago` enum('Efectivo','Tarjeta','Seguro Médico','Transferencia') DEFAULT NULL,
   `total` decimal(10,2) DEFAULT '0.00',
   `estado` enum('Pendiente','Pagado','Cancelado') DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

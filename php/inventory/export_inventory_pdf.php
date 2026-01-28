@@ -11,7 +11,15 @@ verify_session();
 try {
     $database = new Database();
     $conn = $database->getConnection();
-    $stmt = $conn->query("SELECT * FROM inventario ORDER BY nom_medicamento ASC");
+
+    $query = "
+        SELECT i.*, ph.document_number, pi.unit_cost 
+        FROM inventario i
+        LEFT JOIN purchase_items pi ON i.id_purchase_item = pi.id
+        LEFT JOIN purchase_headers ph ON pi.purchase_header_id = ph.id
+        ORDER BY i.nom_medicamento ASC
+    ";
+    $stmt = $conn->query($query);
     $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     die("Error: " . $e->getMessage());
@@ -133,9 +141,9 @@ try {
                 <th>Pres.</th>
                 <th>Cant.</th>
                 <th>Vence</th>
+                <th>Factura</th>
                 <th>P. Compra</th>
                 <th>P. Venta</th>
-                <th>Hosp.</th>
             </tr>
         </thead>
         <tbody>
@@ -159,14 +167,14 @@ try {
                     <td>
                         <?php echo date('d/m/y', strtotime($item['fecha_vencimiento'])); ?>
                     </td>
+                    <td>
+                        <?php echo htmlspecialchars($item['document_number'] ?? 'N/A'); ?>
+                    </td>
                     <td>Q
-                        <?php echo number_format($item['precio_compra'], 2); ?>
+                        <?php echo number_format($item['unit_cost'] ?? $item['precio_compra'], 2); ?>
                     </td>
                     <td>Q
                         <?php echo number_format($item['precio_venta'], 2); ?>
-                    </td>
-                    <td>Q
-                        <?php echo number_format($item['precio_hospital'], 2); ?>
                     </td>
                 </tr>
             <?php endforeach; ?>
