@@ -158,8 +158,8 @@ try {
         <div class="clinic-header text-center">
             <h2 class="fw-bold">CENTRO MÉDICO HERRERA SAENZ</h2>
             <div class="clinic-info">
-                <p>Dirección de la Clínica</p>
-                <p>Tel: (502) 1234-5678</p>
+                <p>7a Av 7-25 Zona 1 HH</p>
+                <p>Tel: (502) 5214-8836</p>
             </div>
         </div>
         <div class="divider"></div>
