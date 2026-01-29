@@ -4485,69 +4485,47 @@ try {
                             <label class="form-label">Tipo de Ultrasonido</label>
                             <select class="form-select" id="ultrasoundSelect" name="ultrasound_type" required>
                                 <option value="">Seleccione...</option>
-                                <option value="ABDOMINAL SUPERIOR" data-price="300.00">ABDOMINAL SUPERIOR
-                                </option>
-                                <option value="CADERA" data-price="500.00">CADERA</option>
-                                <option value="CUELLO O TIROIDEO" data-price="500.00">CUELLO O TIROIDEO
-                                </option>
-                                <option value="HOMBRO" data-price="500.00">HOMBRO</option>
-                                <option value="MUÑECA" data-price="500.00">MUÑECA</option>
-                                <option value="INGUINAL" data-price="500.00">INGUINAL</option>
-                                <option value="OBSTETRICO" data-price="300.00">OBSTETRICO</option>
-                                <option value="ABDOMINAL SUPERIOR (PELVICO)" data-price="300.00">ABDOMINAL SUPERIOR
-                                    (PELVICO)</option>
-                                <option value="ABDOMEN INFERIOR + FID" data-price="300.00">ABDOMEN INFERIOR + FID
-                                </option>
-                                <option value="ABDOMINAL COMPLETO" data-price="300.00">ABDOMINAL COMPLETO
-                                </option>
-                                <option value="ABDOMINAL PEDIATRICO MENORES A 2" data-price="600.00">ABDOMINAL
-                                    PEDIATRICO MENORES A 2</option>
-                                <option value="ABDOMINAL PEDIATRICO" data-price="450.00">ABDOMINAL PEDIATRICO
-                                </option>
-                                <option value="ABDOMINAL SUPERIOR + FID" data-price="350.00">ABDOMINAL SUPERIOR + FID
-                                </option>
-                                <option value="AMBAS RODILLAS" data-price="1000.00">AMBAS RODILLAS</option>
-                                <option value="RODILLA" data-price="500.00">RODILLA</option>
-                                <option value="DOPPLER ARTERIAL UNA EXTREMIDAD" data-price="700.00">DOPPLER ARTERIAL UNA
-                                    EXTREMIDAD</option>
-                                <option value="DOPPLER CAROTIDEO" data-price="700.00">DOPPLER CAROTIDEO</option>
-                                <option value="DOPPLER VENOSO UNA EXTREMIDAD" data-price="700.00">DOPPLER VENOSO UNA
-                                    EXTREMIDAD</option>
-                                <option value="ENDOVAGINAL" data-price="350.00">ENDOVAGINAL</option>
-                                <option value="GUIA ECOGRAFICA PARA BIOPSIA" data-price="590.00">GUIA ECOGRAFICA PARA
-                                    BIOPSIA</option>
-                                <option value="GUIA ECOGRAFICA PARA DRENAJE DE A" data-price="500.00">GUIA ECOGRAFICA
-                                    PARA DRENAJE DE A</option>
-                                <option value="GUIA PARA PARACENTESIS" data-price="400.00">GUIA PARA PARACENTESIS
-                                </option>
-                                <option value="HEPATICO Y VIAS BILIARES" data-price="380.00">HEPATICO Y VIAS BILIARES
-                                </option>
-                                <option value="HEPATICO Y VIAS BILIARES PEDIATRICO" data-price="350.00">HEPATICO Y VIAS
-                                    BILIARES PEDIATRICO</option>
-                                <option value="RIÑON- ESCROTAL" data-price="350.00">RIÑON- ESCROTAL</option>
-                                <option value="MAMARIO" data-price="500.00">MAMARIO</option>
-                                <option value="MUSCULAR PARTES BLANDAS" data-price="500.00">MUSCULAR PARTES BLANDAS
-                                </option>
-                                + <option value="obstetrico" data-price="250.00">obstetrico</option>
-                                <option value="OBSTETRICO GEMELAR" data-price="400.00">OBSTETRICO GEMELAR</option>
-                                <option value="PARED ABDOMINAL E INGUINAL" data-price="500.00">PARED ABDOMINAL E
-                                    INGUINAL</option>
-                                <option value="PERICARDIO" data-price="350.00">PERICARDIO</option>
-                                <option value="PILORO" data-price="250.00">PILORO</option>
-                                <option value="PROSTATICO" data-price="250.00">PROSTATICO</option>
-                                <option value="PROSTATICO ENDORECTAL" data-price="350.00">PROSTATICO ENDORECTAL
-                                </option>
-                                <option value="RENAL PEDIATRICO MENORA 2 AÑOS" data-price="300.00">RENAL PEDIATRICO
-                                    MENORA 2 AÑOS</option>
-                                <option value="RENAL" data-price="250.00">RENAL</option>
-                                <option value="renal y vias urinarias" data-price="450.00">renal y vias urinarias
-                                </option>
-                                <option value="TEJIDOS BLANDOS - MUSCULAR" data-price="Manual">TEJIDOS BLANDOS -
-                                    MUSCULAR</option>
-                                <option value="TENDON DE AQUILES" data-price="500.00">TENDON DE AQUILES</option>
-                                <option value="TESTICULAR O ESCROTAL" data-price="500.00">TESTICULAR O ESCROTAL
-                                </option>
-                                <option value="TRANSFONELAR" data-price="Manual">TRANSFONELAR</option>
+                                <option value="Abdominal superior" data-price="300.00">Abdominal superior</option>
+                                <option value="Cadera" data-price="500.00">Cadera</option>
+                                <option value="Cuello o tiroideo" data-price="500.00">Cuello o tiroideo</option>
+                                <option value="Hombro" data-price="500.00">Hombro</option>
+                                <option value="Muñeca" data-price="500.00">Muñeca</option>
+                                <option value="Inguinal" data-price="500.00">Inguinal</option>
+                                <option value="Obstetrico" data-price="300.00">Obstetrico</option>
+                                <option value="Abdominal inferior (pelvico)" data-price="300.00">Abdominal inferior (pelvico)</option>
+                                <option value="Abdomen inferior + FID" data-price="300.00">Abdomen inferior + FID</option>
+                                <option value="Abdominal completo" data-price="500.00">Abdominal completo</option>
+                                <option value="Abdominal pediatrico menores a 2 años" data-price="600.00">Abdominal pediatrico menores a 2 años</option>
+                                <option value="Abdominal pediatrico" data-price="450.00">Abdominal pediatrico</option>
+                                <option value="Abdominal superior + FID" data-price="350.00">Abdominal superior + FID</option>
+                                <option value="Ambas rodillas" data-price="1000.00">Ambas rodillas</option>
+                                <option value="Rodilla" data-price="500.00">Rodilla</option>
+                                <option value="Doppler arterial una extremidad" data-price="700.00">Doppler arterial una extremidad</option>
+                                <option value="Doppler carotideo" data-price="700.00">Doppler carotideo</option>
+                                <option value="Doppler venoso una extremidad" data-price="700.00">Doppler venoso una extremidad</option>
+                                <option value="Endovaginal" data-price="350.00">Endovaginal</option>
+                                <option value="Guia ecografica para biopsia" data-price="550.00">Guia ecografica para biopsia</option>
+                                <option value="Guia ecografica para drenaje de absceso" data-price="500.00">Guia ecografica para drenaje de absceso</option>
+                                <option value="Guia para paracentesis" data-price="400.00">Guia para paracentesis</option>
+                                <option value="Hepatico y vias biliares" data-price="350.00">Hepatico y vias biliares</option>
+                                <option value="Hepatico y vias biliares pediatrico menores a 2 años" data-price="380.00">Hepatico y vias biliares pediatrico menores a 2 años</option>
+                                <option value="Inguino-escrotal" data-price="350.00">Inguino-escrotal</option>
+                                <option value="Mamario" data-price="500.00">Mamario</option>
+                                <option value="Muscular partes blandas" data-price="500.00">Muscular partes blandas</option>
+                                <option value="Obstetrico" data-price="250.00">Obstetrico</option>
+                                <option value="Obstetrico gemelar" data-price="400.00">Obstetrico gemelar</option>
+                                <option value="Pared abdominal e inguinal" data-price="500.00">Pared abdominal e inguinal</option>
+                                <option value="Pericardico" data-price="350.00">Pericardico</option>
+                                <option value="Piloro" data-price="250.00">Piloro</option>
+                                <option value="Prostatico" data-price="250.00">Prostatico</option>
+                                <option value="Prostatico endorrectal" data-price="350.00">Prostatico endorrectal</option>
+                                <option value="Renal pediatrico menor a 2 años" data-price="300.00">Renal pediatrico menor a 2 años</option>
+                                <option value="Renal" data-price="250.00">Renal</option>
+                                <option value="Renal y vias urinarias" data-price="450.00">Renal y vias urinarias</option>
+                                <option value="Tejidos blandos - muscular" data-price="Manual">Tejidos blandos - muscular</option>
+                                <option value="Tendon de aquiles" data-price="500.00">Tendon de aquiles</option>
+                                <option value="Testicular o escrotal" data-price="500.00">Testicular o escrotal</option>
+                                <option value="Transfonelar" data-price="Manual">Transfonelar</option>
                                 <option value="6D" data-price="Manual">6D</option>
                             </select>
                         </div>
