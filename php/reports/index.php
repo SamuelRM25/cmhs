@@ -177,6 +177,48 @@ try {
     // Título de la página
     $page_title = "Reportes - Centro Médico Herrera Saenz";
 
+    // ============ REPORTE DE RENTABILIDAD DE FARMACIA ============
+
+    // Obtener fechas para filtro de rentabilidad (predeterminado: mes actual)
+    $profit_start = $_GET['profit_start'] ?? date('Y-m-01');
+    $profit_end = $_GET['profit_end'] ?? date('Y-m-d');
+
+    // Ajustar final del día para la fecha fin
+    $profit_end_datetime = $profit_end . ' 23:59:59';
+    $profit_start_datetime = $profit_start . ' 00:00:00';
+
+    $stmt_profitability = $conn->prepare("
+        SELECT 
+            i.nom_medicamento,
+            i.codigo_barras,
+            SUM(dv.cantidad_vendida) as cantidad_total,
+            SUM(dv.cantidad_vendida * dv.precio_unitario) as total_venta,
+            SUM(dv.cantidad_vendida * COALESCE(pi.unit_cost, 0)) as total_costo
+        FROM detalle_ventas dv
+        JOIN ventas v ON dv.id_venta = v.id_venta
+        JOIN inventario i ON dv.id_inventario = i.id_inventario
+        LEFT JOIN purchase_items pi ON i.id_purchase_item = pi.id
+        WHERE v.fecha_venta BETWEEN ? AND ?
+        GROUP BY i.id_inventario, i.nom_medicamento, i.codigo_barras
+        ORDER BY total_venta DESC
+    ");
+
+    $stmt_profitability->execute([$profit_start_datetime, $profit_end_datetime]);
+    $profitability_data = $stmt_profitability->fetchAll(PDO::FETCH_ASSOC);
+
+    // Calcular totales generales del reporte
+    $total_profit_revenue = 0;
+    $total_profit_cost = 0;
+
+    foreach ($profitability_data as $row) {
+        $total_profit_revenue += $row['total_venta'];
+        $total_profit_cost += $row['total_costo'];
+    }
+
+    $total_profit_amount = $total_profit_revenue - $total_profit_cost;
+    $total_profit_margin = $total_profit_revenue > 0 ? ($total_profit_amount / $total_profit_revenue) * 100 : 0;
+
+
 } catch (PDOException $e) {
     // Error específico de base de datos
     error_log("Error DB en módulo de reportes: " . $e->getMessage());
@@ -1646,6 +1688,148 @@ try {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+            
+            <!-- SECCIÓN RENTABILIDAD DE FARMACIA -->
+            <div class="content-section animate-in" style="margin-top: 2rem;">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="bi bi-cash-stack section-title-icon"></i>
+                        Rentabilidad Farmacia
+                    </h3>
+                    <div class="page-actions">
+                        <a href="export_sales.php?start=<?php echo $profit_start; ?>&end=<?php echo $profit_end; ?>&format=csv"
+                            target="_blank" class="action-btn secondary">
+                            <i class="bi bi-filetype-csv"></i> CSV
+                        </a>
+                        <a href="export_sales.php?start=<?php echo $profit_start; ?>&end=<?php echo $profit_end; ?>&format=excel"
+                            target="_blank" class="action-btn secondary">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> Excel
+                        </a>
+                        <a href="export_sales.php?start=<?php echo $profit_start; ?>&end=<?php echo $profit_end; ?>&format=print"
+                            target="_blank" class="action-btn secondary">
+                            <i class="bi bi-printer"></i> PDF
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filter-panel">
+                    <form method="GET" class="filter-form">
+                        <div class="form-group">
+                            <label class="form-label">Fecha Inicio</label>
+                            <input type="date" name="profit_start" class="form-control"
+                                value="<?php echo $profit_start; ?>">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Fecha Fin</label>
+                            <input type="date" name="profit_end" class="form-control"
+                                value="<?php echo $profit_end; ?>">
+                        </div>
+                        <div class="form-group" style="flex: 0; min-width: 150px;">
+                            <input type="hidden" name="fecha_filtro" value="<?php echo $fecha_filtro ?? ''; ?>">
+                            <button type="submit" class="action-btn primary w-100">
+                                <i class="bi bi-search"></i> Filtrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Resumen de Estadísticas -->
+                <div class="stats-grid" style="margin-top: 2rem;">
+                    <div class="stat-card">
+                        <div class="stat-icon info">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                        <div class="stat-value">Q<?php echo number_format($total_profit_revenue, 2); ?></div>
+                        <div class="stat-label">Ventas Totales</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon danger">
+                            <i class="bi bi-cart-x"></i>
+                        </div>
+                        <div class="stat-value">Q<?php echo number_format($total_profit_cost, 2); ?></div>
+                        <div class="stat-label">Costos Totales</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon success">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <div class="stat-value">Q<?php echo number_format($total_profit_amount, 2); ?></div>
+                        <div class="stat-label">Ganancia Neta (<?php echo number_format($total_profit_margin, 1); ?>%)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Detalles -->
+                <div class="table-responsive" style="margin-top: 2rem;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Medicamento</th>
+                                <th class="text-center">Cant.</th>
+                                <th class="text-end">P. Venta</th>
+                                <th class="text-end">Costo</th>
+                                <th class="text-end">Total Venta</th>
+                                <th class="text-end">Total Costo</th>
+                                <th class="text-end">Ganancia</th>
+                                <th class="text-end">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($profitability_data as $row):
+                                $ganancia = $row['total_venta'] - $row['total_costo'];
+                                $margen = $row['total_venta'] > 0 ? ($ganancia / $row['total_venta']) * 100 : 0;
+
+                                $p_venta_unit = $row['cantidad_total'] > 0 ? $row['total_venta'] / $row['cantidad_total'] : 0;
+                                $p_costo_unit = $row['cantidad_total'] > 0 ? $row['total_costo'] / $row['cantidad_total'] : 0;
+                                ?>
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 600;">
+                                            <?php echo htmlspecialchars($row['nom_medicamento']); ?></div>
+                                        <?php if (!empty($row['codigo_barras'])): ?>
+                                            <div style="font-size: 0.75rem; color: var(--color-text-secondary);">
+                                                <i class="bi bi-upc"></i> <?php echo htmlspecialchars($row['codigo_barras']); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="amount-badge"><?php echo $row['cantidad_total']; ?></span>
+                                    </td>
+                                    <td class="text-end text-muted">Q<?php echo number_format($p_venta_unit, 2); ?></td>
+                                    <td class="text-end text-muted">Q<?php echo number_format($p_costo_unit, 2); ?></td>
+                                    <td class="text-end" style="font-weight: 600;">
+                                        Q<?php echo number_format($row['total_venta'], 2); ?></td>
+                                    <td class="text-end text-muted">Q<?php echo number_format($row['total_costo'], 2); ?>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="amount-badge <?php echo $ganancia >= 0 ? 'income' : 'expense'; ?>">
+                                            Q<?php echo number_format($ganancia, 2); ?>
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span
+                                            style="font-weight: 700; color: <?php echo $margen > 30 ? 'var(--color-success)' : ($margen > 15 ? 'var(--color-warning)' : 'var(--color-danger)'); ?>;">
+                                            <?php echo number_format($margen, 0); ?>%
+                                        </span>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <?php if (empty($profitability_data)): ?>
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <div style="opacity: 0.5; margin-bottom: 1rem;">
+                                            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                                        </div>
+                                        <div style="color: var(--color-text-secondary);">No se encontraron ventas en el
+                                            rango seleccionado</div>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </main>

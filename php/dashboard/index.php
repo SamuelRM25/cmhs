@@ -3599,7 +3599,6 @@ try {
                     this.setupXrayHandlers();
                     this.setupUltrasoundHandlers();
                     this.setupAnimations();
-                    this.setupAdminNotifications();
                 }
 
                 setupGreeting() {
@@ -4193,35 +4192,6 @@ try {
                     }, { threshold: 0.1 });
 
                     document.querySelectorAll('.stat-card, .appointments-section, .alert-card').forEach(el => observer.observe(el));
-                }
-
-                setupAdminNotifications() {
-                    <?php if ($user_type === 'admin'): ?>
-                        const lastDate = localStorage.getItem('dailyReportDate');
-                        const today = new Date().toISOString().split('T')[0];
-                        if (new Date().getHours() >= 8 && lastDate !== today) {
-                            setTimeout(() => this.showDailyReportNotification(today), 2000);
-                        }
-                    <?php endif; ?>
-                }
-
-                showDailyReportNotification(today) {
-                    const notification = document.createElement('div');
-                    notification.className = 'alert-card mb-4 animate-in';
-                    notification.style.borderLeft = '4px solid var(--color-info)';
-                    notification.innerHTML = `
-                        <div class="alert-header">
-                            <div class="alert-icon info"><i class="bi bi-info-circle"></i></div>
-                            <h3 class="alert-title">Reporte Diario</h3>
-                            <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
-                        </div>
-                        <p class="text-muted mb-3">¿Desea generar el reporte de la jornada anterior?</p>
-                        <div class="d-flex gap-2">
-                            <button class="action-btn" onclick="window.open('../reports/export_jornada.php?date=${today}', '_blank'); localStorage.setItem('dailyReportDate', '${today}'); this.parentElement.parentElement.remove();"><i class="bi bi-file-earmark-pdf"></i> Generar Reporte</button>
-                            <button class="btn btn-outline-secondary" onclick="localStorage.setItem('dailyReportDate', '${today}'); this.parentElement.parentElement.remove();">Más tarde</button>
-                        </div>`;
-                    const main = document.querySelector('.main-content');
-                    if (main) main.insertBefore(notification, main.firstChild);
                 }
             }
 
