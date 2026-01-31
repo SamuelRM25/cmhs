@@ -20,6 +20,16 @@ try {
     $database = new Database();
     $conn = $database->getConnection();
 
+    // Auto-populate session username if missing (for already logged-in users)
+    if (!isset($_SESSION['usuario'])) {
+        $stmt_u = $conn->prepare("SELECT usuario FROM usuarios WHERE idUsuario = ?");
+        $stmt_u->execute([$user_id]);
+        $u_row = $stmt_u->fetch(PDO::FETCH_ASSOC);
+        if ($u_row) {
+            $_SESSION['usuario'] = $u_row['usuario'];
+        }
+    }
+
     // Fetch encamamiento details
     $stmt_enc = $conn->prepare("
         SELECT 
@@ -1265,6 +1275,9 @@ try {
                                                     <th>Cantidad</th>
                                                     <th>Precio Unit.</th>
                                                     <th>Subtotal</th>
+                                                    <?php if (isset($_SESSION['usuario']) && in_array($_SESSION['usuario'], ['admin', 'epineda', 'ysantos'])): ?>
+                                                        <th>Acciones</th>
+                                                    <?php endif; ?>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1275,6 +1288,14 @@ try {
                                                         <td><?php echo number_format($cargo['cantidad'], 2); ?></td>
                                                         <td>Q<?php echo number_format($cargo['precio_unitario'], 2); ?></td>
                                                         <td>Q<?php echo number_format($cargo['subtotal'], 2); ?></td>
+                                                        <?php if (isset($_SESSION['usuario']) && in_array($_SESSION['usuario'], ['admin', 'epineda', 'ysantos'])): ?>
+                                                            <td>
+                                                                <button class="btn btn-sm btn-outline-primary"
+                                                                    onclick='editCargo(<?php echo json_encode($cargo); ?>)'>
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </button>
+                                                            </td>
+                                                        <?php endif; ?>
                                                     </tr>
                                                 <?php endforeach; ?>
                                             </tbody>
@@ -1947,6 +1968,60 @@ try {
 
         function printAbono(id) {
             window.open('print_abono.php?id=' + id, '_blank');
+        }
+
+        function editCargo(cargo) {
+            Swal.fire({
+                title: 'Editar Cargo',
+                html: `
+                <form id="editCargoForm" class="text-start">
+                    <input type="hidden" name="id_cargo" value="${cargo.id_cargo}">
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <input type="text" class="form-control" name="descripcion" value="${cargo.descripcion}" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cantidad</label>
+                            <input type="number" step="1" class="form-control" name="cantidad" value="${cargo.cantidad}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Precio Unitario (Q)</label>
+                            <input type="number" step="1" class="form-control" name="precio_unitario" value="${cargo.precio_unitario}" required>
+                        </div>
+                    </div>
+                </form>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Actualizar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#7c90db',
+                preConfirm: () => {
+                    const form = document.getElementById('editCargoForm');
+                    const formData = new FormData(form);
+
+                    return fetch('api/update_hospital_charge.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status !== 'success') {
+                                throw new Error(data.message);
+                            }
+                            return data;
+                        })
+                        .catch(error => {
+                            Swal.showValidationMessage(`Error: ${error}`);
+                        });
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire('¡Actualizado!', 'El cargo ha sido actualizado correctamente.', 'success').then(() => {
+                        location.reload();
+                    });
+                }
+            });
         }
 
         function printAccount() {
