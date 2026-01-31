@@ -102,12 +102,18 @@ try {
         $fecha_ingreso = new DateTime($encamamiento['fecha_ingreso']);
         $fecha_hasta = $encamamiento['estado'] == 'Activo' ? new DateTime() : new DateTime($encamamiento['fecha_alta']);
 
+        // Check if this is a "RETRASADO" admission
+        $is_retrasado_record = (strpos($encamamiento['notas_ingreso'] ?? '', '[RETRASADO]') !== false);
+
         // We charge for the first day, and every midnight that passed
+        // SKIP if it's a delayed record to avoid automatic charges for retrospective days
         $interval = new DateInterval('P1D');
         $date_period = new DatePeriod($fecha_ingreso, $interval, $fecha_hasta);
 
         $added_any = false;
         foreach ($date_period as $date) {
+            if ($is_retrasado_record)
+                break; // Skip the loop if it's a delayed record
             $date_str = $date->format('Y-m-d');
             if (!in_array($date_str, $existing_nights)) {
                 // Charge is missing for this night

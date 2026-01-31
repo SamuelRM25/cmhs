@@ -112,8 +112,18 @@ try {
     $stmt_billings->execute([$fecha_inicio, $fecha_fin]);
     $total_billings = $stmt_billings->fetchColumn() ?: 0;
 
+    // 6.b Hospitalizaciones (Cuentas de encamamientos dados de alta)
+    $stmt_hosp = $conn->prepare("
+        SELECT SUM(total_general) 
+        FROM cuenta_hospitalaria ch 
+        JOIN encamamientos e ON ch.id_encamamiento = e.id_encamamiento 
+        WHERE e.fecha_alta BETWEEN ? AND ?
+    ");
+    $stmt_hosp->execute([$start_datetime, $end_datetime]);
+    $total_hospitalization = $stmt_hosp->fetchColumn() ?: 0;
+
     // 7. Ingresos brutos totales
-    $total_gross_revenue = $total_sales_meds + $total_procedures + $total_exams_revenue + $total_billings;
+    $total_gross_revenue = $total_sales_meds + $total_procedures + $total_exams_revenue + $total_billings + $total_hospitalization;
 
     // 8. Utilidad Bruta
     $total_gross_profit = $total_gross_revenue - $sales_cost;
@@ -139,7 +149,8 @@ try {
         'Ventas' => (float) $total_sales_meds,
         'Consultas' => (float) $total_billings,
         'Procedimientos' => (float) $total_procedures,
-        'Exámenes' => (float) $total_exams_revenue
+        'Exámenes' => (float) $total_exams_revenue,
+        'Hospitalización' => (float) $total_hospitalization
     ];
 
     // C. Top 5 Medicamentos más vendidos
@@ -1373,6 +1384,14 @@ try {
                                                 </span>
                                             </td>
                                         </tr>
+                                        <tr>
+                                            <td>Hospitalización</td>
+                                            <td class="text-end">
+                                                <span class="amount-badge income">
+                                                    Q<?php echo number_format($total_hospitalization, 2); ?>
+                                                </span>
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1690,7 +1709,7 @@ try {
                     </div>
                 </div>
             </div>
-            
+
             <!-- SECCIÓN RENTABILIDAD DE FARMACIA -->
             <div class="content-section animate-in" style="margin-top: 2rem;">
                 <div class="section-header">
@@ -1788,7 +1807,8 @@ try {
                                 <tr>
                                     <td>
                                         <div style="font-weight: 600;">
-                                            <?php echo htmlspecialchars($row['nom_medicamento']); ?></div>
+                                            <?php echo htmlspecialchars($row['nom_medicamento']); ?>
+                                        </div>
                                         <?php if (!empty($row['codigo_barras'])): ?>
                                             <div style="font-size: 0.75rem; color: var(--color-text-secondary);">
                                                 <i class="bi bi-upc"></i> <?php echo htmlspecialchars($row['codigo_barras']); ?>
@@ -2007,7 +2027,7 @@ try {
                                 labels: Object.keys(categoryData),
                                 datasets: [{
                                     data: Object.values(categoryData),
-                                    backgroundColor: ['#7c90db', '#8dd7bf', '#f8b195', '#38bdf8'],
+                                    backgroundColor: ['#7c90db', '#8dd7bf', '#f8b195', '#38bdf8', '#fbbf24'],
                                     borderWidth: 0,
                                     hoverOffset: 15
                                 }]

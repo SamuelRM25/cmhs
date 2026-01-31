@@ -1702,7 +1702,9 @@ try {
                             <select class="form-select" id="id_doctor" name="id_doctor" required>
                                 <option value="">Seleccione un médico...</option>
                                 <?php foreach ($doctores as $doctor): ?>
-                                    <option value="<?php echo $doctor['idUsuario']; ?>">
+                                    <option value="<?php echo $doctor['idUsuario']; ?>"
+                                        data-nombre="<?php echo htmlspecialchars($doctor['nombre']); ?>"
+                                        data-apellido="<?php echo htmlspecialchars($doctor['apellido']); ?>">
                                         Dr(a).
                                         <?php echo htmlspecialchars($doctor['nombre'] . ' ' . $doctor['apellido']); ?>
                                     </option>
@@ -1923,6 +1925,27 @@ try {
                                 }
                                 break;
                             default: price = (type === 'Consulta') ? 100 : 0; break;
+                        }
+
+                        // Overrides based on name
+                        const selectedOption = doctorSelect.options[doctorSelect.selectedIndex];
+                        if (selectedOption) {
+                            const nombre = (selectedOption.getAttribute('data-nombre') || '').toLowerCase();
+                            const apellido = (selectedOption.getAttribute('data-apellido') || '').toLowerCase();
+                            
+                            // Dr. Estuardo Rivas - Q400 off-hours/weekends
+                            if (nombre.includes('estuardo') && apellido.includes('rivas')) {
+                                if (day === 0 || day === 6 || hour >= 16) {
+                                    price = 400;
+                                }
+                            }
+                            
+                            // Dra. Libny - Q300 off-hours/weekends
+                            if (nombre.includes('libny')) {
+                                if (day === 0 || day === 6 || hour >= 16) {
+                                    price = 300;
+                                }
+                            }
                         }
                         montoInput.value = price;
                     };

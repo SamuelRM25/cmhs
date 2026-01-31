@@ -896,10 +896,20 @@ try {
                     <div class="badge <?php echo $orden['prioridad'] === 'Rutina' ? 'bg-info' : 'bg-danger'; ?> mb-2">
                         Prioridad: <?php echo $orden['prioridad']; ?>
                     </div>
-                    <p class="small text-muted mb-0">
+                    <p class="small text-muted mb-2">
                         <i class="bi bi-person-badge me-1"></i>
                         Dr. <?php echo htmlspecialchars($orden['doctor_nombre'] . ' ' . $orden['doctor_apellido']); ?>
                     </p>
+                    <button type="button" class="btn btn-outline-primary btn-sm"
+                        onclick="openOrderUploadModal(<?php echo $id_orden; ?>)">
+                        <i class="bi bi-paperclip"></i> Adjuntar Orden Física
+                    </button>
+                    <?php if (!empty($orden['archivo_resultados'])): ?>
+                        <a href="<?php echo htmlspecialchars($orden['archivo_resultados']); ?>" target="_blank"
+                            class="btn btn-sm btn-info text-white mt-1">
+                            <i class="bi bi-eye"></i> Ver Orden
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -916,20 +926,11 @@ try {
                                 <?php echo htmlspecialchars($prueba['nombre_prueba']); ?>
                             </h4>
                             <div>
-                                <?php if ($prueba['estado'] === 'Pendiente'): ?>
-                                    <button type="button" class="action-btn"
-                                        onclick="openFileUploadModal(<?php echo $prueba['id_orden_prueba']; ?>, <?php echo $id_orden; ?>)">
-                                        <i class="bi bi-file-earmark-arrow-up"></i> Cargar Archivo
-                                    </button>
-                                <?php else: ?>
+                                <?php if ($prueba['estado'] !== 'Pendiente'): ?>
                                     <div class="d-flex gap-2">
                                         <span class="badge bg-success py-2">
                                             <i class="bi bi-check-circle"></i> Muestra Recibida
                                         </span>
-                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                            onclick="openFileUploadModal(<?php echo $prueba['id_orden_prueba']; ?>, <?php echo $id_orden; ?>)">
-                                            <i class="bi bi-arrow-repeat"></i> Cambiar Archivo
-                                        </button>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -1194,12 +1195,8 @@ try {
         });
 
         // Funciones globales para botones
-        function openFileUploadModal(id_orden_prueba, id_orden) {
-            // Store values for form submission
-            window.currentTestId = id_orden_prueba;
+        function openOrderUploadModal(id_orden) {
             window.currentOrderId = id_orden;
-
-            // Show Bootstrap modal
             const modal = new bootstrap.Modal(document.getElementById('fileUploadModal'));
             modal.show();
         }
@@ -1227,8 +1224,8 @@ try {
             e.preventDefault();
 
             const formData = new FormData(this);
-            formData.append('id_orden_prueba', window.currentTestId);
             formData.append('id_orden', window.currentOrderId);
+            // formData.append('id_orden_prueba', window.currentTestId); // Removed as we are uploading for order
 
             // Show loading state
             const submitBtn = this.querySelector('button[type="submit"]');

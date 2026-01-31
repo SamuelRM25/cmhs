@@ -17,7 +17,7 @@ $id_orden_prueba = $_POST['id_orden_prueba'] ?? null;
 $id_orden = $_POST['id_orden'] ?? null;
 $notas = $_POST['notas'] ?? '';
 
-if (!$id_orden_prueba || !$id_orden) {
+if (!$id_orden && !$id_orden_prueba) {
     echo json_encode(['success' => false, 'message' => 'Faltan parámetros requeridos']);
     exit;
 }
@@ -48,19 +48,42 @@ try {
 
         $conn->beginTransaction();
 
-        // 1. Insert file into archivos_orden
-        $stmt = $conn->prepare("INSERT INTO archivos_orden (id_orden_prueba, nombre_archivo, tipo_contenido, tamano, contenido) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([$id_orden_prueba, $fileName, $fileType, $fileSize, $content]);
+        if ($id_orden_prueba) {
+            // ORIGINAL LOGIC: Per-Test Upload
+            // 1. Insert file into archivos_orden
+            $stmt = $conn->prepare("INSERT INTO archivos_orden (id_orden_prueba, nombre_archivo, tipo_contenido, tamano, contenido) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$id_orden_prueba, $fileName, $fileType, $fileSize, $content]);
 
-        // 2. Update orden_pruebas status
-        $stmt = $conn->prepare("
-            UPDATE orden_pruebas 
-            SET estado = 'Muestra_Recibida', 
-                fecha_muestra_recibida = NOW(),
-                notas_tecnico = ?
-            WHERE id_orden_prueba = ?
-        ");
-        $stmt->execute([$notas, $id_orden_prueba]);
+            // 2. Update orden_pruebas status
+            $stmt = $conn->prepare("
+                UPDATE orden_pruebas 
+                SET estado = 'Muestra_Recibida', 
+                    fecha_muestra_recibida = NOW(),
+                    notas_tecnico = ?
+                WHERE id_orden_prueba = ?
+            ");
+            $stmt->execute([$notas, $id_orden_prueba]);
+
+        } elseif ($id_orden) {
+            // NEW LOGIC: Order-Level Upload
+
+            // Save file to disk (as done in save_results.php) to ensure consistency with procesar_orden.php expectations
+            $uploadDir = '../../../uploads/results/';
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            $newFileName = 'orden_' . $id_orden . '_' . uniqid() . '.' . $fileExtension;
+            $targetPath = $uploadDir . $newFileName;
+
+            if (move_uploaded_file($fileTmpPath, $targetPath)) {
+                // Save relative path to DB
+                $dbPath = '../../uploads/results/' . $newFileName;
+                $stmt_file = $conn->prepare("UPDATE ordenes_laboratorio SET archivo_resultados = ? WHERE id_orden = ?");
+                $stmt_file->execute([$dbPath, $id_orden]);
+            } else {
+                throw new Exception('Error al mover el archivo al directorio de destino.');
+            }
+        }
 
         // 3. Update order status if it was Pendiente
         $stmt = $conn->prepare("

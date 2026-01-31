@@ -3056,7 +3056,9 @@ try {
                             <select class="form-select" id="billing_id_doctor" name="id_doctor" required>
                                 <option value="">Seleccione un médico...</option>
                                 <?php foreach ($doctores as $doctor): ?>
-                                    <option value="<?php echo $doctor['idUsuario']; ?>">
+                                    <option value="<?php echo $doctor['idUsuario']; ?>"
+                                        data-nombre="<?php echo htmlspecialchars($doctor['nombre']); ?>"
+                                        data-apellido="<?php echo htmlspecialchars($doctor['apellido']); ?>">
                                         Dr(a).
                                         <?php echo htmlspecialchars($doctor['nombre'] . ' ' . $doctor['apellido']); ?>
                                     </option>
@@ -3706,6 +3708,27 @@ try {
                             default: price = (type === 'Consulta') ? 100 : 0; break;
                         }
                         montoInput.value = price;
+
+                        // Overrides based on name
+                        const selectedOption = doctorSelect.options[doctorSelect.selectedIndex];
+                        if (selectedOption) {
+                            const nombre = (selectedOption.getAttribute('data-nombre') || '').toLowerCase();
+                            const apellido = (selectedOption.getAttribute('data-apellido') || '').toLowerCase();
+
+                            // Dr. Estuardo Rivas - Q400 off-hours/emergencies (after 16:00 or weekends)
+                            if (nombre.includes('estuardo') && apellido.includes('rivas')) {
+                                if (day === 0 || day === 6 || hour >= 16) {
+                                    montoInput.value = 400;
+                                }
+                            }
+
+                            // Dra. Libny - Q300 off-hours/weekends (after 16:00 or weekends)
+                            if (nombre.includes('libny')) {
+                                if (day === 0 || day === 6 || hour >= 16) {
+                                    montoInput.value = 300;
+                                }
+                            }
+                        }
                     };
 
                     doctorSelect.addEventListener('change', calculatePrice);
@@ -4017,8 +4040,8 @@ try {
                     }
                 }
 
-                
-                
+
+
 
                 setupUltrasoundHandlers() {
                     const select = document.getElementById('ultrasoundSelect');
@@ -4462,37 +4485,54 @@ try {
                                 <option value="Muñeca" data-price="500.00">Muñeca</option>
                                 <option value="Inguinal" data-price="500.00">Inguinal</option>
                                 <option value="Obstetrico" data-price="300.00">Obstetrico</option>
-                                <option value="Abdominal inferior (pelvico)" data-price="300.00">Abdominal inferior (pelvico)</option>
-                                <option value="Abdomen inferior + FID" data-price="300.00">Abdomen inferior + FID</option>
+                                <option value="Abdominal inferior (pelvico)" data-price="300.00">Abdominal inferior
+                                    (pelvico)</option>
+                                <option value="Abdomen inferior + FID" data-price="300.00">Abdomen inferior + FID
+                                </option>
                                 <option value="Abdominal completo" data-price="500.00">Abdominal completo</option>
-                                <option value="Abdominal pediatrico menores a 2 años" data-price="600.00">Abdominal pediatrico menores a 2 años</option>
+                                <option value="Abdominal pediatrico menores a 2 años" data-price="600.00">Abdominal
+                                    pediatrico menores a 2 años</option>
                                 <option value="Abdominal pediatrico" data-price="450.00">Abdominal pediatrico</option>
-                                <option value="Abdominal superior + FID" data-price="350.00">Abdominal superior + FID</option>
+                                <option value="Abdominal superior + FID" data-price="350.00">Abdominal superior + FID
+                                </option>
                                 <option value="Ambas rodillas" data-price="1000.00">Ambas rodillas</option>
                                 <option value="Rodilla" data-price="500.00">Rodilla</option>
-                                <option value="Doppler arterial una extremidad" data-price="700.00">Doppler arterial una extremidad</option>
+                                <option value="Doppler arterial una extremidad" data-price="700.00">Doppler arterial una
+                                    extremidad</option>
                                 <option value="Doppler carotideo" data-price="700.00">Doppler carotideo</option>
-                                <option value="Doppler venoso una extremidad" data-price="700.00">Doppler venoso una extremidad</option>
+                                <option value="Doppler venoso una extremidad" data-price="700.00">Doppler venoso una
+                                    extremidad</option>
                                 <option value="Endovaginal" data-price="350.00">Endovaginal</option>
-                                <option value="Guia ecografica para biopsia" data-price="550.00">Guia ecografica para biopsia</option>
-                                <option value="Guia ecografica para drenaje de absceso" data-price="500.00">Guia ecografica para drenaje de absceso</option>
-                                <option value="Guia para paracentesis" data-price="400.00">Guia para paracentesis</option>
-                                <option value="Hepatico y vias biliares" data-price="350.00">Hepatico y vias biliares</option>
-                                <option value="Hepatico y vias biliares pediatrico menores a 2 años" data-price="380.00">Hepatico y vias biliares pediatrico menores a 2 años</option>
+                                <option value="Guia ecografica para biopsia" data-price="550.00">Guia ecografica para
+                                    biopsia</option>
+                                <option value="Guia ecografica para drenaje de absceso" data-price="500.00">Guia
+                                    ecografica para drenaje de absceso</option>
+                                <option value="Guia para paracentesis" data-price="400.00">Guia para paracentesis
+                                </option>
+                                <option value="Hepatico y vias biliares" data-price="350.00">Hepatico y vias biliares
+                                </option>
+                                <option value="Hepatico y vias biliares pediatrico menores a 2 años"
+                                    data-price="380.00">Hepatico y vias biliares pediatrico menores a 2 años</option>
                                 <option value="Inguino-escrotal" data-price="350.00">Inguino-escrotal</option>
                                 <option value="Mamario" data-price="500.00">Mamario</option>
-                                <option value="Muscular partes blandas" data-price="500.00">Muscular partes blandas</option>
+                                <option value="Muscular partes blandas" data-price="500.00">Muscular partes blandas
+                                </option>
                                 <option value="Obstetrico" data-price="250.00">Obstetrico</option>
                                 <option value="Obstetrico gemelar" data-price="400.00">Obstetrico gemelar</option>
-                                <option value="Pared abdominal e inguinal" data-price="500.00">Pared abdominal e inguinal</option>
+                                <option value="Pared abdominal e inguinal" data-price="500.00">Pared abdominal e
+                                    inguinal</option>
                                 <option value="Pericardico" data-price="350.00">Pericardico</option>
                                 <option value="Piloro" data-price="250.00">Piloro</option>
                                 <option value="Prostatico" data-price="250.00">Prostatico</option>
-                                <option value="Prostatico endorrectal" data-price="350.00">Prostatico endorrectal</option>
-                                <option value="Renal pediatrico menor a 2 años" data-price="300.00">Renal pediatrico menor a 2 años</option>
+                                <option value="Prostatico endorrectal" data-price="350.00">Prostatico endorrectal
+                                </option>
+                                <option value="Renal pediatrico menor a 2 años" data-price="300.00">Renal pediatrico
+                                    menor a 2 años</option>
                                 <option value="Renal" data-price="250.00">Renal</option>
-                                <option value="Renal y vias urinarias" data-price="450.00">Renal y vias urinarias</option>
-                                <option value="Tejidos blandos - muscular" data-price="Manual">Tejidos blandos - muscular</option>
+                                <option value="Renal y vias urinarias" data-price="450.00">Renal y vias urinarias
+                                </option>
+                                <option value="Tejidos blandos - muscular" data-price="Manual">Tejidos blandos -
+                                    muscular</option>
                                 <option value="Tendon de aquiles" data-price="500.00">Tendon de aquiles</option>
                                 <option value="Testicular o escrotal" data-price="500.00">Testicular o escrotal</option>
                                 <option value="Transfonelar" data-price="Manual">Transfonelar</option>
@@ -4599,7 +4639,7 @@ try {
 
     <script>
         const procedurePrices = {
-            'Inyeccion': { habil: 5, inhabil: 10 },
+            'Inyeccion': { habil: 10, inhabil: 15 },
             'Toma de Presion': { habil: 5, inhabil: 10 },
             'Glucometria': { habil: 25, inhabil: 30 },
             'Unicotomia': { habil: 125, inhabil: 150 },
@@ -4610,7 +4650,7 @@ try {
             'Sutura 1-5 pts': { habil: 300, inhabil: 400 },
             'Sutura 6-10 pts': { habil: 500, inhabil: 650 },
             'Sutura 11-15 pts': { habil: 750, inhabil: 900 },
-            'Nebulizacion': { habil: 40, inhabil: 65 },
+            'Nebulizacion': { habil: 50, inhabil: 75 },
             'Curacion de herida': { habil: 100, inhabil: 150 },
             'Retiro de Puntos': { habil: 50, inhabil: 100 },
             'Suero Vitaminado': { habil: 800, inhabil: 1100 }
