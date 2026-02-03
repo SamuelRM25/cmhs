@@ -2412,33 +2412,6 @@ try {
                             </div>
 
                             <div id="detailedBreakdown" class="mt-4" style="display:none;">
-                                <!-- Detail Modal -->
-                                <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true"
-                                    style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
-                                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                                        <div class="modal-content shadow-lg border-0">
-                                            <div class="modal-header text-white" id="detailModalHeader">
-                                                <h5 class="modal-title fw-bold" id="detailModalTitle">Detalle</h5>
-                                                <button type="button" class="btn-close btn-close-white"
-                                                    onclick="bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide()"></button>
-                                            </div>
-                                            <div class="modal-body p-0">
-                                                <div class="table-responsive">
-                                                    <table class="table table-hover mb-0 align-middle">
-                                                        <thead class="table-light">
-                                                            <tr id="detailTableHead"></tr>
-                                                        </thead>
-                                                        <tbody id="detailTableBody"></tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer bg-light py-2">
-                                                <button type="button" class="btn btn-secondary btn-sm"
-                                                    onclick="bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide()">Cerrar</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
 
                             <div id="consultationBreakdown" class="mt-4" style="display:none;">
@@ -2452,6 +2425,34 @@ try {
                         <button type="button" class="btn btn-warning px-4 text-white" onclick="window.print()">
                             <i class="bi bi-printer me-2"></i>Imprimir Reporte
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Modal (Generic for all categories) -->
+        <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true"
+            style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content shadow-lg border-0">
+                    <div class="modal-header text-white" id="detailModalHeader">
+                        <h5 class="modal-title fw-bold" id="detailModalTitle">Detalle</h5>
+                        <button type="button" class="btn-close btn-close-white"
+                            onclick="bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide()"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr id="detailTableHead"></tr>
+                                </thead>
+                                <tbody id="detailTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light py-2">
+                        <button type="button" class="btn btn-secondary btn-sm"
+                            onclick="bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide()">Cerrar</button>
                     </div>
                 </div>
             </div>
@@ -2588,6 +2589,66 @@ try {
                         Swal.fire('Error', 'Error de conexión', 'error');
                         loading.style.display = 'none';
                     });
+            }
+
+            function showDetailModal(type, title) {
+                const d = window.currentShiftDetails;
+                if (!d || !d[type]) return;
+
+                const modalElement = document.getElementById('detailModal');
+                const modal = new bootstrap.Modal(modalElement);
+
+                document.getElementById('detailModalTitle').textContent = `Detalle de ${title}`;
+                const header = document.getElementById('detailModalHeader');
+                const colors = {
+                    pharmacy: 'bg-primary',
+                    consultations: 'bg-success',
+                    laboratory: 'bg-danger',
+                    procedures: 'bg-warning',
+                    ultrasound: 'bg-info',
+                    xray: 'bg-secondary',
+                    hospitalization: 'bg-dark'
+                };
+
+                header.className = `modal-header text-white ${colors[type] || 'bg-primary'}`;
+
+                const head = document.getElementById('detailTableHead');
+                const body = document.getElementById('detailTableBody');
+
+                let headHtml = '';
+                let bodyHtml = '';
+
+                const details = d[type].details || [];
+
+                if (type === 'pharmacy') {
+                    headHtml = '<tr><th>Hora</th><th>Cliente</th><th>Pago</th><th class="text-end">Monto</th></tr>';
+                    details.forEach(item => {
+                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.cliente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.total).toFixed(2)}</td></tr>`;
+                    });
+                } else if (type === 'consultations') {
+                    headHtml = '<tr><th>Hora</th><th>Médico</th><th>Paciente</th><th>Pago</th><th class="text-end">Monto</th></tr>';
+                    details.forEach(item => {
+                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.medico}</td><td>${item.paciente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto).toFixed(2)}</td></tr>`;
+                    });
+                } else if (['laboratory', 'procedures', 'ultrasound', 'xray'].includes(type)) {
+                    headHtml = '<tr><th>Hora</th><th>Paciente</th><th>Pago</th><th class="text-end">Monto</th></tr>';
+                    details.forEach(item => {
+                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.paciente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto).toFixed(2)}</td></tr>`;
+                    });
+                } else if (type === 'hospitalization') {
+                    headHtml = '<tr><th>Fecha/Hora</th><th>Paciente</th><th>Pago</th><th class="text-end">Monto</th></tr>';
+                    details.forEach(item => {
+                        bodyHtml += `<tr><td>${item.fecha}</td><td>${item.paciente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto).toFixed(2)}</td></tr>`;
+                    });
+                }
+
+                if (details.length === 0) {
+                    bodyHtml = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay registros para esta categoría</td></tr>';
+                }
+
+                head.innerHTML = headHtml;
+                body.innerHTML = bodyHtml;
+                modal.show();
             }
         </script>
 
