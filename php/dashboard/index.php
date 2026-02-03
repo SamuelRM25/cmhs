@@ -2411,9 +2411,38 @@ try {
                                 </table>
                             </div>
 
+                            <div id="detailedBreakdown" class="mt-4" style="display:none;">
+                                <!-- Detail Modal -->
+                                <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true"
+                                    style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
+                                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                                        <div class="modal-content shadow-lg border-0">
+                                            <div class="modal-header text-white" id="detailModalHeader">
+                                                <h5 class="modal-title fw-bold" id="detailModalTitle">Detalle</h5>
+                                                <button type="button" class="btn-close btn-close-white"
+                                                    onclick="bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide()"></button>
+                                            </div>
+                                            <div class="modal-body p-0">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover mb-0 align-middle">
+                                                        <thead class="table-light">
+                                                            <tr id="detailTableHead"></tr>
+                                                        </thead>
+                                                        <tbody id="detailTableBody"></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer bg-light py-2">
+                                                <button type="button" class="btn btn-secondary btn-sm"
+                                                    onclick="bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide()">Cerrar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div id="consultationBreakdown" class="mt-4" style="display:none;">
-                                <h6 class="fw-bold text-muted border-bottom pb-2 mb-3">Detalle de Consultas por Médico
-                                </h6>
+                                <h6 class="fw-bold text-muted border-bottom pb-2 mb-3">Resumen por Médico</h6>
                                 <div id="doctorsList"></div>
                             </div>
                         </div>
@@ -2479,22 +2508,31 @@ try {
 
                             // Build main table
                             const categories = [
-                                { label: 'Farmacia', data: d.pharmacy, icon: 'bi-capsule text-primary' },
-                                { label: 'Consultas', data: d.consultations, icon: 'bi-person-video text-success' },
-                                { label: 'Laboratorio', data: d.laboratory, icon: 'bi-eyedropper text-danger' },
-                                { label: 'Procedimientos', data: d.procedures, icon: 'bi-bandaid text-warning' },
-                                { label: 'Ultrasonido', data: d.ultrasound, icon: 'bi-activity text-info' },
-                                { label: 'Rayos X', data: d.xray, icon: 'bi-radioactive text-secondary' }
+                                { type: 'pharmacy', label: 'Farmacia', data: d.pharmacy, icon: 'bi-capsule', color: 'bg-primary' },
+                                { type: 'consultations', label: 'Consultas', data: d.consultations, icon: 'bi-person-video', color: 'bg-success' },
+                                { type: 'laboratory', label: 'Laboratorio', data: d.laboratory, icon: 'bi-eyedropper', color: 'bg-danger' },
+                                { type: 'procedures', label: 'Procedimientos', data: d.procedures, icon: 'bi-bandaid', color: 'bg-warning' },
+                                { type: 'ultrasound', label: 'Ultrasonido', data: d.ultrasound, icon: 'bi-activity', color: 'bg-info' },
+                                { type: 'xray', label: 'Rayos X', data: d.xray, icon: 'bi-radioactive', color: 'bg-secondary' },
+                                { type: 'hospitalization', label: 'Hospitalización', data: d.hospitalization, icon: 'bi-hospital', color: 'bg-dark' }
                             ];
 
                             let html = '';
-                            categories.forEach(cat => {
+                            categories.forEach((cat, index) => {
+                                const catData = JSON.stringify(cat).replace(/"/g, '&quot;');
                                 html += `
                                     <tr>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                <i class="bi ${cat.icon} fs-5 me-2"></i>
-                                                <span class="fw-semibold">${cat.label}</span>
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi ${cat.icon} fs-5 me-2 ${cat.color.replace('bg-', 'text-')}"></i>
+                                                    <span class="fw-semibold">${cat.label}</span>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-secondary py-0 px-2 ms-2 small" 
+                                                        style="font-size: 0.75rem;"
+                                                        onclick="showDetailModal('${cat.type}', '${cat.label}')">
+                                                    <i class="bi bi-eye me-1"></i>Ver
+                                                </button>
                                             </div>
                                         </td>
                                         <td class="text-center">Q${cat.data.breakdown?.['Efectivo']?.toFixed(2) || '0.00'}</td>
@@ -2504,8 +2542,14 @@ try {
                                     </tr>
                                 `;
                             });
+
+                            // Attach generic data for modal use
+                            window.currentShiftDetails = d;
+
                             tableBody.innerHTML = html;
                             document.getElementById('cut-grand-total').textContent = d.grand_total.toFixed(2);
+
+                            document.getElementById('detailedBreakdown').style.display = 'block';
 
                             // Build doctors breakdown
                             if (d.consultations.by_doctor && d.consultations.by_doctor.length > 0) {
@@ -3107,6 +3151,12 @@ try {
                                     autocomplete="off">
                                 <label class="btn btn-outline-success" for="pago_tarjeta">
                                     <i class="bi bi-credit-card me-1"></i>Tarjeta
+                                </label>
+
+                                <input type="radio" class="btn-check" name="tipo_pago" id="pago_seguro"
+                                    value="Seguro Médico" autocomplete="off">
+                                <label class="btn btn-outline-success" for="pago_seguro">
+                                    <i class="bi bi-shield-check me-1"></i>EPS
                                 </label>
                             </div>
                         </div>

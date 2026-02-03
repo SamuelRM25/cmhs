@@ -1585,7 +1585,11 @@ try {
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-end mb-3">
+                        <div class="d-flex justify-content-end mb-3 gap-2">
+                            <button class="btn btn-info btn-sm fw-bold shadow-sm"
+                                onclick="window.dashboard.pos.openHistory()">
+                                <i class="bi bi-clock-history me-1"></i> Historial
+                            </button>
                             <button class="btn btn-warning btn-sm fw-bold shadow-sm"
                                 onclick="window.dashboard.pos.openShiftReport()">
                                 <i class="bi bi-receipt-cutoff me-1"></i> Corte de Jornada
@@ -1747,6 +1751,41 @@ try {
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+                <div class="modal-header bg-info text-white py-3">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-clock-history me-2"></i>Historial de Ventas (Turno
+                        Actual)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Hora</th>
+                                    <th>Cliente</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-center pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <!-- Data will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="historyLoading" class="text-center py-5">
+                        <div class="spinner-border text-info" role="status"></div>
+                        <p class="mt-2 text-muted">Cargando historial...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Auth Modal -->
@@ -2475,6 +2514,45 @@ try {
                             window.open('export_shift_pdf.php', '_blank');
                         }
                     });
+                }
+
+                async openHistory() {
+                    const modal = new bootstrap.Modal(document.getElementById('historyModal'));
+                    const tbody = document.getElementById('historyTableBody');
+                    const loading = document.getElementById('historyLoading');
+
+                    tbody.innerHTML = '';
+                    loading.style.display = 'block';
+                    modal.show();
+
+                    try {
+                        const response = await fetch('get_recent_sales.php');
+                        const data = await response.json();
+
+                        loading.style.display = 'none';
+
+                        if (data.status === 'success' && data.sales.length > 0) {
+                            data.sales.forEach(sale => {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td class="ps-4 small text-muted">${sale.hora}</td>
+                                    <td><span class="fw-bold">${sale.nombre_cliente}</span></td>
+                                    <td class="text-end fw-bold">Q${parseFloat(sale.total).toFixed(2)}</td>
+                                    <td class="text-center pe-4">
+                                        <button class="btn btn-light btn-sm shadow-sm" onclick="window.open('print_receipt.php?id=${sale.id_venta}', '_blank')">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </td>
+                                `;
+                                tbody.appendChild(row);
+                            });
+                        } else {
+                            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No hay ventas registradas en este turno.</td></tr>';
+                        }
+                    } catch (error) {
+                        console.error('Error loading history:', error);
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Error al cargar el historial.</td></tr>';
+                    }
                 }
 
                 setupAnimations() {

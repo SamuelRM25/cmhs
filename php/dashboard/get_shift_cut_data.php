@@ -65,7 +65,7 @@ try {
     };
 
     // 1. Pharmacy Sales (Ventas)
-    $pharmacy = $getTotals($conn, 'ventas', 'total', 'fecha_venta', $start_datetime, $end_datetime, 'tipo_pago');
+    $pharmacy = $getTotals($conn, 'ventas', 'total', 'fecha_venta', $start_datetime, $end_datetime, 'tipo_pago', '');
 
     // 2. Consultations (Cobros) - Detailed by Doctor
     $consultations_breakdown = [];
@@ -138,10 +138,10 @@ try {
     $lab = $getTotals($conn, 'examenes_realizados', 'cobro', 'fecha_examen', $start_datetime, $end_datetime, 'tipo_pago', $lab_extra);
 
     // 4. Minor Procedures (procedimientos_menores)
-    $procedures = $getTotals($conn, 'procedimientos_menores', 'cobro', 'fecha_procedimiento', $start_datetime, $end_datetime);
+    $procedures = $getTotals($conn, 'procedimientos_menores', 'cobro', 'fecha_procedimiento', $start_datetime, $end_datetime, 'tipo_pago', '');
 
     // 5. Ultrasound (Combine new dedicated table and legacy examenes_realizados entries)
-    $us_new = $getTotals($conn, 'ultrasonidos', 'cobro', 'fecha_ultrasonido', $start_datetime, $end_datetime);
+    $us_new = $getTotals($conn, 'ultrasonidos', 'cobro', 'fecha_ultrasonido', $start_datetime, $end_datetime, 'tipo_pago', '');
     $us_old = $getTotals($conn, 'examenes_realizados', 'cobro', 'fecha_examen', $start_datetime, $end_datetime, 'tipo_pago', "tipo_examen LIKE '%ultrasonido%'");
     $ultrasound = [
         'total' => $us_new['total'] + $us_old['total'],
@@ -153,7 +153,7 @@ try {
     ];
 
     // 6. X-Rays (Combine new dedicated table and legacy examenes_realizados entries)
-    $rx_new = $getTotals($conn, 'rayos_x', 'cobro', 'fecha_estudio', $start_datetime, $end_datetime);
+    $rx_new = $getTotals($conn, 'rayos_x', 'cobro', 'fecha_estudio', $start_datetime, $end_datetime, 'tipo_pago', '');
     $rx_old = $getTotals($conn, 'examenes_realizados', 'cobro', 'fecha_examen', $start_datetime, $end_datetime, 'tipo_pago', "(tipo_examen LIKE '%rayos x%' OR tipo_examen LIKE '%rx%')");
     $xray = [
         'total' => $rx_new['total'] + $rx_old['total'],
@@ -164,7 +164,10 @@ try {
         ]
     ];
 
-    $grand_total = $pharmacy['total'] + $consultations_total + $lab['total'] + $procedures['total'] + $ultrasound['total'] + $xray['total'];
+    // 7. Hospitalization (abonos_hospitalarios)
+    $hospitalization = $getTotals($conn, 'abonos_hospitalarios', 'monto', 'fecha_abono', $start_datetime, $end_datetime, 'metodo_pago', '');
+
+    $grand_total = $pharmacy['total'] + $consultations_total + $lab['total'] + $procedures['total'] + $ultrasound['total'] + $xray['total'] + $hospitalization['total'];
 
     echo json_encode([
         'success' => true,
@@ -184,6 +187,7 @@ try {
             'procedures' => $procedures,
             'ultrasound' => $ultrasound,
             'xray' => $xray,
+            'hospitalization' => $hospitalization,
             'grand_total' => $grand_total
         ]
     ]);

@@ -1704,6 +1704,17 @@ try {
                             <i class="bi bi-file-earmark-text"></i>
                             Resumen CSV
                         </a>
+                        <?php if (in_array($_SESSION['user_id'], [1, 12])): ?>
+                            <a href="insumos.php" class="action-btn" style="background: var(--color-info);">
+                                <i class="bi bi-box-fill"></i>
+                                Descarga de Insumos
+                            </a>
+                            <button type="button" class="action-btn" style="background: var(--color-warning);"
+                                data-bs-toggle="modal" data-bs-target="#insumosReportModal">
+                                <i class="bi bi-file-earmark-bar-graph"></i>
+                                Reporte de Insumos
+                            </button>
+                        <?php endif; ?>
                         <?php if ($can_manage_inventory): ?>
                             <button type="button" class="action-btn" data-bs-toggle="modal"
                                 data-bs-target="#addMedicineModal">
@@ -3115,6 +3126,41 @@ try {
     `;
         document.head.appendChild(style);
     </script>
+
+    <!-- Insumos Report Modal -->
+    <div class="modal fade" id="insumosReportModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-bar-graph me-2"></i>Reporte Insumos
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form action="report_insumos.php" method="GET" target="_blank">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Fecha</label>
+                            <input type="date" name="date" class="form-control" value="<?php echo date('Y-m-d'); ?>"
+                                required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Jornada</label>
+                            <select name="shift" class="form-select">
+                                <option value="morning">Mañana (08:00 AM - 05:00 PM)</option>
+                                <option value="night">Noche (05:00 PM - 08:00 AM)</option>
+                            </select>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-warning fw-bold text-white">
+                                <i class="bi bi-printer me-2"></i>Generar Reporte
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- jQuery (required for Bootstrap modals) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
