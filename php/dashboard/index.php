@@ -2623,22 +2623,22 @@ try {
                 if (type === 'pharmacy') {
                     headHtml = '<tr><th>Hora</th><th>Cliente</th><th>Pago</th><th class="text-end">Monto</th></tr>';
                     details.forEach(item => {
-                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.cliente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.total).toFixed(2)}</td></tr>`;
+                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.cliente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto || 0).toFixed(2)}</td></tr>`;
                     });
                 } else if (type === 'consultations') {
                     headHtml = '<tr><th>Hora</th><th>Médico</th><th>Paciente</th><th>Pago</th><th class="text-end">Monto</th></tr>';
                     details.forEach(item => {
-                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.medico}</td><td>${item.paciente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto).toFixed(2)}</td></tr>`;
+                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.medico}</td><td>${item.paciente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto || 0).toFixed(2)}</td></tr>`;
                     });
                 } else if (['laboratory', 'procedures', 'ultrasound', 'xray'].includes(type)) {
                     headHtml = '<tr><th>Hora</th><th>Paciente</th><th>Pago</th><th class="text-end">Monto</th></tr>';
                     details.forEach(item => {
-                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.paciente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto).toFixed(2)}</td></tr>`;
+                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.paciente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto || 0).toFixed(2)}</td></tr>`;
                     });
                 } else if (type === 'hospitalization') {
-                    headHtml = '<tr><th>Fecha/Hora</th><th>Paciente</th><th>Pago</th><th class="text-end">Monto</th></tr>';
+                    headHtml = '<tr><th>Hora</th><th>Paciente</th><th>Pago</th><th class="text-end">Monto</th></tr>';
                     details.forEach(item => {
-                        bodyHtml += `<tr><td>${item.fecha}</td><td>${item.paciente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto).toFixed(2)}</td></tr>`;
+                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.paciente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto || 0).toFixed(2)}</td></tr>`;
                     });
                 }
 
