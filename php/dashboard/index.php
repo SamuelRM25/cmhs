@@ -2340,14 +2340,14 @@ try {
             </div>
             <!-- Botón Corte de Turno -->
             <?php if ($user_type === 'admin'): ?>
-                <div style="position: absolute; right: 2rem; bottom: -3.5rem;">
-                    <button type="button" class="btn btn-warning shadow-sm border-0 px-4 py-2 fw-bold"
-                        style="border-radius: 50px; background: linear-gradient(135deg, #ffc107, #ff9800); color: #fff;"
-                        onclick="verifyShiftCode()">
-                        <i class="bi bi-receipt-cutoff me-2"></i>
-                        Corte de Turno
-                    </button>
-                </div>
+                    <div style="position: absolute; right: 2rem; bottom: -3.5rem;">
+                        <button type="button" class="btn btn-warning shadow-sm border-0 px-4 py-2 fw-bold"
+                            style="border-radius: 50px; background: linear-gradient(135deg, #ffc107, #ff9800); color: #fff;"
+                            onclick="verifyShiftCode()">
+                            <i class="bi bi-receipt-cutoff me-2"></i>
+                            Corte de Turno
+                        </button>
+                    </div>
             <?php endif; ?>
         </header>
 
@@ -2411,11 +2411,9 @@ try {
                                 </table>
                             </div>
 
-                            <div id="detailedBreakdown" class="mt-4" style="display:none;">
-                            </div>
-
                             <div id="consultationBreakdown" class="mt-4" style="display:none;">
-                                <h6 class="fw-bold text-muted border-bottom pb-2 mb-3">Resumen por Médico</h6>
+                                <h6 class="fw-bold text-muted border-bottom pb-2 mb-3">Detalle de Consultas por Médico
+                                </h6>
                                 <div id="doctorsList"></div>
                             </div>
                         </div>
@@ -2425,34 +2423,6 @@ try {
                         <button type="button" class="btn btn-warning px-4 text-white" onclick="window.print()">
                             <i class="bi bi-printer me-2"></i>Imprimir Reporte
                         </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Detail Modal (Generic for all categories) -->
-        <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true"
-            style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content shadow-lg border-0">
-                    <div class="modal-header text-white" id="detailModalHeader">
-                        <h5 class="modal-title fw-bold" id="detailModalTitle">Detalle</h5>
-                        <button type="button" class="btn-close btn-close-white"
-                            onclick="bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide()"></button>
-                    </div>
-                    <div class="modal-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0 align-middle">
-                                <thead class="table-light">
-                                    <tr id="detailTableHead"></tr>
-                                </thead>
-                                <tbody id="detailTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="modal-footer bg-light py-2">
-                        <button type="button" class="btn btn-secondary btn-sm"
-                            onclick="bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide()">Cerrar</button>
                     </div>
                 </div>
             </div>
@@ -2509,31 +2479,22 @@ try {
 
                             // Build main table
                             const categories = [
-                                { type: 'pharmacy', label: 'Farmacia', data: d.pharmacy, icon: 'bi-capsule', color: 'bg-primary' },
-                                { type: 'consultations', label: 'Consultas', data: d.consultations, icon: 'bi-person-video', color: 'bg-success' },
-                                { type: 'laboratory', label: 'Laboratorio', data: d.laboratory, icon: 'bi-eyedropper', color: 'bg-danger' },
-                                { type: 'procedures', label: 'Procedimientos', data: d.procedures, icon: 'bi-bandaid', color: 'bg-warning' },
-                                { type: 'ultrasound', label: 'Ultrasonido', data: d.ultrasound, icon: 'bi-activity', color: 'bg-info' },
-                                { type: 'xray', label: 'Rayos X', data: d.xray, icon: 'bi-radioactive', color: 'bg-secondary' },
-                                { type: 'hospitalization', label: 'Hospitalización', data: d.hospitalization, icon: 'bi-hospital', color: 'bg-dark' }
+                                { label: 'Farmacia', data: d.pharmacy, icon: 'bi-capsule text-primary' },
+                                { label: 'Consultas', data: d.consultations, icon: 'bi-person-video text-success' },
+                                { label: 'Laboratorio', data: d.laboratory, icon: 'bi-eyedropper text-danger' },
+                                { label: 'Procedimientos', data: d.procedures, icon: 'bi-bandaid text-warning' },
+                                { label: 'Ultrasonido', data: d.ultrasound, icon: 'bi-activity text-info' },
+                                { label: 'Rayos X', data: d.xray, icon: 'bi-radioactive text-secondary' }
                             ];
 
                             let html = '';
-                            categories.forEach((cat, index) => {
-                                const catData = JSON.stringify(cat).replace(/"/g, '&quot;');
+                            categories.forEach(cat => {
                                 html += `
                                     <tr>
                                         <td>
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="bi ${cat.icon} fs-5 me-2 ${cat.color.replace('bg-', 'text-')}"></i>
-                                                    <span class="fw-semibold">${cat.label}</span>
-                                                </div>
-                                                <button class="btn btn-sm btn-outline-secondary py-0 px-2 ms-2 small" 
-                                                        style="font-size: 0.75rem;"
-                                                        onclick="showDetailModal('${cat.type}', '${cat.label}')">
-                                                    <i class="bi bi-eye me-1"></i>Ver
-                                                </button>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi ${cat.icon} fs-5 me-2"></i>
+                                                <span class="fw-semibold">${cat.label}</span>
                                             </div>
                                         </td>
                                         <td class="text-center">Q${cat.data.breakdown?.['Efectivo']?.toFixed(2) || '0.00'}</td>
@@ -2543,14 +2504,8 @@ try {
                                     </tr>
                                 `;
                             });
-
-                            // Attach generic data for modal use
-                            window.currentShiftDetails = d;
-
                             tableBody.innerHTML = html;
                             document.getElementById('cut-grand-total').textContent = d.grand_total.toFixed(2);
-
-                            document.getElementById('detailedBreakdown').style.display = 'block';
 
                             // Build doctors breakdown
                             if (d.consultations.by_doctor && d.consultations.by_doctor.length > 0) {
@@ -2590,66 +2545,6 @@ try {
                         loading.style.display = 'none';
                     });
             }
-
-            function showDetailModal(type, title) {
-                const d = window.currentShiftDetails;
-                if (!d || !d[type]) return;
-
-                const modalElement = document.getElementById('detailModal');
-                const modal = new bootstrap.Modal(modalElement);
-
-                document.getElementById('detailModalTitle').textContent = `Detalle de ${title}`;
-                const header = document.getElementById('detailModalHeader');
-                const colors = {
-                    pharmacy: 'bg-primary',
-                    consultations: 'bg-success',
-                    laboratory: 'bg-danger',
-                    procedures: 'bg-warning',
-                    ultrasound: 'bg-info',
-                    xray: 'bg-secondary',
-                    hospitalization: 'bg-dark'
-                };
-
-                header.className = `modal-header text-white ${colors[type] || 'bg-primary'}`;
-
-                const head = document.getElementById('detailTableHead');
-                const body = document.getElementById('detailTableBody');
-
-                let headHtml = '';
-                let bodyHtml = '';
-
-                const details = d[type].details || [];
-
-                if (type === 'pharmacy') {
-                    headHtml = '<tr><th>Hora</th><th>Cliente</th><th>Pago</th><th class="text-end">Monto</th></tr>';
-                    details.forEach(item => {
-                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.cliente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto || 0).toFixed(2)}</td></tr>`;
-                    });
-                } else if (type === 'consultations') {
-                    headHtml = '<tr><th>Hora</th><th>Médico</th><th>Paciente</th><th>Pago</th><th class="text-end">Monto</th></tr>';
-                    details.forEach(item => {
-                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.medico}</td><td>${item.paciente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto || 0).toFixed(2)}</td></tr>`;
-                    });
-                } else if (['laboratory', 'procedures', 'ultrasound', 'xray'].includes(type)) {
-                    headHtml = '<tr><th>Hora</th><th>Paciente</th><th>Pago</th><th class="text-end">Monto</th></tr>';
-                    details.forEach(item => {
-                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.paciente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto || 0).toFixed(2)}</td></tr>`;
-                    });
-                } else if (type === 'hospitalization') {
-                    headHtml = '<tr><th>Hora</th><th>Paciente</th><th>Pago</th><th class="text-end">Monto</th></tr>';
-                    details.forEach(item => {
-                        bodyHtml += `<tr><td>${item.hora}</td><td>${item.paciente}</td><td>${item.tipo_pago}</td><td class="text-end">Q${parseFloat(item.monto || 0).toFixed(2)}</td></tr>`;
-                    });
-                }
-
-                if (details.length === 0) {
-                    bodyHtml = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay registros para esta categoría</td></tr>';
-                }
-
-                head.innerHTML = headHtml;
-                body.innerHTML = bodyHtml;
-                modal.show();
-            }
         </script>
 
         <!-- Botón para colapsar/expandir sidebar (solo escritorio) -->
@@ -2661,20 +2556,20 @@ try {
         <main class="main-content">
             <!-- Notificación de compras pendientes -->
             <?php if ($pending_purchases > 0 && $_SESSION['user_id'] == 6): ?>
-                <div class="alert-card mb-4 animate-in delay-1">
-                    <div class="alert-header">
-                        <div class="alert-icon warning">
-                            <i class="bi bi-box-seam"></i>
+                    <div class="alert-card mb-4 animate-in delay-1">
+                        <div class="alert-header">
+                            <div class="alert-icon warning">
+                                <i class="bi bi-box-seam"></i>
+                            </div>
+                            <h3 class="alert-title">Compras Pendientes</h3>
                         </div>
-                        <h3 class="alert-title">Compras Pendientes</h3>
+                        <p class="text-muted mb-0">
+                            Hay <strong><?php echo $pending_purchases; ?></strong> productos por recibir en inventario.
+                            <a href="../inventory/index.php" class="text-primary text-decoration-none ms-1">
+                                Revisar inventario <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </p>
                     </div>
-                    <p class="text-muted mb-0">
-                        Hay <strong><?php echo $pending_purchases; ?></strong> productos por recibir en inventario.
-                        <a href="../inventory/index.php" class="text-primary text-decoration-none ms-1">
-                            Revisar inventario <i class="bi bi-arrow-right"></i>
-                        </a>
-                    </p>
-                </div>
             <?php endif; ?>
 
             <!-- Bienvenida personalizada -->
@@ -2699,154 +2594,154 @@ try {
             </div>
 
             <!-- Acciones Rápidas -->
-            <?php if ($_SESSION['user_id'] == 7): ?>
-                <div class="stats-grid mb-4 animate-in delay-1">
-                    <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#newBillingModal"
-                        style="text-decoration: none; border-left: 4px solid var(--color-success);">
-                        <div class="stat-header mb-0">
-                            <div>
-                                <div class="stat-title text-success fw-bold">Cobros</div>
-                                <div class="stat-value" style="font-size: 1.25rem;">Registrar Cobro</div>
+            <?php if ($_SESSION['user_id'] == 7 || $_SESSION['user_id'] == 1): ?>
+                    <div class="stats-grid mb-4 animate-in delay-1">
+                        <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#newBillingModal"
+                            style="text-decoration: none; border-left: 4px solid var(--color-success);">
+                            <div class="stat-header mb-0">
+                                <div>
+                                    <div class="stat-title text-success fw-bold">Cobros</div>
+                                    <div class="stat-value" style="font-size: 1.25rem;">Registrar Cobro</div>
+                                </div>
+                                <div class="stat-icon success">
+                                    <i class="bi bi-cash-coin"></i>
+                                </div>
                             </div>
-                            <div class="stat-icon success">
-                                <i class="bi bi-cash-coin"></i>
+                        </a>
+                        <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#electroBillingModal"
+                            style="text-decoration: none; border-left: 4px solid var(--color-danger);">
+                            <div class="stat-header mb-0">
+                                <div>
+                                    <div class="stat-title text-danger fw-bold">Electro</div>
+                                    <div class="stat-value" style="font-size: 1.25rem;">Cobrar Electro</div>
+                                </div>
+                                <div class="stat-icon danger">
+                                    <i class="bi bi-heart-pulse"></i>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                    <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#electroBillingModal"
-                        style="text-decoration: none; border-left: 4px solid var(--color-danger);">
-                        <div class="stat-header mb-0">
-                            <div>
-                                <div class="stat-title text-danger fw-bold">Electro</div>
-                                <div class="stat-value" style="font-size: 1.25rem;">Cobrar Electro</div>
+                        </a>
+                        <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#newLabOrderModal"
+                            style="text-decoration: none; border-left: 4px solid var(--color-info);">
+                            <div class="stat-header mb-0">
+                                <div>
+                                    <div class="stat-title text-info fw-bold">Laboratorio</div>
+                                    <div class="stat-value" style="font-size: 1.25rem;">Nueva Orden</div>
+                                </div>
+                                <div class="stat-icon info">
+                                    <i class="bi bi-virus"></i>
+                                </div>
                             </div>
-                            <div class="stat-icon danger">
-                                <i class="bi bi-heart-pulse"></i>
+                        </a>
+                        <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#procedureBillingModal"
+                            style="text-decoration: none; border-left: 4px solid var(--color-warning);">
+                            <div class="stat-header mb-0">
+                                <div>
+                                    <div class="stat-title text-warning fw-bold">Procedimientos</div>
+                                    <div class="stat-value" style="font-size: 1.25rem;">Cobro Proc.</div>
+                                </div>
+                                <div class="stat-icon warning">
+                                    <i class="bi bi-bandaid"></i>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                    <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#newLabOrderModal"
-                        style="text-decoration: none; border-left: 4px solid var(--color-info);">
-                        <div class="stat-header mb-0">
-                            <div>
-                                <div class="stat-title text-info fw-bold">Laboratorio</div>
-                                <div class="stat-value" style="font-size: 1.25rem;">Nueva Orden</div>
+                        </a>
+                        <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#xrayBillingModal"
+                            style="text-decoration: none; border-left: 4px solid var(--color-secondary);">
+                            <div class="stat-header mb-0">
+                                <div>
+                                    <div class="stat-title text-secondary fw-bold">Rayos X</div>
+                                    <div class="stat-value" style="font-size: 1.25rem;">Cobro RX</div>
+                                </div>
+                                <div class="stat-icon secondary">
+                                    <i class="bi bi-file-medical"></i>
+                                </div>
                             </div>
-                            <div class="stat-icon info">
-                                <i class="bi bi-virus"></i>
+                        </a>
+                        <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#ultrasoundBillingModal"
+                            style="text-decoration: none; border-left: 4px solid var(--color-primary);">
+                            <div class="stat-header mb-0">
+                                <div>
+                                    <div class="stat-title text-primary fw-bold">Ultrasonido</div>
+                                    <div class="stat-value" style="font-size: 1.25rem;">Cobro US</div>
+                                </div>
+                                <div class="stat-icon primary">
+                                    <i class="bi bi-activity"></i>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                    <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#procedureBillingModal"
-                        style="text-decoration: none; border-left: 4px solid var(--color-warning);">
-                        <div class="stat-header mb-0">
-                            <div>
-                                <div class="stat-title text-warning fw-bold">Procedimientos</div>
-                                <div class="stat-value" style="font-size: 1.25rem;">Cobro Proc.</div>
-                            </div>
-                            <div class="stat-icon warning">
-                                <i class="bi bi-bandaid"></i>
-                            </div>
-                        </div>
-                    </a>
-                    <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#xrayBillingModal"
-                        style="text-decoration: none; border-left: 4px solid var(--color-secondary);">
-                        <div class="stat-header mb-0">
-                            <div>
-                                <div class="stat-title text-secondary fw-bold">Rayos X</div>
-                                <div class="stat-value" style="font-size: 1.25rem;">Cobro RX</div>
-                            </div>
-                            <div class="stat-icon secondary">
-                                <i class="bi bi-file-medical"></i>
-                            </div>
-                        </div>
-                    </a>
-                    <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#ultrasoundBillingModal"
-                        style="text-decoration: none; border-left: 4px solid var(--color-primary);">
-                        <div class="stat-header mb-0">
-                            <div>
-                                <div class="stat-title text-primary fw-bold">Ultrasonido</div>
-                                <div class="stat-value" style="font-size: 1.25rem;">Cobro US</div>
-                            </div>
-                            <div class="stat-icon primary">
-                                <i class="bi bi-activity"></i>
-                            </div>
-                        </div>
-                    </a>
-                </div>
+                        </a>
+                    </div>
             <?php endif; ?>
 
             <!-- Estadísticas principales -->
             <?php if ($user_type === 'admin'): ?>
-                <div class="stats-grid">
-                    <!-- Citas de hoy -->
-                    <div class="stat-card animate-in delay-1">
-                        <div class="stat-header">
-                            <div>
-                                <div class="stat-title">Citas Hoy</div>
-                                <div class="stat-value"><?php echo $today_appointments; ?></div>
+                    <div class="stats-grid">
+                        <!-- Citas de hoy -->
+                        <div class="stat-card animate-in delay-1">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-title">Citas Hoy</div>
+                                    <div class="stat-value"><?php echo $today_appointments; ?></div>
+                                </div>
+                                <div class="stat-icon primary">
+                                    <i class="bi bi-calendar-check"></i>
+                                </div>
                             </div>
-                            <div class="stat-icon primary">
-                                <i class="bi bi-calendar-check"></i>
+                            <div class="stat-change positive">
+                                <i class="bi bi-arrow-up-right"></i>
+                                <span>Programadas para hoy</span>
                             </div>
                         </div>
-                        <div class="stat-change positive">
-                            <i class="bi bi-arrow-up-right"></i>
-                            <span>Programadas para hoy</span>
-                        </div>
-                    </div>
 
-                    <!-- Pacientes del año -->
-                    <div class="stat-card animate-in delay-2">
-                        <div class="stat-header">
-                            <div>
-                                <div class="stat-title">Pacientes Año</div>
-                                <div class="stat-value"><?php echo $year_patients; ?></div>
+                        <!-- Pacientes del año -->
+                        <div class="stat-card animate-in delay-2">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-title">Pacientes Año</div>
+                                    <div class="stat-value"><?php echo $year_patients; ?></div>
+                                </div>
+                                <div class="stat-icon success">
+                                    <i class="bi bi-people"></i>
+                                </div>
                             </div>
-                            <div class="stat-icon success">
-                                <i class="bi bi-people"></i>
+                            <div class="stat-change positive">
+                                <i class="bi bi-person-plus"></i>
+                                <span>Año <?php echo date('Y'); ?></span>
                             </div>
                         </div>
-                        <div class="stat-change positive">
-                            <i class="bi bi-person-plus"></i>
-                            <span>Año <?php echo date('Y'); ?></span>
-                        </div>
-                    </div>
 
-                    <!-- Citas pendientes -->
-                    <div class="stat-card animate-in delay-3">
-                        <div class="stat-header">
-                            <div>
-                                <div class="stat-title">Citas Pendientes</div>
-                                <div class="stat-value"><?php echo $pending_appointments; ?></div>
+                        <!-- Citas pendientes -->
+                        <div class="stat-card animate-in delay-3">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-title">Citas Pendientes</div>
+                                    <div class="stat-value"><?php echo $pending_appointments; ?></div>
+                                </div>
+                                <div class="stat-icon warning">
+                                    <i class="bi bi-clock-history"></i>
+                                </div>
                             </div>
-                            <div class="stat-icon warning">
-                                <i class="bi bi-clock-history"></i>
+                            <div class="stat-change positive">
+                                <i class="bi bi-calendar-plus"></i>
+                                <span>Próximas citas</span>
                             </div>
                         </div>
-                        <div class="stat-change positive">
-                            <i class="bi bi-calendar-plus"></i>
-                            <span>Próximas citas</span>
-                        </div>
-                    </div>
 
-                    <!-- Consultas del mes -->
-                    <div class="stat-card animate-in delay-4">
-                        <div class="stat-header">
-                            <div>
-                                <div class="stat-title">Consultas Mes</div>
-                                <div class="stat-value"><?php echo $month_consultations; ?></div>
+                        <!-- Consultas del mes -->
+                        <div class="stat-card animate-in delay-4">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-title">Consultas Mes</div>
+                                    <div class="stat-value"><?php echo $month_consultations; ?></div>
+                                </div>
+                                <div class="stat-icon info">
+                                    <i class="bi bi-graph-up-arrow"></i>
+                                </div>
                             </div>
-                            <div class="stat-icon info">
-                                <i class="bi bi-graph-up-arrow"></i>
+                            <div class="stat-change positive">
+                                <i class="bi bi-calendar-month"></i>
+                                <span>Mes actual</span>
                             </div>
-                        </div>
-                        <div class="stat-change positive">
-                            <i class="bi bi-calendar-month"></i>
-                            <span>Mes actual</span>
                         </div>
                     </div>
-                </div>
             <?php endif; ?>
 
             <!-- Sección de citas de hoy -->
@@ -2863,69 +2758,69 @@ try {
                 </div>
 
                 <?php if (count($todays_appointments) > 0): ?>
-                    <div class="table-responsive">
-                        <table class="appointments-table">
-                            <thead>
-                                <tr>
-                                    <th>Paciente</th>
-                                    <th>Hora</th>
-                                    <th>Contacto</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($todays_appointments as $appointment): ?>
-                                    <?php
-                                    $patient_name = htmlspecialchars($appointment['nombre_pac'] . ' ' . $appointment['apellido_pac']);
-                                    $patient_initials = strtoupper(
-                                        substr($appointment['nombre_pac'], 0, 1) .
-                                        substr($appointment['apellido_pac'], 0, 1)
-                                    );
-                                    ?>
+                        <div class="table-responsive">
+                            <table class="appointments-table">
+                                <thead>
                                     <tr>
-                                        <td>
-                                            <div class="patient-cell">
-                                                <div class="patient-avatar">
-                                                    <?php echo $patient_initials; ?>
-                                                </div>
-                                                <div class="patient-info">
-                                                    <div class="patient-name"><?php echo $patient_name; ?></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="time-badge">
-                                                <i class="bi bi-clock"></i>
-                                                <?php echo htmlspecialchars($appointment['hora_cita']); ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="patient-contact">
-                                                <?php echo htmlspecialchars($appointment['telefono'] ?? 'No disponible'); ?>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="action-buttons">
-                                                <a href="#" class="btn-icon history check-patient" title="Ver historial"
-                                                    data-nombre="<?php echo htmlspecialchars($appointment['nombre_pac']); ?>"
-                                                    data-apellido="<?php echo htmlspecialchars($appointment['apellido_pac']); ?>">
-                                                    <i class="bi bi-file-medical"></i>
-                                                </a>
-                                            </div>
-                                        </td>
+                                        <th>Paciente</th>
+                                        <th>Hora</th>
+                                        <th>Contacto</th>
+                                        <th>Acciones</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php else: ?>
-                    <div class="empty-state">
-                        <div class="empty-icon">
-                            <i class="bi bi-calendar-x"></i>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($todays_appointments as $appointment): ?>
+                                            <?php
+                                            $patient_name = htmlspecialchars($appointment['nombre_pac'] . ' ' . $appointment['apellido_pac']);
+                                            $patient_initials = strtoupper(
+                                                substr($appointment['nombre_pac'], 0, 1) .
+                                                substr($appointment['apellido_pac'], 0, 1)
+                                            );
+                                            ?>
+                                            <tr>
+                                                <td>
+                                                    <div class="patient-cell">
+                                                        <div class="patient-avatar">
+                                                            <?php echo $patient_initials; ?>
+                                                        </div>
+                                                        <div class="patient-info">
+                                                            <div class="patient-name"><?php echo $patient_name; ?></div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="time-badge">
+                                                        <i class="bi bi-clock"></i>
+                                                        <?php echo htmlspecialchars($appointment['hora_cita']); ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="patient-contact">
+                                                        <?php echo htmlspecialchars($appointment['telefono'] ?? 'No disponible'); ?>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="action-buttons">
+                                                        <a href="#" class="btn-icon history check-patient" title="Ver historial"
+                                                            data-nombre="<?php echo htmlspecialchars($appointment['nombre_pac']); ?>"
+                                                            data-apellido="<?php echo htmlspecialchars($appointment['apellido_pac']); ?>">
+                                                            <i class="bi bi-file-medical"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
-                        <h4 class="text-muted mb-2">No hay citas programadas para hoy</h4>
-                        <p class="text-muted mb-3">Total de citas en sistema: <?php echo $total_appointments; ?></p>
-                    </div>
+                <?php else: ?>
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="bi bi-calendar-x"></i>
+                            </div>
+                            <h4 class="text-muted mb-2">No hay citas programadas para hoy</h4>
+                            <p class="text-muted mb-3">Total de citas en sistema: <?php echo $total_appointments; ?></p>
+                        </div>
                 <?php endif; ?>
             </section>
 
@@ -2949,84 +2844,84 @@ try {
                 </div>
 
                 <?php if (count($hospitalized_patients) > 0): ?>
-                    <div class="table-responsive">
-                        <table class="appointments-table">
-                            <thead>
-                                <tr>
-                                    <th>Paciente</th>
-                                    <th>Habitación</th>
-                                    <th>Ingreso</th>
-                                    <th>Diagnóstico</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($hospitalized_patients as $hosp): ?>
-                                    <?php
-                                    $patient_name = htmlspecialchars($hosp['nombre'] . ' ' . $hosp['apellido']);
-                                    $patient_initials = strtoupper(
-                                        substr($hosp['nombre'], 0, 1) .
-                                        substr($hosp['apellido'], 0, 1)
-                                    );
-                                    ?>
+                        <div class="table-responsive">
+                            <table class="appointments-table">
+                                <thead>
                                     <tr>
-                                        <td>
-                                            <div class="patient-cell">
-                                                <div class="patient-avatar" style="background: var(--color-secondary);">
-                                                    <?php echo $patient_initials; ?>
-                                                </div>
-                                                <div class="patient-info">
-                                                    <div class="patient-name"><?php echo $patient_name; ?></div>
-                                                    <small class="text-muted">ID:
-                                                        #<?php echo $hosp['id_encamamiento']; ?></small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info text-white">
-                                                Hab. <?php echo htmlspecialchars($hosp['numero_habitacion']); ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <?php echo date('d/m/Y', strtotime($hosp['fecha_ingreso'])); ?>
-                                            <br>
-                                            <small
-                                                class="text-muted"><?php echo date('H:i', strtotime($hosp['fecha_ingreso'])); ?></small>
-                                        </td>
-                                        <td>
-                                            <small class="d-block text-truncate" style="max-width: 150px;">
-                                                <?php echo htmlspecialchars($hosp['diagnostico_ingreso']); ?>
-                                            </small>
-                                        </td>
-                                        <td>
-                                            <a href="../hospitalization/detalle_encamamiento.php?id=<?php echo $hosp['id_encamamiento']; ?>"
-                                                class="btn-icon" title="Ver detalles"
-                                                style="color: var(--color-primary); border-color: var(--color-primary);">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                        </td>
+                                        <th>Paciente</th>
+                                        <th>Habitación</th>
+                                        <th>Ingreso</th>
+                                        <th>Diagnóstico</th>
+                                        <th>Acciones</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="mt-3 text-center">
-                        <a href="../hospitalization/index.php" class="text-primary text-decoration-none">
-                            Ver todos los pacientes hospitalizados <i class="bi bi-arrow-right"></i>
-                        </a>
-                    </div>
-                <?php else: ?>
-                    <div class="empty-state">
-                        <div class="empty-icon">
-                            <i class="bi bi-hospital"></i>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($hospitalized_patients as $hosp): ?>
+                                            <?php
+                                            $patient_name = htmlspecialchars($hosp['nombre'] . ' ' . $hosp['apellido']);
+                                            $patient_initials = strtoupper(
+                                                substr($hosp['nombre'], 0, 1) .
+                                                substr($hosp['apellido'], 0, 1)
+                                            );
+                                            ?>
+                                            <tr>
+                                                <td>
+                                                    <div class="patient-cell">
+                                                        <div class="patient-avatar" style="background: var(--color-secondary);">
+                                                            <?php echo $patient_initials; ?>
+                                                        </div>
+                                                        <div class="patient-info">
+                                                            <div class="patient-name"><?php echo $patient_name; ?></div>
+                                                            <small class="text-muted">ID:
+                                                                #<?php echo $hosp['id_encamamiento']; ?></small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-info text-white">
+                                                        Hab. <?php echo htmlspecialchars($hosp['numero_habitacion']); ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <?php echo date('d/m/Y', strtotime($hosp['fecha_ingreso'])); ?>
+                                                    <br>
+                                                    <small
+                                                        class="text-muted"><?php echo date('H:i', strtotime($hosp['fecha_ingreso'])); ?></small>
+                                                </td>
+                                                <td>
+                                                    <small class="d-block text-truncate" style="max-width: 150px;">
+                                                        <?php echo htmlspecialchars($hosp['diagnostico_ingreso']); ?>
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <a href="../hospitalization/detalle_encamamiento.php?id=<?php echo $hosp['id_encamamiento']; ?>"
+                                                        class="btn-icon" title="Ver detalles"
+                                                        style="color: var(--color-primary); border-color: var(--color-primary);">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
-                        <h4 class="text-muted mb-2">No hay hospitalizaciones activas</h4>
-                        <p class="text-muted mb-3">Todas las camas están disponibles</p>
-                        <a href="../hospitalization/ingresar_paciente.php" class="action-btn">
-                            <i class="bi bi-plus-lg"></i>
-                            Ingresar Paciente
-                        </a>
-                    </div>
+                        <div class="mt-3 text-center">
+                            <a href="../hospitalization/index.php" class="text-primary text-decoration-none">
+                                Ver todos los pacientes hospitalizados <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                <?php else: ?>
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="bi bi-hospital"></i>
+                            </div>
+                            <h4 class="text-muted mb-2">No hay hospitalizaciones activas</h4>
+                            <p class="text-muted mb-3">Todas las camas están disponibles</p>
+                            <a href="../hospitalization/ingresar_paciente.php" class="action-btn">
+                                <i class="bi bi-plus-lg"></i>
+                                Ingresar Paciente
+                            </a>
+                        </div>
                 <?php endif; ?>
             </section>
 
@@ -3042,44 +2937,44 @@ try {
                     </div>
 
                     <?php if (count($expiring_medications) > 0): ?>
-                        <ul class="alert-list">
-                            <?php foreach (array_slice($expiring_medications, 0, 5) as $medication): ?>
-                                <?php
-                                $expiry_date = new DateTime($medication['fecha_vencimiento']);
-                                $today = new DateTime();
-                                $days_diff = $today->diff($expiry_date)->days;
-                                $is_expired = $expiry_date < $today;
-                                ?>
-                                <li class="alert-item">
-                                    <div class="alert-item-header">
-                                        <span
-                                            class="alert-item-name"><?php echo htmlspecialchars($medication['nom_medicamento']); ?></span>
-                                        <span class="alert-badge <?php echo $is_expired ? 'expired' : 'warning'; ?>">
-                                            <?php echo $is_expired ? 'Vencido' : $days_diff . ' días'; ?>
-                                        </span>
-                                    </div>
-                                    <div class="alert-item-details">
-                                        <span>Vence: <?php echo $expiry_date->format('d/m/Y'); ?></span>
-                                        <span>Stock: <?php echo $medication['cantidad_med']; ?></span>
-                                    </div>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
+                            <ul class="alert-list">
+                                <?php foreach (array_slice($expiring_medications, 0, 5) as $medication): ?>
+                                        <?php
+                                        $expiry_date = new DateTime($medication['fecha_vencimiento']);
+                                        $today = new DateTime();
+                                        $days_diff = $today->diff($expiry_date)->days;
+                                        $is_expired = $expiry_date < $today;
+                                        ?>
+                                        <li class="alert-item">
+                                            <div class="alert-item-header">
+                                                <span
+                                                    class="alert-item-name"><?php echo htmlspecialchars($medication['nom_medicamento']); ?></span>
+                                                <span class="alert-badge <?php echo $is_expired ? 'expired' : 'warning'; ?>">
+                                                    <?php echo $is_expired ? 'Vencido' : $days_diff . ' días'; ?>
+                                                </span>
+                                            </div>
+                                            <div class="alert-item-details">
+                                                <span>Vence: <?php echo $expiry_date->format('d/m/Y'); ?></span>
+                                                <span>Stock: <?php echo $medication['cantidad_med']; ?></span>
+                                            </div>
+                                        </li>
+                                <?php endforeach; ?>
+                            </ul>
 
-                        <?php if (count($expiring_medications) > 5): ?>
-                            <div class="text-center mt-3">
-                                <a href="../inventory/index.php?filter=expiring" class="text-primary text-decoration-none">
-                                    Ver todas (<?php echo count($expiring_medications); ?>) <i class="bi bi-arrow-right"></i>
-                                </a>
-                            </div>
-                        <?php endif; ?>
+                            <?php if (count($expiring_medications) > 5): ?>
+                                    <div class="text-center mt-3">
+                                        <a href="../inventory/index.php?filter=expiring" class="text-primary text-decoration-none">
+                                            Ver todas (<?php echo count($expiring_medications); ?>) <i class="bi bi-arrow-right"></i>
+                                        </a>
+                                    </div>
+                            <?php endif; ?>
                     <?php else: ?>
-                        <div class="no-alerts">
-                            <div class="no-alerts-icon">
-                                <i class="bi bi-check-circle"></i>
+                            <div class="no-alerts">
+                                <div class="no-alerts-icon">
+                                    <i class="bi bi-check-circle"></i>
+                                </div>
+                                <p class="text-muted mb-0">Sin medicamentos próximos a caducar</p>
                             </div>
-                            <p class="text-muted mb-0">Sin medicamentos próximos a caducar</p>
-                        </div>
                     <?php endif; ?>
                 </div>
 
@@ -3093,34 +2988,34 @@ try {
                     </div>
 
                     <?php if (count($low_stock_medications) > 0): ?>
-                        <ul class="alert-list">
-                            <?php foreach (array_slice($low_stock_medications, 0, 5) as $medication): ?>
-                                <li class="alert-item">
-                                    <div class="alert-item-header">
-                                        <span
-                                            class="alert-item-name"><?php echo htmlspecialchars($medication['nom_medicamento']); ?></span>
-                                        <span class="alert-badge danger">
-                                            <?php echo $medication['cantidad_med']; ?> unidades
-                                        </span>
-                                    </div>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
+                            <ul class="alert-list">
+                                <?php foreach (array_slice($low_stock_medications, 0, 5) as $medication): ?>
+                                        <li class="alert-item">
+                                            <div class="alert-item-header">
+                                                <span
+                                                    class="alert-item-name"><?php echo htmlspecialchars($medication['nom_medicamento']); ?></span>
+                                                <span class="alert-badge danger">
+                                                    <?php echo $medication['cantidad_med']; ?> unidades
+                                                </span>
+                                            </div>
+                                        </li>
+                                <?php endforeach; ?>
+                            </ul>
 
-                        <?php if (count($low_stock_medications) > 5): ?>
-                            <div class="text-center mt-3">
-                                <a href="../inventory/index.php?filter=low_stock" class="text-primary text-decoration-none">
-                                    Ver todas (<?php echo count($low_stock_medications); ?>) <i class="bi bi-arrow-right"></i>
-                                </a>
-                            </div>
-                        <?php endif; ?>
+                            <?php if (count($low_stock_medications) > 5): ?>
+                                    <div class="text-center mt-3">
+                                        <a href="../inventory/index.php?filter=low_stock" class="text-primary text-decoration-none">
+                                            Ver todas (<?php echo count($low_stock_medications); ?>) <i class="bi bi-arrow-right"></i>
+                                        </a>
+                                    </div>
+                            <?php endif; ?>
                     <?php else: ?>
-                        <div class="no-alerts">
-                            <div class="no-alerts-icon">
-                                <i class="bi bi-check-circle"></i>
+                            <div class="no-alerts">
+                                <div class="no-alerts-icon">
+                                    <i class="bi bi-check-circle"></i>
+                                </div>
+                                <p class="text-muted mb-0">Inventario con stock suficiente</p>
                             </div>
-                            <p class="text-muted mb-0">Inventario con stock suficiente</p>
-                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -3149,8 +3044,8 @@ try {
                                 autocomplete="off">
                             <datalist id="billingDatalistOptions">
                                 <?php foreach ($pacientes as $paciente): ?>
-                                    <option data-id="<?php echo $paciente['id_paciente']; ?>"
-                                        value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
+                                        <option data-id="<?php echo $paciente['id_paciente']; ?>"
+                                            value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
                                     <?php endforeach; ?>
                             </datalist>
                             <input type="hidden" id="billing_paciente" name="paciente">
@@ -3161,18 +3056,17 @@ try {
                             <select class="form-select" id="billing_id_doctor" name="id_doctor" required>
                                 <option value="">Seleccione un médico...</option>
                                 <?php foreach ($doctores as $doctor): ?>
-                                    <option value="<?php echo $doctor['idUsuario']; ?>"
-                                        data-nombre="<?php echo htmlspecialchars($doctor['nombre']); ?>"
-                                        data-apellido="<?php echo htmlspecialchars($doctor['apellido']); ?>">
-                                        Dr(a).
-                                        <?php echo htmlspecialchars($doctor['nombre'] . ' ' . $doctor['apellido']); ?>
-                                    </option>
+                                        <option value="<?php echo $doctor['idUsuario']; ?>">
+                                            Dr(a).
+                                            <?php echo htmlspecialchars($doctor['nombre'] . ' ' . $doctor['apellido']); ?>
+                                        </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-bold">Tipo de Consulta</label>
+                            <label class="form-label fw-bold">Tipo de Consulta <span id="consultationHistoryBadge"
+                                    class="badge bg-info ms-2 d-none"></span></label>
                             <div class="btn-group w-100" role="group">
                                 <input type="radio" class="btn-check" name="tipo_consulta" id="btn_consulta"
                                     value="Consulta" checked autocomplete="off">
@@ -3212,12 +3106,6 @@ try {
                                     autocomplete="off">
                                 <label class="btn btn-outline-success" for="pago_tarjeta">
                                     <i class="bi bi-credit-card me-1"></i>Tarjeta
-                                </label>
-
-                                <input type="radio" class="btn-check" name="tipo_pago" id="pago_seguro"
-                                    value="Seguro Médico" autocomplete="off">
-                                <label class="btn btn-outline-success" for="pago_seguro">
-                                    <i class="bi bi-shield-check me-1"></i>EPS
                                 </label>
                             </div>
                         </div>
@@ -3275,8 +3163,8 @@ try {
                                         </div>
                                         <datalist id="labDatalistOptions">
                                             <?php foreach ($pacientes as $paciente): ?>
-                                                <option data-id="<?php echo $paciente['id_paciente']; ?>"
-                                                    value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
+                                                    <option data-id="<?php echo $paciente['id_paciente']; ?>"
+                                                        value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
                                                 <?php endforeach; ?>
                                         </datalist>
                                         <input type="hidden" id="lab_id_paciente" name="id_paciente">
@@ -3291,10 +3179,10 @@ try {
                                                 name="id_doctor" required>
                                                 <option value="">Seleccionar doctor...</option>
                                                 <?php foreach ($doctores as $doctor): ?>
-                                                    <option value="<?php echo $doctor['idUsuario']; ?>">
-                                                        Dr(a).
-                                                        <?php echo htmlspecialchars($doctor['nombre'] . ' ' . $doctor['apellido']); ?>
-                                                    </option>
+                                                        <option value="<?php echo $doctor['idUsuario']; ?>">
+                                                            Dr(a).
+                                                            <?php echo htmlspecialchars($doctor['nombre'] . ' ' . $doctor['apellido']); ?>
+                                                        </option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </div>
@@ -3321,52 +3209,52 @@ try {
                                 <!-- Listado de Pruebas -->
                                 <div class="accordion accordion-flush" id="testsAccordion">
                                     <?php foreach ($pruebas_por_categoria as $categoria => $pruebas): ?>
-                                        <?php $catID = 'cat_v2_' . md5($categoria); ?>
-                                        <div class="accordion-item border rounded-3 mb-2 category-container"
-                                            data-category="<?php echo htmlspecialchars($categoria); ?>">
-                                            <h2 class="accordion-header" id="heading_<?php echo $catID; ?>">
-                                                <button class="accordion-button rounded-3 fw-bold" type="button"
-                                                    data-bs-toggle="collapse"
-                                                    data-bs-target="#collapse_<?php echo $catID; ?>" aria-expanded="true">
-                                                    <i class="bi bi-tags me-2 text-primary"></i>
-                                                    <?php echo htmlspecialchars($categoria); ?>
-                                                    <span
-                                                        class="badge bg-light text-primary ms-2 border"><?php echo count($pruebas); ?></span>
-                                                </button>
-                                            </h2>
-                                            <div id="collapse_<?php echo $catID; ?>"
-                                                class="accordion-collapse collapse show" data-bs-parent="#testsAccordion">
-                                                <div class="accordion-body p-2">
-                                                    <div class="row g-2">
-                                                        <?php foreach ($pruebas as $prueba): ?>
-                                                            <div class="col-md-6 test-item"
-                                                                data-name="<?php echo strtolower(htmlspecialchars($prueba['nombre_prueba'])); ?>">
-                                                                <div class="test-card-v2 p-2 border rounded-3 position-relative transition-all d-flex align-items-center gap-3 h-100 hover-shadow cursor-pointer"
-                                                                    onclick="toggleLabCheckbox('test_v2_<?php echo $prueba['id_prueba']; ?>')">
-                                                                    <div class="check-indicator">
-                                                                        <input
-                                                                            class="form-check-input test-checkbox stretched-link"
-                                                                            type="checkbox" name="pruebas[]"
-                                                                            value="<?php echo $prueba['id_prueba']; ?>"
-                                                                            id="test_v2_<?php echo $prueba['id_prueba']; ?>"
-                                                                            data-price="<?php echo $prueba['precio']; ?>"
-                                                                            data-name="<?php echo htmlspecialchars($prueba['nombre_prueba']); ?>">
-                                                                    </div>
-                                                                    <div class="flex-grow-1">
-                                                                        <div class="fw-semibold small lh-1 mb-1">
-                                                                            <?php echo htmlspecialchars($prueba['nombre_prueba']); ?>
+                                            <?php $catID = 'cat_v2_' . md5($categoria); ?>
+                                            <div class="accordion-item border rounded-3 mb-2 category-container"
+                                                data-category="<?php echo htmlspecialchars($categoria); ?>">
+                                                <h2 class="accordion-header" id="heading_<?php echo $catID; ?>">
+                                                    <button class="accordion-button rounded-3 fw-bold" type="button"
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target="#collapse_<?php echo $catID; ?>" aria-expanded="true">
+                                                        <i class="bi bi-tags me-2 text-primary"></i>
+                                                        <?php echo htmlspecialchars($categoria); ?>
+                                                        <span
+                                                            class="badge bg-light text-primary ms-2 border"><?php echo count($pruebas); ?></span>
+                                                    </button>
+                                                </h2>
+                                                <div id="collapse_<?php echo $catID; ?>"
+                                                    class="accordion-collapse collapse show" data-bs-parent="#testsAccordion">
+                                                    <div class="accordion-body p-2">
+                                                        <div class="row g-2">
+                                                            <?php foreach ($pruebas as $prueba): ?>
+                                                                    <div class="col-md-6 test-item"
+                                                                        data-name="<?php echo strtolower(htmlspecialchars($prueba['nombre_prueba'])); ?>">
+                                                                        <div class="test-card-v2 p-2 border rounded-3 position-relative transition-all d-flex align-items-center gap-3 h-100 hover-shadow cursor-pointer"
+                                                                            onclick="toggleLabCheckbox('test_v2_<?php echo $prueba['id_prueba']; ?>')">
+                                                                            <div class="check-indicator">
+                                                                                <input
+                                                                                    class="form-check-input test-checkbox stretched-link"
+                                                                                    type="checkbox" name="pruebas[]"
+                                                                                    value="<?php echo $prueba['id_prueba']; ?>"
+                                                                                    id="test_v2_<?php echo $prueba['id_prueba']; ?>"
+                                                                                    data-price="<?php echo $prueba['precio']; ?>"
+                                                                                    data-name="<?php echo htmlspecialchars($prueba['nombre_prueba']); ?>">
+                                                                            </div>
+                                                                            <div class="flex-grow-1">
+                                                                                <div class="fw-semibold small lh-1 mb-1">
+                                                                                    <?php echo htmlspecialchars($prueba['nombre_prueba']); ?>
+                                                                                </div>
+                                                                                <div class="text-success fw-bold small">
+                                                                                    Q<?php echo number_format($prueba['precio'], 2); ?>
+                                                                                </div>
+                                                                            </div>
                                                                         </div>
-                                                                        <div class="text-success fw-bold small">
-                                                                            Q<?php echo number_format($prueba['precio'], 2); ?>
-                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            </div>
-                                                        <?php endforeach; ?>
+                                                            <?php endforeach; ?>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
                                     <?php endforeach; ?>
                                 </div>
                             </form>
@@ -3394,7 +3282,13 @@ try {
                                     <span class="fw-bold text-dark" id="orderSubtotal">Q0.00</span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <span class="fw-bold text-uppercase">Total a Pagar:</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-bold text-uppercase">Total a Pagar:</span>
+                                        <button type="button" class="btn btn-sm btn-outline-warning" id="toggleEPSBtn"
+                                            title="Activar modo EPS (Editar precios)">
+                                            <i class="bi bi-pencil-square"></i> EPS
+                                        </button>
+                                    </div>
                                     <span class="fs-3 fw-bold text-primary" id="orderTotal">Q0.00</span>
                                 </div>
 
@@ -3712,6 +3606,7 @@ try {
                     this.setupXrayHandlers();
                     this.setupUltrasoundHandlers();
                     this.setupAnimations();
+                    this.setupAdminNotifications();
                 }
 
                 setupGreeting() {
@@ -3819,32 +3714,58 @@ try {
                             default: price = (type === 'Consulta') ? 100 : 0; break;
                         }
                         montoInput.value = price;
-
-                        // Overrides based on name
-                        const selectedOption = doctorSelect.options[doctorSelect.selectedIndex];
-                        if (selectedOption) {
-                            const nombre = (selectedOption.getAttribute('data-nombre') || '').toLowerCase();
-                            const apellido = (selectedOption.getAttribute('data-apellido') || '').toLowerCase();
-
-                            // Dr. Estuardo Rivas - Q400 off-hours/emergencies (after 16:00 or weekends)
-                            if (nombre.includes('estuardo') && apellido.includes('rivas')) {
-                                if (day === 0 || day === 6 || hour >= 16) {
-                                    montoInput.value = 400;
-                                }
-                            }
-
-                            // Dra. Libny - Q300 off-hours/weekends (after 16:00 or weekends)
-                            if (nombre.includes('libny')) {
-                                if (day === 0 || day === 6 || hour >= 16) {
-                                    montoInput.value = 300;
-                                }
-                            }
-                        }
                     };
 
                     doctorSelect.addEventListener('change', calculatePrice);
                     tipoRadios.forEach(r => r.addEventListener('change', calculatePrice));
                     calculatePrice();
+
+                    // Listener para historial de paciente
+                    const billingPatientInput = document.getElementById('billing_paciente_input');
+                    const billingDatalist = document.getElementById('billingDatalistOptions');
+
+                    if (billingPatientInput && billingDatalist) {
+                        billingPatientInput.addEventListener('input', () => {
+                            const val = billingPatientInput.value;
+                            let patientId = null;
+                            const options = billingDatalist.options;
+                            for (let i = 0; i < options.length; i++) {
+                                if (options[i].value === val) {
+                                    patientId = options[i].getAttribute('data-id');
+                                    break;
+                                }
+                            }
+
+                            if (patientId) {
+                                fetch(`api/check_consultation_history.php?id_paciente=${patientId}`)
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        const badge = document.getElementById('consultationHistoryBadge');
+                                        const btnReconsulta = document.getElementById('btn_reconsulta'); // Si se desea auto-seleccionar
+
+                                        if (badge) {
+                                            if (data.status === 'success' && data.has_prior) {
+                                                badge.textContent = `${data.count} Citas Previas`;
+                                                badge.classList.remove('d-none');
+
+                                                Swal.fire({
+                                                    toast: true,
+                                                    position: 'top-end',
+                                                    icon: 'info',
+                                                    title: 'Paciente Recurrente',
+                                                    text: `Tiene ${data.count} citas previas. Verifique si aplica Re-consulta.`,
+                                                    showConfirmButton: false,
+                                                    timer: 4000
+                                                });
+                                            } else {
+                                                badge.classList.add('d-none');
+                                            }
+                                        }
+                                    })
+                                    .catch(e => console.error("Error checking history", e));
+                            }
+                        });
+                    }
 
                     const saveBtn = document.getElementById('saveBillingBtn');
                     if (saveBtn) {
@@ -3940,6 +3861,7 @@ try {
                                     break;
                                 }
                             }
+
                             patientHidden.value = patientId;
 
                             if (!form.checkValidity()) {
@@ -3993,6 +3915,9 @@ try {
                     const saveBtn = document.getElementById('saveLabOrderBtn');
                     const searchInput = document.getElementById('labTestSearch');
 
+                    const epsBtn = document.getElementById('toggleEPSBtn');
+                    let isEPSMode = false;
+
                     if (!selectedList) return;
 
                     const updateSummary = () => {
@@ -4011,11 +3936,14 @@ try {
                                 const item = document.createElement('div');
                                 item.className = 'd-flex justify-content-between align-items-center p-2 mb-2 bg-white border rounded shadow-sm animate-in';
                                 item.innerHTML = `
-                                    <div class="small">
+                                    <div class="small w-100">
                                         <div class="fw-bold text-dark">${cb.getAttribute('data-name')}</div>
-                                        <div class="text-primary fw-bold">Q${price.toFixed(2)}</div>
+                                        ${isEPSMode
+                                        ? `<input type="number" class="form-control form-control-sm mt-1 eps-price-input" value="${price.toFixed(2)}" step="0.01" min="0" data-id="${cb.value}">`
+                                        : `<div class="text-primary fw-bold">Q${price.toFixed(2)}</div>`
+                                    }
                                     </div>
-                                    <button type="button" class="btn btn-link text-danger p-0" onclick="document.getElementById('${cb.id}').click()">
+                                    <button type="button" class="btn btn-link text-danger p-0 ms-2" onclick="document.getElementById('${cb.id}').click()">
                                         <i class="bi bi-trash"></i>
                                     </button>`;
                                 fragment.appendChild(item);
@@ -4041,6 +3969,33 @@ try {
                         countElements.forEach(el => el.textContent = count);
                         if (saveBtn) saveBtn.disabled = (count === 0);
                     };
+
+                    const toggleEPS = () => {
+                        isEPSMode = !isEPSMode;
+                        epsBtn.classList.toggle('active', isEPSMode);
+                        epsBtn.classList.toggle('btn-warning', isEPSMode);
+                        epsBtn.classList.toggle('btn-outline-warning', !isEPSMode);
+                        updateSummary();
+                    };
+
+                    if (epsBtn) {
+                        epsBtn.addEventListener('click', toggleEPS);
+                    }
+
+                    // Delegación de eventos para inputs de precio en modo EPS
+                    if (selectedList) {
+                        selectedList.addEventListener('input', (e) => {
+                            if (e.target.classList.contains('eps-price-input')) {
+                                let total = 0;
+                                document.querySelectorAll('.eps-price-input').forEach(input => {
+                                    total += parseFloat(input.value) || 0;
+                                });
+                                const totalStr = `Q${total.toFixed(2)}`;
+                                if (subtotalElement) subtotalElement.textContent = totalStr;
+                                if (totalElement) totalElement.textContent = totalStr;
+                            }
+                        });
+                    }
 
                     checkboxes.forEach(cb => {
                         cb.addEventListener('change', updateSummary);
@@ -4076,8 +4031,18 @@ try {
                                 id_doctor: document.getElementById('lab_id_doctor').value,
                                 observaciones: form.observaciones.value,
                                 pruebas: pruebas,
-                                tipo_pago: document.querySelector('input[name="order_tipo_pago"]:checked')?.value || 'Efectivo'
+                                tipo_pago: document.querySelector('input[name="order_tipo_pago"]:checked')?.value || 'Efectivo',
+                                is_eps: isEPSMode,
+                                custom_prices: {}
                             };
+
+                            if (isEPSMode) {
+                                document.querySelectorAll('.eps-price-input').forEach(input => {
+                                    const id = input.getAttribute('data-id');
+                                    const val = parseFloat(input.value) || 0; // Si está vacío o es 0, se guarda como 0
+                                    data.custom_prices[id] = val;
+                                });
+                            }
 
                             const originalText = saveBtn.innerHTML;
                             saveBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Procesando...';
@@ -4162,19 +4127,48 @@ try {
                     if (!select || !amountInput) return;
 
                     // Update price on select
-                    select.addEventListener('change', () => {
+                    // Update price on select or radio change
+                    const updatePrice = () => {
                         const option = select.options[select.selectedIndex];
-                        const price = option.getAttribute('data-price');
+                        const rateType = document.querySelector('input[name="us_rate_type"]:checked').value;
+
+                        let price = 0;
+                        if (option.value) {
+                            if (option.getAttribute('data-price') === 'Manual' || option.getAttribute('data-p-normal') === 'Manual') {
+                                price = 'Manual';
+                            } else {
+                                switch (rateType) {
+                                    case 'inhabil':
+                                        price = parseFloat(option.getAttribute('data-p-inhabil')) || 0;
+                                        break;
+                                    case 'radio':
+                                        price = parseFloat(option.getAttribute('data-p-radio')) || 0;
+                                        break;
+                                    case 'iradio':
+                                        price = parseFloat(option.getAttribute('data-p-iradio')) || 0;
+                                        break;
+                                    default: // normal
+                                        price = parseFloat(option.getAttribute('data-p-normal')) || 0;
+                                }
+                            }
+                        }
+
                         if (price === 'Manual') {
                             amountInput.value = '';
                             amountInput.readOnly = false;
                             amountInput.placeholder = 'Ingrese monto...';
-                        } else if (price) {
-                            amountInput.value = parseFloat(price).toFixed(2);
+                        } else if (price > 0) {
+                            amountInput.value = price.toFixed(2);
                             amountInput.readOnly = true;
                         } else {
                             amountInput.value = '';
+                            amountInput.readOnly = true;
                         }
+                    };
+
+                    select.addEventListener('change', updatePrice);
+                    document.querySelectorAll('.us-rate-type').forEach(radio => {
+                        radio.addEventListener('change', updatePrice);
                     });
 
                     if (saveBtn) {
@@ -4326,6 +4320,16 @@ try {
                     }, { threshold: 0.1 });
 
                     document.querySelectorAll('.stat-card, .appointments-section, .alert-card').forEach(el => observer.observe(el));
+                }
+
+                setupAdminNotifications() {
+                    <?php if ($user_type === 'admin'): ?>
+                            const lastDate = localStorage.getItem('dailyReportDate');
+                            const today = new Date().toISOString().split('T')[0];
+                            if (new Date().getHours() >= 8 && lastDate !== today) {
+                                setTimeout(() => this.showDailyReportNotification(today), 2000);
+                            }
+                    <?php endif; ?>
                 }
             }
 
@@ -4486,8 +4490,8 @@ try {
                                 placeholder="Buscar paciente..." required autocomplete="off">
                             <datalist id="procedurePatientDatalist">
                                 <?php foreach ($pacientes as $paciente): ?>
-                                    <option data-id="<?php echo $paciente['id_paciente']; ?>"
-                                        value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
+                                        <option data-id="<?php echo $paciente['id_paciente']; ?>"
+                                            value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
                                     <?php endforeach; ?>
                             </datalist>
                             <input type="hidden" id="procedure_patient_id" name="patient_id">
@@ -4579,8 +4583,8 @@ try {
                                 placeholder="Buscar paciente..." required autocomplete="off">
                             <datalist id="ultrasoundPatientDatalist">
                                 <?php foreach ($pacientes as $paciente): ?>
-                                    <option data-id="<?php echo $paciente['id_paciente']; ?>"
-                                        value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
+                                        <option data-id="<?php echo $paciente['id_paciente']; ?>"
+                                            value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
                                     <?php endforeach; ?>
                             </datalist>
                             <input type="hidden" id="ultrasound_patient_id" name="patient_id">
@@ -4589,72 +4593,118 @@ try {
                             <label class="form-label">Tipo de Ultrasonido</label>
                             <select class="form-select" id="ultrasoundSelect" name="ultrasound_type" required>
                                 <option value="">Seleccione...</option>
-                                <option value="Abdominal superior" data-price="300.00">Abdominal superior</option>
-                                <option value="Cadera" data-price="500.00">Cadera</option>
-                                <option value="Cuello o tiroideo" data-price="500.00">Cuello o tiroideo</option>
-                                <option value="Hombro" data-price="500.00">Hombro</option>
-                                <option value="Muñeca" data-price="500.00">Muñeca</option>
-                                <option value="Inguinal" data-price="500.00">Inguinal</option>
-                                <option value="Obstetrico" data-price="300.00">Obstetrico</option>
-                                <option value="Abdominal inferior (pelvico)" data-price="300.00">Abdominal inferior
-                                    (pelvico)</option>
-                                <option value="Abdomen inferior + FID" data-price="300.00">Abdomen inferior + FID
-                                </option>
-                                <option value="Abdominal completo" data-price="500.00">Abdominal completo</option>
-                                <option value="Abdominal pediatrico menores a 2 años" data-price="600.00">Abdominal
-                                    pediatrico menores a 2 años</option>
-                                <option value="Abdominal pediatrico" data-price="450.00">Abdominal pediatrico</option>
-                                <option value="Abdominal superior + FID" data-price="350.00">Abdominal superior + FID
-                                </option>
-                                <option value="Ambas rodillas" data-price="1000.00">Ambas rodillas</option>
-                                <option value="Rodilla" data-price="500.00">Rodilla</option>
-                                <option value="Doppler arterial una extremidad" data-price="700.00">Doppler arterial una
-                                    extremidad</option>
-                                <option value="Doppler carotideo" data-price="700.00">Doppler carotideo</option>
-                                <option value="Doppler venoso una extremidad" data-price="700.00">Doppler venoso una
-                                    extremidad</option>
-                                <option value="Endovaginal" data-price="350.00">Endovaginal</option>
-                                <option value="Guia ecografica para biopsia" data-price="550.00">Guia ecografica para
-                                    biopsia</option>
-                                <option value="Guia ecografica para drenaje de absceso" data-price="500.00">Guia
-                                    ecografica para drenaje de absceso</option>
-                                <option value="Guia para paracentesis" data-price="400.00">Guia para paracentesis
-                                </option>
-                                <option value="Hepatico y vias biliares" data-price="350.00">Hepatico y vias biliares
-                                </option>
-                                <option value="Hepatico y vias biliares pediatrico menores a 2 años"
-                                    data-price="380.00">Hepatico y vias biliares pediatrico menores a 2 años</option>
-                                <option value="Inguino-escrotal" data-price="350.00">Inguino-escrotal</option>
-                                <option value="Mamario" data-price="500.00">Mamario</option>
-                                <option value="Muscular partes blandas" data-price="500.00">Muscular partes blandas
-                                </option>
-                                <option value="Obstetrico" data-price="250.00">Obstetrico</option>
-                                <option value="Obstetrico gemelar" data-price="400.00">Obstetrico gemelar</option>
-                                <option value="Pared abdominal e inguinal" data-price="500.00">Pared abdominal e
-                                    inguinal</option>
-                                <option value="Pericardico" data-price="350.00">Pericardico</option>
-                                <option value="Piloro" data-price="250.00">Piloro</option>
-                                <option value="Prostatico" data-price="250.00">Prostatico</option>
-                                <option value="Prostatico endorrectal" data-price="350.00">Prostatico endorrectal
-                                </option>
-                                <option value="Renal pediatrico menor a 2 años" data-price="300.00">Renal pediatrico
-                                    menor a 2 años</option>
-                                <option value="Renal" data-price="250.00">Renal</option>
-                                <option value="Renal y vias urinarias" data-price="450.00">Renal y vias urinarias
-                                </option>
-                                <option value="Tejidos blandos - muscular" data-price="Manual">Tejidos blandos -
-                                    muscular</option>
-                                <option value="Tendon de aquiles" data-price="500.00">Tendon de aquiles</option>
-                                <option value="Testicular o escrotal" data-price="500.00">Testicular o escrotal</option>
-                                <option value="Transfonelar" data-price="Manual">Transfonelar</option>
-                                <option value="6D" data-price="Manual">6D</option>
+                                <option value="ABDOMINAL SUPERIOR" data-p-normal="300" data-p-inhabil="350"
+                                    data-p-radio="150" data-p-iradio="200">ABDOMINAL SUPERIOR</option>
+                                <option value="CADERA" data-p-normal="500" data-p-inhabil="700" data-p-radio="250"
+                                    data-p-iradio="450">CADERA</option>
+                                <option value="CUELLO O TIROIDEO" data-p-normal="500" data-p-inhabil="700"
+                                    data-p-radio="250" data-p-iradio="450">CUELLO O TIROIDEO</option>
+                                <option value="HOMBRO" data-p-normal="500" data-p-inhabil="700" data-p-radio="250"
+                                    data-p-iradio="450">HOMBRO</option>
+                                <option value="MUÑECA" data-p-normal="500" data-p-inhabil="700" data-p-radio="250"
+                                    data-p-iradio="450">MUÑECA</option>
+                                <option value="INGUINAL" data-p-normal="500" data-p-inhabil="700" data-p-radio="250"
+                                    data-p-iradio="400">INGUINAL</option>
+                                <option value="OBSTETRICO" data-p-normal="300" data-p-inhabil="350" data-p-radio="150"
+                                    data-p-iradio="200">OBSTETRICO</option>
+                                <option value="ABDOMINAL INFERIOR (PELVICO)" data-p-normal="300" data-p-inhabil="350"
+                                    data-p-radio="150" data-p-iradio="200">ABDOMINAL INFERIOR (PELVICO)</option>
+                                <option value="ABDOMEN INFERIOR + FID" data-p-normal="300" data-p-inhabil="400"
+                                    data-p-radio="150" data-p-iradio="250">ABDOMEN INFERIOR + FID</option>
+                                <option value="ABDOMINAL COMPLETO" data-p-normal="500" data-p-inhabil="700"
+                                    data-p-radio="250" data-p-iradio="400">ABDOMINAL COMPLETO</option>
+                                <option value="ABDOMINAL PEDIATRICO MENORES A 2 AÑOS" data-p-normal="600"
+                                    data-p-inhabil="750" data-p-radio="400" data-p-iradio="500">ABDOMINAL PEDIATRICO
+                                    MENORES A 2 AÑOS</option>
+                                <option value="ABDOMINAL PEDIATRICO" data-p-normal="450" data-p-inhabil="700"
+                                    data-p-radio="300" data-p-iradio="500">ABDOMINAL PEDIATRICO</option>
+                                <option value="ABDOMINAL SUPERIOR + FID" data-p-normal="350" data-p-inhabil="450"
+                                    data-p-radio="150" data-p-iradio="250">ABDOMINAL SUPERIOR + FID</option>
+                                <option value="AMBAS RODILLAS" data-p-normal="1000" data-p-inhabil="1400"
+                                    data-p-radio="400" data-p-iradio="600">AMBAS RODILLAS</option>
+                                <option value="RODILLA" data-p-normal="500" data-p-inhabil="700" data-p-radio="250"
+                                    data-p-iradio="450">RODILLA</option>
+                                <option value="DOPLER ARTERIAL UNA EXTREMIDAD" data-p-normal="700" data-p-inhabil="900"
+                                    data-p-radio="600" data-p-iradio="1000">DOPLER ARTERIAL UNA EXTREMIDAD</option>
+                                <option value="DOPPLER CAROTIDEO" data-p-normal="700" data-p-inhabil="900"
+                                    data-p-radio="500" data-p-iradio="900">DOPPLER CAROTIDEO</option>
+                                <option value="DOPPLER VENOSO UNA EXTREMIDAD" data-p-normal="700" data-p-inhabil="900"
+                                    data-p-radio="600" data-p-iradio="1000">DOPPLER VENOSO UNA EXTREMIDAD</option>
+                                <option value="ENDOVAGINAL" data-p-normal="350" data-p-inhabil="450" data-p-radio="150"
+                                    data-p-iradio="250">ENDOVAGINAL</option>
+                                <option value="GUIA ECOGAFRICA PARA BIOPSIA" data-p-normal="550" data-p-inhabil="700"
+                                    data-p-radio="350" data-p-iradio="450">GUIA ECOGAFRICA PARA BIOPSIA</option>
+                                <option value="GUIA ECOGRAFICA PARA DRENAJE DE ABSCESO" data-p-normal="500"
+                                    data-p-inhabil="700" data-p-radio="300" data-p-iradio="400">GUIA ECOGRAFICA PARA
+                                    DRENAJE DE ABSCESO</option>
+                                <option value="GUIA PARA PARACENTESIS" data-p-normal="400" data-p-inhabil="550"
+                                    data-p-radio="250" data-p-iradio="350">GUIA PARA PARACENTESIS</option>
+                                <option value="HEPATICO Y VIAS BILIARES PEDIATRICO MENORES A 2 AÑOS" data-p-normal="380"
+                                    data-p-inhabil="580" data-p-radio="200" data-p-iradio="400">HEPATICO Y VIAS BILIARES
+                                    PEDIATRICO MENORES A 2 AÑOS</option>
+                                <option value="HEPATICO Y VIAS BILIARES" data-p-normal="350" data-p-inhabil="500"
+                                    data-p-radio="150" data-p-iradio="250">HEPATICO Y VIAS BILIARES</option>
+                                <option value="INGUINO- ESCROTAL" data-p-normal="350" data-p-inhabil="550"
+                                    data-p-radio="200" data-p-iradio="400">INGUINO- ESCROTAL</option>
+                                <option value="MAMARIO" data-p-normal="500" data-p-inhabil="700" data-p-radio="250"
+                                    data-p-iradio="450">MAMARIO</option>
+                                <option value="MUSCULAR PARTES BLANDAS" data-p-normal="500" data-p-inhabil="700"
+                                    data-p-radio="250" data-p-iradio="450">MUSCULAR PARTES BLANDAS</option>
+                                <option value="OBSTETRICO GEMELAR" data-p-normal="400" data-p-inhabil="450"
+                                    data-p-radio="200" data-p-iradio="250">OBSTETRICO GEMELAR</option>
+                                <option value="PARED ABDMINAL E INGUINAL" data-p-normal="500" data-p-inhabil="700"
+                                    data-p-radio="200" data-p-iradio="400">PARED ABDMINAL E INGUINAL</option>
+                                <option value="PILORO" data-p-normal="250" data-p-inhabil="350" data-p-radio="250"
+                                    data-p-iradio="450">PILORO</option>
+                                <option value="PROSTATICO" data-p-normal="250" data-p-inhabil="350" data-p-radio="150"
+                                    data-p-iradio="250">PROSTATICO</option>
+                                <option value="PROSTATICO ENDORECTAL" data-p-normal="350" data-p-inhabil="600"
+                                    data-p-radio="200" data-p-iradio="400">PROSTATICO ENDORECTAL</option>
+                                <option value="RENAL PEDIATRICO MENOR A 2 AÑOS" data-p-normal="300" data-p-inhabil="600"
+                                    data-p-radio="250" data-p-iradio="400">RENAL PEDIATRICO MENOR A 2 AÑOS</option>
+                                <option value="RENAL" data-p-normal="250" data-p-inhabil="350" data-p-radio="150"
+                                    data-p-iradio="200">RENAL</option>
+                                <option value="renal y vias urinarias" data-p-normal="450" data-p-inhabil="350"
+                                    data-p-radio="150" data-p-iradio="200">renal y vias urinarias</option>
+                                <option value="TEJIDOS BLANDOS - MUSCULAR" data-p-normal="350" data-p-inhabil="600"
+                                    data-p-radio="250" data-p-iradio="450">TEJIDOS BLANDOS - MUSCULAR</option>
+                                <option value="TENDON DE AQUILES" data-p-normal="500" data-p-inhabil="700"
+                                    data-p-radio="200" data-p-iradio="400">TENDON DE AQUILES</option>
+                                <option value="TESTICULAR O ESCROTAL" data-p-normal="500" data-p-inhabil="700"
+                                    data-p-radio="200" data-p-iradio="400">TESTICULAR O ESCROTAL</option>
+                                <option value="4D" data-p-normal="500" data-p-inhabil="650" data-p-radio="500"
+                                    data-p-iradio="650">4D</option>
+                                <option value="5D" data-p-normal="600" data-p-inhabil="700" data-p-radio="600"
+                                    data-p-iradio="700">5D</option>
                             </select>
                         </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Horario / Tarifa</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check us-rate-type" name="us_rate_type"
+                                    id="us_rate_normal" value="normal" checked>
+                                <label class="btn btn-outline-secondary" for="us_rate_normal">Normal</label>
+
+                                <input type="radio" class="btn-check us-rate-type" name="us_rate_type"
+                                    id="us_rate_inhabil" value="inhabil">
+                                <label class="btn btn-outline-secondary" for="us_rate_inhabil">Inhabil</label>
+
+                                <input type="radio" class="btn-check us-rate-type" name="us_rate_type"
+                                    id="us_rate_radio" value="radio">
+                                <label class="btn btn-outline-secondary" for="us_rate_radio">Radiólogo</label>
+
+                                <input type="radio" class="btn-check us-rate-type" name="us_rate_type"
+                                    id="us_rate_iradio" value="iradio">
+                                <label class="btn btn-outline-secondary" for="us_rate_iradio">Inh. Rad.</label>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">Monto a Cobrar (Q)</label>
                             <input type="number" class="form-control" id="ultrasound_amount" name="amount" readonly
                                 step="0.01" placeholder="0.00">
-                            <small class="text-muted">El monto se actualiza al seleccionar el tipo</small>
+                            <small class="text-muted">El monto se actualiza al seleccionar el tipo y tarifa</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Tipo de Pago</label>
@@ -4702,8 +4752,8 @@ try {
                                 placeholder="Buscar paciente..." required autocomplete="off">
                             <datalist id="xrayPatientDatalist">
                                 <?php foreach ($pacientes as $paciente): ?>
-                                    <option data-id="<?php echo $paciente['id_paciente']; ?>"
-                                        value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
+                                        <option data-id="<?php echo $paciente['id_paciente']; ?>"
+                                            value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
                                     <?php endforeach; ?>
                             </datalist>
                             <input type="hidden" id="xray_patient_id" name="patient_id">
@@ -4750,7 +4800,7 @@ try {
 
     <script>
         const procedurePrices = {
-            'Inyeccion': { habil: 10, inhabil: 15 },
+            'Inyeccion': { habil: 5, inhabil: 10 },
             'Toma de Presion': { habil: 5, inhabil: 10 },
             'Glucometria': { habil: 25, inhabil: 30 },
             'Unicotomia': { habil: 125, inhabil: 150 },
@@ -4761,7 +4811,7 @@ try {
             'Sutura 1-5 pts': { habil: 300, inhabil: 400 },
             'Sutura 6-10 pts': { habil: 500, inhabil: 650 },
             'Sutura 11-15 pts': { habil: 750, inhabil: 900 },
-            'Nebulizacion': { habil: 50, inhabil: 75 },
+            'Nebulizacion': { habil: 40, inhabil: 65 },
             'Curacion de herida': { habil: 100, inhabil: 150 },
             'Retiro de Puntos': { habil: 50, inhabil: 100 },
             'Suero Vitaminado': { habil: 800, inhabil: 1100 }
