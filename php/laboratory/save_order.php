@@ -82,9 +82,16 @@ try {
         $stmt_price->execute([$id_prueba]);
         $test_info = $stmt_price->fetch(PDO::FETCH_ASSOC);
         if ($test_info) {
+            $final_price = $test_info['precio'];
+
+            // EPS Logic: Use custom price if available and is_eps is true
+            if (!empty($data['is_eps']) && isset($data['custom_prices'][$id_prueba])) {
+                $final_price = floatval($data['custom_prices'][$id_prueba]);
+            }
+
             $items_for_billing[] = [
                 'nombre' => $test_info['nombre_prueba'],
-                'precio' => $test_info['precio']
+                'precio' => $final_price
             ];
         }
     }

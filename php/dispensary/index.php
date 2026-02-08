@@ -1590,6 +1590,10 @@ try {
                                 onclick="window.dashboard.pos.openHistory()">
                                 <i class="bi bi-clock-history me-1"></i> Historial
                             </button>
+                            <button class="btn btn-outline-danger btn-sm fw-bold shadow-sm"
+                                onclick="window.dashboard.pos.openHistory('Traslado')">
+                                <i class="bi bi-arrow-left-right me-1"></i> Historial Traslados
+                            </button>
                             <button class="btn btn-warning btn-sm fw-bold shadow-sm"
                                 onclick="window.dashboard.pos.openShiftReport()">
                                 <i class="bi bi-receipt-cutoff me-1"></i> Corte de Jornada
@@ -1652,7 +1656,7 @@ try {
                                 <label class="form-label">Precio Unitario</label>
                                 <div class="d-flex align-items-center">
                                     <span class="me-2">Q</span>
-                                    <input type="number" class="form-input" id="unitPrice" step="0.01" min="0" required
+                                    <input type="number" class="form-input" id="unitPrice" step="1" min="0" required
                                         style="flex: 1;" readonly>
                                 </div>
                             </div>
@@ -2045,6 +2049,13 @@ try {
                     document.getElementById('btnModeSpecial').className = `btn ${mode === 'special' ? 'btn-warning text-white' : 'btn-outline-warning'}`;
                     document.getElementById('btnModeTransfer').className = `btn ${mode === 'transfer' ? 'btn-danger text-white' : 'btn-outline-danger'}`;
 
+                    // Toggle price editing
+                    if (mode === 'special') {
+                        DOM.unitPrice.removeAttribute('readonly');
+                    } else {
+                        DOM.unitPrice.setAttribute('readonly', true);
+                    }
+
                     // Update UI if item selected
                     if (selectedItem) {
                         this.selectProduct(selectedItem);
@@ -2248,8 +2259,22 @@ try {
                     // Agregar al carrito
                     DOM.addToCartBtn.addEventListener('click', () => this.addToCart());
 
-                    // Permitir Enter en cantidad para agregar
+                    // Permitir Enter en cantidad
                     DOM.quantity.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            // En modos especiales, mover foco a precio en lugar de agregar
+                            if (currentMode === 'public') {
+                                this.addToCart();
+                            } else {
+                                DOM.unitPrice.focus();
+                                DOM.unitPrice.select();
+                            }
+                        }
+                    });
+
+                    // Permitir Enter en precio (para modos especiales)
+                    DOM.unitPrice.addEventListener('keypress', (e) => {
                         if (e.key === 'Enter') {
                             e.preventDefault();
                             this.addToCart();
@@ -2516,17 +2541,25 @@ try {
                     });
                 }
 
-                async openHistory() {
+                async openHistory(type = '') {
                     const modal = new bootstrap.Modal(document.getElementById('historyModal'));
                     const tbody = document.getElementById('historyTableBody');
                     const loading = document.getElementById('historyLoading');
+                    const title = document.querySelector('#historyModal .modal-title');
 
                     tbody.innerHTML = '';
                     loading.style.display = 'block';
+
+                    if (title) {
+                        title.innerHTML = type === 'Traslado'
+                            ? '<i class="bi bi-arrow-left-right me-2"></i>Historial de Traslados (Turno Actual)'
+                            : '<i class="bi bi-clock-history me-2"></i>Historial de Ventas (Turno Actual)';
+                    }
+
                     modal.show();
 
                     try {
-                        const response = await fetch('get_recent_sales.php');
+                        const response = await fetch(`get_recent_sales.php${type ? '?type=' + type : ''}`);
                         const data = await response.json();
 
                         loading.style.display = 'none';
@@ -2536,7 +2569,10 @@ try {
                                 const row = document.createElement('tr');
                                 row.innerHTML = `
                                     <td class="ps-4 small text-muted">${sale.hora}</td>
-                                    <td><span class="fw-bold">${sale.nombre_cliente}</span></td>
+                                    <td>
+                                        <div class="fw-bold">${sale.nombre_cliente}</div>
+                                        ${sale.tipo_pago ? `<span class="badge bg-light text-dark border">${sale.tipo_pago}</span>` : ''}
+                                    </td>
                                     <td class="text-end fw-bold">Q${parseFloat(sale.total).toFixed(2)}</td>
                                     <td class="text-center pe-4">
                                         <button class="btn btn-light btn-sm shadow-sm" onclick="window.open('print_receipt.php?id=${sale.id_venta}', '_blank')">
@@ -2547,7 +2583,7 @@ try {
                                 tbody.appendChild(row);
                             });
                         } else {
-                            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No hay ventas registradas en este turno.</td></tr>';
+                            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No hay registros en este turno.</td></tr>';
                         }
                     } catch (error) {
                         console.error('Error loading history:', error);

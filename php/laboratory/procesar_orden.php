@@ -64,6 +64,11 @@ try {
     $edad = date_diff(date_create($orden['fecha_nacimiento']), date_create('today'))->y;
     $genero = $orden['genero'];
 
+    // 3. Get latest global result file for this order
+    $stmt_archivo_global = $conn->prepare("SELECT * FROM archivos_resultados_laboratorio WHERE id_orden = ? ORDER BY id_archivo DESC LIMIT 1");
+    $stmt_archivo_global->execute([$id_orden]);
+    $archivo_orden = $stmt_archivo_global->fetch(PDO::FETCH_ASSOC);
+
     $page_title = "Procesar Orden #" . $orden['numero_orden'] . " - Centro Médico Herrera Saenz";
 
 } catch (Exception $e) {
@@ -904,6 +909,10 @@ try {
                         onclick="openOrderUploadModal(<?php echo $id_orden; ?>)">
                         <i class="bi bi-paperclip"></i> Adjuntar Orden Física
                     </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm ms-1"
+                        onclick="openResultsUploadModal(<?php echo $id_orden; ?>)">
+                        <i class="bi bi-upload"></i> Subir Resultados
+                    </button>
                     <?php if (!empty($orden['archivo_resultados'])): ?>
                         <a href="<?php echo htmlspecialchars($orden['archivo_resultados']); ?>" target="_blank"
                             class="btn btn-sm btn-info text-white mt-1">
@@ -917,6 +926,54 @@ try {
             <form id="resultsForm" action="api/save_results.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="id_orden" value="<?php echo $id_orden; ?>">
 
+                <!-- Visualizador de Resultados (Global para la Orden) -->
+                <div class="test-processing-section animate-in mb-4">
+                    <div class="test-title-bar">
+                        <h4 class="mb-0">
+                            <i class="bi bi-file-earmark-medical text-primary me-2"></i>
+                            Archivo de Resultados
+                        </h4>
+                    </div>
+                    <div class="result-display-area p-4 text-center">
+                        <?php if ($archivo_orden):
+                            $file_url = "api/get_result_file.php?id=" . $archivo_orden['id_archivo'];
+                            $mime_type = $archivo_orden['tipo_contenido'];
+                            ?>
+
+                            <?php if (strpos($mime_type, 'image') !== false): ?>
+                                <div class="mb-3">
+                                    <img src="<?php echo htmlspecialchars($file_url); ?>" class="img-fluid rounded border"
+                                        style="max-height: 600px;" alt="Resultado">
+                                </div>
+                            <?php elseif (strpos($mime_type, 'pdf') !== false): ?>
+                                <div class="ratio ratio-16x9">
+                                    <iframe src="<?php echo htmlspecialchars($file_url); ?>" frameborder="0"></iframe>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="mt-3">
+                                <a href="<?php echo htmlspecialchars($file_url); ?>" target="_blank" class="btn btn-primary">
+                                    <i class="bi bi-arrows-fullscreen me-1"></i> Ver en Pantalla Completa
+                                </a>
+                            </div>
+
+                        <?php else: ?>
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class="bi bi-droplet"></i>
+                                </div>
+                                <h4 class="text-muted mb-2">Esperando resultados</h4>
+                                <p class="text-muted mb-3">Debe cargar el archivo de resultados (PDF o Imagen) para continuar</p>
+                                <button type="button" class="btn btn-outline-primary"
+                                    onclick="openResultsUploadModal(<?php echo $id_orden; ?>)">
+                                    <i class="bi bi-upload me-1"></i> Subir Resultados Ahora
+                                </button>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Lista de Pruebas -->
                 <?php foreach ($pruebas as $prueba): ?>
                     <div class="test-processing-section animate-in delay-1"
                         data-id-orden-prueba="<?php echo $prueba['id_orden_prueba']; ?>">
@@ -925,62 +982,67 @@ try {
                                 <i class="bi bi-virus text-primary me-2"></i>
                                 <?php echo htmlspecialchars($prueba['nombre_prueba']); ?>
                             </h4>
-                            <div>
-                                <?php if ($prueba['estado'] !== 'Pendiente'): ?>
-                                    <div class="d-flex gap-2">
-                                        <span class="badge bg-success py-2">
-                                            <i class="bi bi-check-circle"></i> Muestra Recibida
-                                        </span>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
                         </div>
+                        
+                        <!-- Parámetros de la Prueba -->
+                        <div class="test-parameters mt-2">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th width="35%">Parámetro</th>
+                                        <th width="20%">Resultado</th>
+                                        <th width="15%">Unidad</th>
+                                        <th width="25%">Valor Referencia</th>
+                                        <th width="5%">Flag</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $stmt_params = $conn->prepare("
+                                        SELECT pp.*, rl.valor_resultado as valor_actual
+                                        FROM parametros_pruebas pp
+                                        LEFT JOIN resultados_laboratorio rl ON pp.id_parametro = rl.id_parametro 
+                                            AND rl.id_orden_prueba = ?
+                                        WHERE pp.id_prueba = ? 
+                                        ORDER BY pp.orden_visualizacion ASC
+                                    ");
+                                    $stmt_params->execute([$prueba['id_orden_prueba'], $prueba['id_prueba']]);
+                                    $parametros = $stmt_params->fetchAll(PDO::FETCH_ASSOC);
 
-                        <?php if ($prueba['estado'] !== 'Pendiente'): ?>
-                            <div class="result-display-area p-4 text-center">
-                                <?php
-                                // Fetch the file metadata from DB
-                                $stmt_file = $conn->prepare("SELECT id_archivo, nombre_archivo, tipo_contenido FROM archivos_orden WHERE id_orden_prueba = ? ORDER BY id_archivo DESC LIMIT 1");
-                                $stmt_file->execute([$prueba['id_orden_prueba']]);
-                                $file_data = $stmt_file->fetch(PDO::FETCH_ASSOC);
-
-                                if ($file_data):
-                                    $file_url = "api/get_file.php?id=" . $file_data['id_archivo'];
-                                    $mime_type = $file_data['tipo_contenido'];
-
-                                    if (strpos($mime_type, 'image') !== false): ?>
-                                        <div class="mb-3">
-                                            <img src="<?php echo htmlspecialchars($file_url); ?>" class="img-fluid rounded border"
-                                                style="max-height: 600px;" alt="Resultado">
-                                        </div>
-                                    <?php elseif (strpos($mime_type, 'pdf') !== false): ?>
-                                        <div class="ratio ratio-16x9">
-                                            <iframe src="<?php echo htmlspecialchars($file_url); ?>" frameborder="0"></iframe>
-                                        </div>
-                                    <?php endif; ?>
-                                    <div class="mt-3">
-                                        <a href="<?php echo htmlspecialchars($file_url); ?>" target="_blank"
-                                            class="btn btn-primary">
-                                            <i class="bi bi-arrows-fullscreen me-1"></i> Ver en Pantalla Completa
-                                        </a>
-                                    </div>
-                                <?php else: ?>
-                                    <div class="alert alert-info">
-                                        <i class="bi bi-info-circle me-2"></i>
-                                        El archivo está siendo procesado o no se encontró. Reintente subirlo.
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        <?php else: ?>
-                            <div class="empty-state">
-                                <div class="empty-icon">
-                                    <i class="bi bi-droplet"></i>
-                                </div>
-                                <h4 class="text-muted mb-2">Esperando muestra</h4>
-                                <p class="text-muted mb-3">Debe cargar el archivo de resultados (PDF o Imagen) para continuar
-                                </p>
-                            </div>
-                        <?php endif; ?>
+                                    foreach ($parametros as $param):
+                                        // Determinar valores de referencia según paciente
+                                        $min = null; $max = null;
+                                        if ($edad <= 12) {
+                                            $min = $param['valor_ref_pediatrico_min'];
+                                            $max = $param['valor_ref_pediatrico_max'];
+                                        } else if ($genero === 'Masculino') {
+                                            $min = $param['valor_ref_hombre_min'];
+                                            $max = $param['valor_ref_hombre_max'];
+                                        } else {
+                                            $min = $param['valor_ref_mujer_min'];
+                                            $max = $param['valor_ref_mujer_max'];
+                                        }
+                                        $val_ref = ($min !== null && $max !== null) ? "$min - $max" : "N/D";
+                                    ?>
+                                    <tr>
+                                        <td class="fw-medium text-dark"><?php echo htmlspecialchars($param['nombre_parametro']); ?></td>
+                                        <td>
+                                            <input type="text" 
+                                                   name="results[<?php echo $prueba['id_orden_prueba']; ?>][<?php echo $param['id_parametro']; ?>]" 
+                                                   class="form-control form-control-sm result-input"
+                                                   value="<?php echo htmlspecialchars($param['valor_actual'] ?? ''); ?>"
+                                                   data-min="<?php echo $min; ?>" 
+                                                   data-max="<?php echo $max; ?>"
+                                                   onchange="validateRange(this)">
+                                        </td>
+                                        <td class="text-muted small"><?php echo htmlspecialchars($param['unidad_medida']); ?></td>
+                                        <td class="text-muted small"><?php echo $val_ref; ?></td>
+                                        <td class="flag-container"></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 <?php endforeach; ?>
 
@@ -1028,6 +1090,39 @@ try {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Upload Modal -->
+            <div class="modal fade" id="resultsUploadModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Subir Resultados de Laboratorio</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="resultsUploadForm" enctype="multipart/form-data">
+                                <input type="hidden" name="id_orden" id="resultUploadOrderId">
+                                <div class="mb-3">
+                                    <label for="archivo_resultado" class="form-label">Archivo de Resultados (PDF, JPG,
+                                        PNG)</label>
+                                    <input class="form-control" type="file" id="archivo_resultado"
+                                        name="archivo_resultado" accept=".pdf,.jpg,.jpeg,.png" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="notas_resultado" class="form-label">Notas Adicionales</label>
+                                    <textarea class="form-control" id="notas_resultado" name="notas" rows="3"
+                                        placeholder="Cualquier observación sobre el archivo..."></textarea>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-cloud-upload"></i> Subir Archivo
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1184,6 +1279,7 @@ try {
             const themeManager = new ThemeManager();
             const labFunctions = new LaboratoryFunctions();
 
+
             // Exponer funciones globalmente
             window.laboratory = {
                 theme: themeManager,
@@ -1198,6 +1294,12 @@ try {
         function openOrderUploadModal(id_orden) {
             window.currentOrderId = id_orden;
             const modal = new bootstrap.Modal(document.getElementById('fileUploadModal'));
+            modal.show();
+        }
+
+        function openResultsUploadModal(id_orden) {
+            document.getElementById('resultUploadOrderId').value = id_orden;
+            const modal = new bootstrap.Modal(document.getElementById('resultsUploadModal'));
             modal.show();
         }
 
@@ -1244,6 +1346,55 @@ try {
                             icon: 'success',
                             title: 'Archivo Cargado',
                             text: 'El archivo se ha cargado correctamente',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error al cargar el archivo'
+                        });
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error de conexión'
+                    });
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                });
+        });
+
+        // Handle results upload form submission
+        document.getElementById('resultsUploadForm')?.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Subiendo...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(this);
+
+            fetch('api/upload_results.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Resultados Cargados',
+                            text: 'El archivo de resultados se ha guardado correctamente',
                             showConfirmButton: false,
                             timer: 1500
                         }).then(() => {

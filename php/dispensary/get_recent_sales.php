@@ -39,13 +39,23 @@ try {
         }
     }
 
-    $stmt = $conn->prepare("
-        SELECT id_venta, nombre_cliente, total, DATE_FORMAT(fecha_venta, '%H:%i') as hora 
-        FROM ventas 
-        WHERE fecha_venta BETWEEN ? AND ? 
-        ORDER BY fecha_venta DESC
-    ");
-    $stmt->execute([$start_datetime, $end_datetime]);
+    $type = $_GET['type'] ?? '';
+
+    $sql = "SELECT id_venta, nombre_cliente, total, DATE_FORMAT(fecha_venta, '%H:%i') as hora, tipo_pago 
+            FROM ventas 
+            WHERE fecha_venta BETWEEN ? AND ?";
+
+    $params = [$start_datetime, $end_datetime];
+
+    if (!empty($type)) {
+        $sql .= " AND tipo_pago = ?";
+        $params[] = $type;
+    }
+
+    $sql .= " ORDER BY fecha_venta DESC";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
     $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([

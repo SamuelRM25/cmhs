@@ -2971,3 +2971,21 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `archivos_resultados_laboratorio`
+--
+
+CREATE TABLE `archivos_resultados_laboratorio` (
+  `id_archivo` int NOT NULL AUTO_INCREMENT,
+  `id_orden` int NOT NULL,
+  `nombre_archivo` varchar(255) NOT NULL,
+  `tipo_contenido` varchar(100) NOT NULL,
+  `tamano` int NOT NULL,
+  `contenido` longblob NOT NULL,
+  `notas` text,
+  `fecha_carga` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_archivo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
