@@ -1590,6 +1590,7 @@ try {
                                     <div class="desc-container">
                                         <input type="text" class="form-control form-control-sm cargo-desc" name="descripcion[]" required placeholder="Buscar medicamento...">
                                         <div class="search-results-inline" style="display:none; position:absolute; z-index:1000; background:white; border:1px solid #ddd; max-height:200px; overflow-y:auto; width:100%; box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>
+                                        <input type="hidden" class="cargo-id-inventario" name="id_inventario[]">
                                     </div>
                                 </td>
                                 <td><input type="number" step="0.01" class="form-control form-control-sm cargo-cantidad" name="cantidad[]" value="1" required></td>
@@ -1624,7 +1625,7 @@ try {
                         const tipo = row.querySelector('[name="tipo_cargo[]"]').value;
                         const desc = row.querySelector('[name="descripcion[]"]').value;
                         const cant = row.querySelector('[name="cantidad[]"]').value;
-                        const price = row.querySelector('[name="precio_unitario[]"]').value;
+                        const idInv = row.querySelector('.cargo-id-inventario').value;
 
                         if (desc && cant && price) {
                             cargos.push({
@@ -1632,7 +1633,8 @@ try {
                                 tipo_cargo: tipo,
                                 descripcion: desc,
                                 cantidad: cant,
-                                precio_unitario: price
+                                precio_unitario: price,
+                                id_inventario: idInv
                             });
                         }
                     });
@@ -1649,6 +1651,7 @@ try {
                         formData.append(`cargos[${index}][descripcion]`, cargo.descripcion);
                         formData.append(`cargos[${index}][cantidad]`, cargo.cantidad);
                         formData.append(`cargos[${index}][precio_unitario]`, cargo.precio_unitario);
+                        formData.append(`cargos[${index}][id_inventario]`, cargo.id_inventario);
                     });
 
                     return fetch('api/add_cargo.php', {
@@ -1694,9 +1697,11 @@ try {
                     descInput.placeholder = 'Buscar medicamento...';
                     descInput.value = '';
                     precioInput.value = '';
+                    row.querySelector('.cargo-id-inventario').value = '';
                 } else {
                     descInput.placeholder = 'Descripción del cargo';
                     resultsDiv.style.display = 'none';
+                    row.querySelector('.cargo-id-inventario').value = '';
                 }
             });
 
@@ -1731,7 +1736,8 @@ try {
                                 <div class="search-result-item p-2" style="cursor:pointer; border-bottom:1px solid #eee;" 
                                      data-name="${med.nom_medicamento}" 
                                      data-presentacion="${med.presentacion_med}"
-                                     data-precio="${med.precio_hospital || 0}">
+                                     data-precio="${med.precio_hospital || 0}"
+                                     data-id="${med.id_inventario}">
                                     <div class="fw-bold small">${med.nom_medicamento}</div>
                                     <div class="text-muted" style="font-size:0.75rem;">${med.mol_medicamento} - ${med.presentacion_med}</div>
                                     <div class="d-flex justify-content-between" style="font-size:0.75rem;">
@@ -1751,9 +1757,11 @@ try {
                                 const name = this.getAttribute('data-name');
                                 const presentacion = this.getAttribute('data-presentacion');
                                 const precio = this.getAttribute('data-precio');
+                                const idInv = this.getAttribute('data-id');
 
                                 descInput.value = `${name} (${presentacion})`;
                                 precioInput.value = precio;
+                                row.querySelector('.cargo-id-inventario').value = idInv;
                                 resultsDiv.style.display = 'none';
                             });
 
@@ -1797,6 +1805,7 @@ try {
                     <div class="desc-container" style="position:relative;">
                         <input type="text" class="form-control form-control-sm cargo-desc" name="descripcion[]" required placeholder="Descripción del cargo">
                         <div class="search-results-inline" style="display:none; position:absolute; z-index:1000; background:white; border:1px solid #ddd; max-height:200px; overflow-y:auto; width:100%; box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>
+                        <input type="hidden" class="cargo-id-inventario" name="id_inventario[]">
                     </div>
                 </td>
                 <td><input type="number" step="0.01" class="form-control form-control-sm cargo-cantidad" name="cantidad[]" value="1" required></td>

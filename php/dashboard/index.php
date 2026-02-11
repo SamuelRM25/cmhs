@@ -4834,6 +4834,74 @@ try {
         </div>
     </div>
 
+    <!-- Modal para Electrocardiograma -->
+    <div class="modal fade" id="electroBillingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-heart-pulse me-2"></i>Cobro de Electrocardiograma</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="electroBillingForm">
+                        <div class="mb-3">
+                            <label class="form-label">Paciente</label>
+                            <input class="form-control" list="electroDatalistOptions" id="electro_paciente_input"
+                                placeholder="Buscar paciente..." required autocomplete="off">
+                            <datalist id="electroDatalistOptions">
+                                <?php foreach ($pacientes as $paciente): ?>
+                                    <option data-id="<?php echo $paciente['id_paciente']; ?>"
+                                        value="<?php echo htmlspecialchars($paciente['nombre_completo']); ?>">
+                                    <?php endforeach; ?>
+                            </datalist>
+                            <input type="hidden" id="electro_paciente" name="id_paciente">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Doctor (Opcional)</label>
+                            <select class="form-select" id="electro_doctor" name="id_doctor">
+                                <option value="">Seleccione Doctor</option>
+                                <?php foreach ($doctores as $doc): ?>
+                                    <option value="<?php echo $doc['idUsuario']; ?>">
+                                        <?php echo htmlspecialchars($doc['nombre'] . ' ' . $doc['apellido']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Horario</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="electro_horario" id="electro_habil"
+                                    value="habil" onchange="updateElectroPrice()" checked autocomplete="off">
+                                <label class="btn btn-outline-danger" for="electro_habil">Normal (Q300)</label>
+
+                                <input type="radio" class="btn-check" name="electro_horario" id="electro_inhabil"
+                                    value="inhabil" onchange="updateElectroPrice()" autocomplete="off">
+                                <label class="btn btn-outline-danger" for="electro_inhabil">Inhábil/Finde (Q400)</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Monto (Q)</label>
+                            <input type="number" class="form-control" id="electro_precio" name="precio" value="300"
+                                required step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Pago</label>
+                            <select class="form-select" name="tipo_pago">
+                                <option value="Efectivo">Efectivo</option>
+                                <option value="Tarjeta">Tarjeta</option>
+                                <option value="Transferencia">Transferencia</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="saveElectroBtn">Guardar Cobro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal para Rayos X -->
     <div class="modal fade" id="xrayBillingModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -4889,6 +4957,10 @@ try {
                     </form>
                 </div>
                 <div class="modal-footer">
+                    <div class="me-auto small text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Precios: Q200 (1 reg), Q300 (2 reg), Q400 (3 reg)
+                    </div>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-secondary" id="saveXrayBtn">Guardar Cobro</button>
                 </div>
@@ -4914,6 +4986,12 @@ try {
             'Retiro de Puntos': { habil: 50, inhabil: 100 },
             'Suero Vitaminado': { habil: 800, inhabil: 1100 }
         };
+
+        function updateElectroPrice() {
+            const isHabil = document.getElementById('electro_habil').checked;
+            const priceField = document.getElementById('electro_precio');
+            priceField.value = isHabil ? "300.00" : "400.00";
+        }
 
         function updateProcedurePrice() {
             const procedure = document.getElementById('procedureSelect').value;
