@@ -2506,7 +2506,10 @@ try {
                                     html += `
                                             <tr>
                                                 <td>${item.hora}</td>
-                                                <td>${item.paciente || item.cliente || 'Desconocido'}</td>
+                                                <td>
+                                                    <div class="fw-medium">${item.paciente || item.cliente || 'Desconocido'}</div>
+                                                    ${item.detalle ? `<div class="text-muted mt-1" style="font-size: 0.75rem;"><i class="bi bi-box-seam me-1"></i>${item.detalle}</div>` : ''}
+                                                </td>
                                                 <td><i class="bi ${mConfig.icon} ${mConfig.color}"></i> ${item.tipo_pago}</td>
                                                 <td class="text-end fw-bold">Q${parseFloat(item.monto || item.cobro || 0).toFixed(2)}</td>
                                             </tr>`;
@@ -4161,9 +4164,7 @@ try {
                                         showConfirmButton: false,
                                         timer: 1500
                                     }).then(() => {
-                                        if (result.id_pago) {
-                                            window.open(`../laboratory/print_lab_receipt.php?id=${result.id_pago}`, '_blank');
-                                        }
+                                        // window.open(`../laboratory/print_lab_receipt.php?id=${result.id_pago}`, '_blank');
                                         location.reload();
                                     });
                                 } else {

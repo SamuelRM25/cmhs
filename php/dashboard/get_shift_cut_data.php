@@ -88,10 +88,37 @@ try {
     };
 
     // 1. Pharmacy Sales (ventas)
-    $pharmacy = $getDetailedData($conn, 'ventas', 'total', 'fecha_venta', $start_datetime, $end_datetime, 'tipo_pago', '', ', nombre_cliente as cliente', '');
+    // Joined with detailing to get medication names
+    $pharmacy = $getDetailedData(
+        $conn,
+        'ventas',
+        'total',
+        'fecha_venta',
+        $start_datetime,
+        $end_datetime,
+        'tipo_pago',
+        '',
+        ', nombre_cliente as cliente, (SELECT GROUP_CONCAT(i.nom_medicamento SEPARATOR ", ") 
+         FROM detalle_ventas dv 
+         JOIN inventario i ON dv.id_inventario = i.id_inventario 
+         WHERE dv.id_venta = ventas.id_venta) as detalle',
+        ''
+    );
 
     // 2. Consultations (cobros)
-    $consultations_raw = $getDetailedData($conn, 'cobros', 'cantidad_consulta', 'fecha_consulta', $start_datetime, $end_datetime, 'tipo_pago', '', ', CONCAT(u.nombre, " ", u.apellido) as medico, CONCAT(p.nombre, " ", p.apellido) as paciente', 'JOIN usuarios u ON cobros.id_doctor = u.idUsuario JOIN pacientes p ON cobros.paciente_cobro = p.id_paciente');
+    // Joined with appointments to get the scheduled time
+    $consultations_raw = $getDetailedData(
+        $conn,
+        'cobros',
+        'cantidad_consulta',
+        'fecha_consulta',
+        $start_datetime,
+        $end_datetime,
+        'tipo_pago',
+        '',
+        ', CONCAT(u.nombre, " ", u.apellido) as medico, CONCAT(p.nombre, " ", p.apellido) as paciente, ci.hora_cita as hora',
+        'JOIN usuarios u ON cobros.id_doctor = u.idUsuario JOIN pacientes p ON cobros.paciente_cobro = p.id_paciente LEFT JOIN citas ci ON cobros.id_cita = ci.id_cita'
+    );
 
     // We also need doctors breakdown for the consultations section
     $doc_query = "SELECT DISTINCT u.idUsuario, u.nombre, u.apellido 

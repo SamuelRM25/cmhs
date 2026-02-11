@@ -111,6 +111,9 @@ try {
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <!-- FullCalendar -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet'>
+
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1768,24 +1771,46 @@ try {
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4">Hora</th>
-                                    <th>Cliente</th>
-                                    <th class="text-end">Total</th>
-                                    <th class="text-center pe-4">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historyTableBody">
-                                <!-- Data will be injected here -->
-                            </tbody>
-                        </table>
-                    </div>
-                    <div id="historyLoading" class="text-center py-5">
-                        <div class="spinner-border text-info" role="status"></div>
-                        <p class="mt-2 text-muted">Cargando historial...</p>
+                    <ul class="nav nav-tabs nav-fill" id="historyTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="list-tab" data-bs-toggle="tab"
+                                data-bs-target="#list-pane" type="button" role="tab">
+                                <i class="bi bi-list-ul me-2"></i>Lista
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="calendar-tab" data-bs-toggle="tab"
+                                data-bs-target="#calendar-pane" type="button" role="tab"
+                                onclick="window.dashboard.pos.initHistoryCalendar()">
+                                <i class="bi bi-calendar3 me-2"></i>Calendario
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="historyTabContent">
+                        <div class="tab-pane fade show active" id="list-pane" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="ps-4">Hora</th>
+                                            <th>Cliente</th>
+                                            <th class="text-end">Total</th>
+                                            <th class="text-center pe-4">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="historyTableBody">
+                                        <!-- Data will be injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="historyLoading" class="text-center py-5">
+                                <div class="spinner-border text-info" role="status"></div>
+                                <p class="mt-2 text-muted">Cargando historial...</p>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="calendar-pane" role="tabpanel">
+                            <div id="historyCalendar" class="p-3" style="min-height: 500px;"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1814,6 +1839,10 @@ try {
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- FullCalendar JS -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js'></script>
 
     <!-- JavaScript Optimizado (mismo que dashboard con funcionalidad POS) -->
     <script>
@@ -2541,11 +2570,49 @@ try {
                     });
                 }
 
+                initHistoryCalendar() {
+                    const calendarEl = document.getElementById('historyCalendar');
+                    if (!calendarEl) return;
+
+                    // If already initialized, just refetch
+                    if (this.calendar) {
+                        this.calendar.refetchEvents();
+                        setTimeout(() => this.calendar.updateSize(), 200);
+                        return;
+                    }
+
+                    this.calendar = new FullCalendar.Calendar(calendarEl, {
+                        initialView: 'dayGridMonth',
+                        locale: 'es',
+                        headerToolbar: {
+                            left: 'prev,next today',
+                            center: 'title',
+                            right: 'dayGridMonth,timeGridWeek'
+                        },
+                        events: 'get_transfer_events.php',
+                        eventClick: (info) => {
+                            window.open(`print_receipt.php?id=${info.event.id}`, '_blank');
+                        },
+                        themeSystem: 'bootstrap5',
+                        height: 500
+                    });
+
+                    this.calendar.render();
+                    setTimeout(() => this.calendar.updateSize(), 200);
+                }
+
                 async openHistory(type = '') {
-                    const modal = new bootstrap.Modal(document.getElementById('historyModal'));
+                    const modalEl = document.getElementById('historyModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
                     const tbody = document.getElementById('historyTableBody');
                     const loading = document.getElementById('historyLoading');
                     const title = document.querySelector('#historyModal .modal-title');
+
+                    // Reset to list tab
+                    const listTab = document.getElementById('list-tab');
+                    if (listTab) {
+                        bootstrap.Tab.getOrCreateInstance(listTab).show();
+                    }
 
                     tbody.innerHTML = '';
                     loading.style.display = 'block';

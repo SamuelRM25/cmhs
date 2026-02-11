@@ -1625,6 +1625,7 @@ try {
                         const tipo = row.querySelector('[name="tipo_cargo[]"]').value;
                         const desc = row.querySelector('[name="descripcion[]"]').value;
                         const cant = row.querySelector('[name="cantidad[]"]').value;
+                        const price = row.querySelector('[name="precio_unitario[]"]').value;
                         const idInv = row.querySelector('.cargo-id-inventario').value;
 
                         if (desc && cant && price) {
