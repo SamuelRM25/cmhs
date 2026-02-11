@@ -4164,8 +4164,11 @@ try {
                                         showConfirmButton: false,
                                         timer: 1500
                                     }).then(() => {
-                                        // window.open(`../laboratory/print_lab_receipt.php?id=${result.id_pago}`, '_blank');
-                                        location.reload();
+                                        if (result.id_pago) {
+                                            window.location.href = `../laboratory/print_lab_receipt.php?id=${result.id_pago}`;
+                                        } else {
+                                            location.reload();
+                                        }
                                     });
                                 } else {
                                     throw new Error(result.message);
