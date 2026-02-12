@@ -68,11 +68,9 @@ try {
     $total_sales = $stmt->fetchColumn() ?: 0;
 
     // 6. Cobros de consultas
-    // Updated to use shift range
-    $stmt = $conn->prepare("SELECT SUM(cantidad_consulta) FROM cobros WHERE " .
-        ($shift === 'morning' ? "(fecha_consulta BETWEEN ? AND ? OR DATE(fecha_consulta) = ?)" : "fecha_consulta BETWEEN ? AND ?"));
-    $params_cobros = ($shift === 'morning') ? [$start_time, $end_time, $date] : [$start_time, $end_time];
-    $stmt->execute($params_cobros);
+    // Updated to use strict shift range
+    $stmt = $conn->prepare("SELECT SUM(cantidad_consulta) FROM cobros WHERE fecha_consulta BETWEEN ? AND ?");
+    $stmt->execute([$start_time, $end_time]);
     $total_billings = $stmt->fetchColumn() ?: 0;
 
     // 7. Ingresos totales

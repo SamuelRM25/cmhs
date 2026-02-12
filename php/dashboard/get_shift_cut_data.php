@@ -40,10 +40,9 @@ try {
             $sql = "SELECT SUM($column_amount) FROM $table $joins WHERE $column_pago = ?";
             $params = [$method];
             if ($shift === 'morning') {
-                $sql .= " AND ($column_date BETWEEN ? AND ? OR DATE($column_date) = ?)";
+                $sql .= " AND $column_date BETWEEN ? AND ?";
                 $params[] = $start;
                 $params[] = $end;
-                $params[] = $date;
             } else {
                 $sql .= " AND $column_date BETWEEN ? AND ?";
                 $params[] = $start;
@@ -63,8 +62,8 @@ try {
         $sql_rows = "SELECT $column_date as hora, $column_amount as monto, $column_pago as tipo_pago $select_extras FROM $table $joins WHERE ";
         $params_rows = [];
         if ($shift === 'morning') {
-            $sql_rows .= "($column_date BETWEEN ? AND ? OR DATE($column_date) = ?)";
-            $params_rows = [$start, $end, $date];
+            $sql_rows .= "$column_date BETWEEN ? AND ?";
+            $params_rows = [$start, $end];
         } else {
             $sql_rows .= "$column_date BETWEEN ? AND ?";
             $params_rows = [$start, $end];
@@ -127,17 +126,17 @@ try {
     $doc_query = "SELECT DISTINCT u.idUsuario, u.nombre, u.apellido 
                   FROM cobros c
                   JOIN usuarios u ON c.id_doctor = u.idUsuario
-                  WHERE " . ($shift === 'morning' ? "(c.fecha_consulta BETWEEN ? AND ? OR DATE(c.fecha_consulta) = ?)" : "c.fecha_consulta BETWEEN ? AND ?");
+                  WHERE c.fecha_consulta BETWEEN ? AND ?";
     $stmt_docs = $conn->prepare($doc_query);
-    $stmt_docs->execute($shift === 'morning' ? [$start_datetime, $end_datetime, $date] : [$start_datetime, $end_datetime]);
+    $stmt_docs->execute([$start_datetime, $end_datetime]);
     $doctors = $stmt_docs->fetchAll(PDO::FETCH_ASSOC);
     $by_doctor = [];
     foreach ($doctors as $doc) {
         $doc_breakdown = [];
         $doc_total = 0;
         foreach ($methods as $method) {
-            $q = "SELECT SUM(cantidad_consulta) FROM cobros WHERE id_doctor = ? AND tipo_pago = ? AND " . ($shift === 'morning' ? "(fecha_consulta BETWEEN ? AND ? OR DATE(fecha_consulta) = ?)" : "fecha_consulta BETWEEN ? AND ?");
-            $p = array_merge([$doc['idUsuario'], $method], $shift === 'morning' ? [$start_datetime, $end_datetime, $date] : [$start_datetime, $end_datetime]);
+            $q = "SELECT SUM(cantidad_consulta) FROM cobros WHERE id_doctor = ? AND tipo_pago = ? AND fecha_consulta BETWEEN ? AND ?";
+            $p = [$doc['idUsuario'], $method, $start_datetime, $end_datetime];
             $stmt = $conn->prepare($q);
             $stmt->execute($p);
             $v = (float) ($stmt->fetchColumn() ?: 0);
