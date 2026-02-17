@@ -116,7 +116,7 @@ try {
         $end_datetime,
         'tipo_pago',
         '',
-        ', CONCAT(u.nombre, " ", u.apellido) as medico, CONCAT(p.nombre, " ", p.apellido) as paciente, ci.hora_cita as hora',
+        ', CONCAT(u.nombre, " ", u.apellido) as medico, CONCAT(p.nombre, " ", p.apellido) as paciente, COALESCE(ci.hora_cita, DATE_FORMAT(cobros.fecha_consulta, "%H:%i")) as hora',
         'JOIN usuarios u ON cobros.id_doctor = u.idUsuario 
          JOIN pacientes p ON cobros.paciente_cobro = p.id_paciente 
          LEFT JOIN citas ci ON cobros.paciente_cobro = ci.historial_id AND DATE(cobros.fecha_consulta) = ci.fecha_cita AND cobros.id_doctor = ci.id_doctor'
@@ -171,7 +171,6 @@ try {
         ],
         'details' => array_merge($us_new['details'], $us_old['details'])
     ];
-
     // 6. X-Rays
     $rx_new = $getDetailedData($conn, 'rayos_x', 'cobro', 'fecha_estudio', $start_datetime, $end_datetime, 'tipo_pago', '', ', nombre_paciente as paciente', '');
     $rx_old = $getDetailedData($conn, 'examenes_realizados', 'cobro', 'fecha_examen', $start_datetime, $end_datetime, 'tipo_pago', "(tipo_examen LIKE '%rayos x%' OR tipo_examen LIKE '%rx%')", ', nombre_paciente as paciente', '');
@@ -185,10 +184,24 @@ try {
         'details' => array_merge($rx_new['details'], $rx_old['details'])
     ];
 
-    // 7. Hospitalization (Abonos)
+    // 7. Electrocardiograms
+    $electro = $getDetailedData(
+        $conn,
+        'electrocardiogramas',
+        'precio',
+        'fecha_realizado',
+        $start_datetime,
+        $end_datetime,
+        'tipo_pago',
+        '',
+        ', CONCAT(p.nombre, " ", p.apellido) as paciente',
+        'JOIN pacientes p ON electrocardiogramas.id_paciente = p.id_paciente'
+    );
+
+    // 8. Hospitalization (Abonos)
     $hospitalization = $getDetailedData($conn, 'abonos_hospitalarios', 'ah.monto', 'ah.fecha_abono', $start_datetime, $end_datetime, 'ah.metodo_pago', '', ", CONCAT(p.nombre, ' ', p.apellido) as paciente", "ah JOIN cuenta_hospitalaria ch ON ah.id_cuenta = ch.id_cuenta JOIN encamamientos e ON ch.id_encamamiento = e.id_encamamiento JOIN pacientes p ON e.id_paciente = p.id_paciente");
 
-    $grand_total = $pharmacy['total'] + $consultations['total'] + $laboratory['total'] + $procedures['total'] + $ultrasound['total'] + $xray['total'] + $hospitalization['total'];
+    $grand_total = $pharmacy['total'] + $consultations['total'] + $laboratory['total'] + $procedures['total'] + $ultrasound['total'] + $xray['total'] + $electro['total'] + $hospitalization['total'];
 
     echo json_encode([
         'success' => true,
@@ -199,6 +212,7 @@ try {
             'procedures' => $procedures,
             'ultrasound' => $ultrasound,
             'xray' => $xray,
+            'electro' => $electro,
             'hospitalization' => $hospitalization,
             'grand_total' => $grand_total,
             'period' => ['start' => $start_datetime, 'end' => $end_datetime, 'shift' => $shift]

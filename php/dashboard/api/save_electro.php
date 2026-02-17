@@ -28,8 +28,8 @@ try {
 
     $stmt = $conn->prepare("
         INSERT INTO electrocardiogramas 
-        (id_paciente, id_doctor, precio, estado_pago, tipo_pago, realizado_por) 
-        VALUES (?, ?, ?, 'Pagado', ?, ?)
+        (id_paciente, id_doctor, precio, estado_pago, tipo_pago, realizado_por, fecha_realizado) 
+        VALUES (?, ?, ?, 'Pagado', ?, ?, NOW())
     ");
 
     $stmt->execute([

@@ -2428,8 +2428,71 @@ try {
             </div>
         </div>
 
+        <!-- Modal Detalle Farmacia -->
+        <div class="modal fade" id="pharmacyDetailsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-capsule me-2"></i>Detalle de Ventas - Farmacia
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-0" id="pharmacyModalBody">
+                        <!-- Content injected by JS -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script>
             // Funciones para el Corte de Turno
+            function openPharmacyModal() {
+                const pharmacyData = window.currentShiftData?.pharmacy;
+                if (!pharmacyData) return;
+
+                const modalBody = document.getElementById('pharmacyModalBody');
+                if (pharmacyData.details && pharmacyData.details.length > 0) {
+                    let html = `
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Hora</th>
+                                        <th>Cliente</th>
+                                        <th>Detalle Medicamentos</th>
+                                        <th>Pago</th>
+                                        <th class="text-end">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
+                    pharmacyData.details.forEach(item => {
+                        html += `
+                            <tr>
+                                <td>${item.hora}</td>
+                                <td class="fw-medium">${item.cliente || 'Consumidor Final'}</td>
+                                <td><small class="text-muted">${item.detalle || 'Varios'}</small></td>
+                                <td><span class="badge bg-light text-dark border">${item.tipo_pago}</span></td>
+                                <td class="text-end fw-bold">Q${parseFloat(item.monto).toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `</tbody></table></div>`;
+                    modalBody.innerHTML = html;
+                } else {
+                    modalBody.innerHTML = '<div class="alert alert-info">No hay ventas de farmacia registradas en este turno.</div>';
+                }
+
+                const modal = new bootstrap.Modal(document.getElementById('pharmacyDetailsModal'));
+                modal.show();
+            }
+
             async function verifyShiftCode() {
                 const { value: code } = await Swal.fire({
                     title: 'Código de Seguridad',
@@ -2471,11 +2534,14 @@ try {
                 loading.style.display = 'block';
                 content.style.display = 'none';
 
+
+
                 fetch(`get_shift_cut_data.php?date=${date}&shift=${shift}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
                             const d = data.data;
+                            window.currentShiftData = d; // Store for modal access
 
                             // Helper para renderizar tabla de detalles
                             const renderDetailsTable = (details, typeId) => {
@@ -2527,6 +2593,7 @@ try {
                                 { id: 'procedures', label: 'Procedimientos', data: d.procedures, icon: 'bi-bandaid text-warning' },
                                 { id: 'ultrasound', label: 'Ultrasonidos', data: d.ultrasound, icon: 'bi-wifi text-info' },
                                 { id: 'xray', label: 'Rayos X', data: d.xray, icon: 'bi-file-medical text-secondary' },
+                                { id: 'electro', label: 'Electrocardiogramas', data: d.electro, icon: 'bi-heart-pulse text-danger' },
                                 { id: 'hospitalization', label: 'Hospitalización', data: d.hospitalization, icon: 'bi-hospital text-danger' }
                             ];
 
@@ -2537,6 +2604,19 @@ try {
                                 const total = parseFloat(cat.data.total || 0);
                                 const collapseId = `collapse-${cat.id}`;
 
+                                let actionBtn = '';
+                                if (cat.id === 'pharmacy') {
+                                    actionBtn = `<button class="btn btn-sm btn-link text-decoration-none p-0 mt-1" type="button" 
+                                        onclick="openPharmacyModal()">
+                                        <i class="bi bi-eye"></i> Ver detalles (Modal)
+                                    </button>`;
+                                } else {
+                                    actionBtn = `<button class="btn btn-sm btn-link text-decoration-none p-0 mt-1" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#${collapseId}" aria-expanded="false">
+                                        <i class="bi bi-eye"></i> Ver detalles
+                                    </button>`;
+                                }
+
                                 const row = document.createElement('tr');
                                 row.innerHTML = `
                                         <td>
@@ -2544,10 +2624,7 @@ try {
                                                 <i class="bi ${cat.icon} fs-5 me-2"></i>
                                                 <span class="fw-bold">${cat.label}</span>
                                             </div>
-                                            <button class="btn btn-sm btn-link text-decoration-none p-0 mt-1" type="button" 
-                                                data-bs-toggle="collapse" data-bs-target="#${collapseId}" aria-expanded="false">
-                                                <i class="bi bi-eye"></i> Ver detalles
-                                            </button>
+                                            ${actionBtn}
                                             <div class="collapse mt-2" id="${collapseId}">
                                                 <div class="card card-body p-2 bg-light border-0">
                                                     ${renderDetailsTable(cat.data.details, cat.id)}
@@ -4432,6 +4509,24 @@ try {
                             setTimeout(() => this.showDailyReportNotification(today), 2000);
                         }
                     <?php endif; ?>
+                }
+
+                showDailyReportNotification(date) {
+                    Swal.fire({
+                        title: 'Resumen Diario Disponible',
+                        text: 'El reporte de ayer ya está listo para revisar.',
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ver Reporte',
+                        cancelButtonText: 'Más tarde',
+                        confirmButtonColor: 'var(--color-primary)'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            localStorage.setItem('dailyReportDate', date);
+                            // Redireccionar al reporte si existe una URL específica, por ahora solo marcamos como visto
+                            // window.location.href = 'reports/daily.php'; 
+                        }
+                    });
                 }
             }
 
