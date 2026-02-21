@@ -3948,6 +3948,7 @@ try {
                     const saveBtn = document.getElementById('saveBillingBtn');
                     if (saveBtn) {
                         saveBtn.addEventListener('click', async () => {
+                            if (saveBtn.disabled) return;
                             const form = document.getElementById('newBillingForm');
                             const patientInput = document.getElementById('billing_paciente_input');
                             const patientHidden = document.getElementById('billing_paciente');
@@ -4018,6 +4019,7 @@ try {
                     const saveBtn = document.getElementById('saveElectroBtn');
                     if (saveBtn) {
                         saveBtn.addEventListener('click', async () => {
+                            if (saveBtn.disabled) return;
                             const form = document.getElementById('electroBillingForm');
                             const patientInput = document.getElementById('electro_paciente_input');
                             const patientHidden = document.getElementById('electro_paciente');
@@ -4352,6 +4354,8 @@ try {
 
                     if (saveBtn) {
                         saveBtn.addEventListener('click', async () => {
+                            if (saveBtn.disabled) return;
+
                             const form = document.getElementById('ultrasoundBillingForm');
                             const patientInput = document.getElementById('ultrasound_patient_input');
                             const patientHidden = document.getElementById('ultrasound_patient_id');
@@ -4423,6 +4427,8 @@ try {
                     const saveBtn = document.getElementById('saveXrayBtn');
                     if (saveBtn) {
                         saveBtn.addEventListener('click', async () => {
+                            if (saveBtn.disabled) return;
+
                             const form = document.getElementById('xrayBillingForm');
                             const patientInput = document.getElementById('xray_patient_input');
                             const patientHidden = document.getElementById('xray_patient_id');

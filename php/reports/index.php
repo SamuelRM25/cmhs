@@ -210,6 +210,8 @@ try {
         JOIN inventario i ON dv.id_inventario = i.id_inventario
         LEFT JOIN purchase_items pi ON i.id_purchase_item = pi.id
         WHERE v.fecha_venta BETWEEN ? AND ?
+        AND v.tipo_pago != 'Traslado'
+        AND COALESCE(pi.unit_cost, 0) > 0
         GROUP BY i.id_inventario, i.nom_medicamento, i.codigo_barras
         ORDER BY total_venta DESC
     ");

@@ -2200,7 +2200,7 @@ try {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="action-btn secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="action-btn" onclick="savePurchase()">
+                    <button type="button" class="action-btn" id="savePurchaseBtn" onclick="savePurchase()">
                         <i class="bi bi-check-lg me-2"></i>Guardar Compra
                     </button>
                 </div>
@@ -2258,7 +2258,8 @@ try {
                                     <textarea class="form-control" name="notes" id="pay_notes" rows="2"></textarea>
                                 </div>
 
-                                <button type="button" class="action-btn w-100" onclick="submitPayment()">
+                                <button type="button" class="action-btn w-100" id="submitPaymentBtn"
+                                    onclick="submitPayment()">
                                     <i class="bi bi-check-circle me-2"></i>Registrar Pago
                                 </button>
                             </form>
@@ -2759,6 +2760,13 @@ try {
                     return;
                 }
 
+                // Deshabilitar botón para evitar duplicados
+                const saveBtn = document.getElementById('savePurchaseBtn');
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                    saveBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin me-2"></i>Guardando...';
+                }
+
                 // Preparar datos del encabezado
                 const header = {
                     purchase_date: document.getElementById('purchase_date').value,
@@ -2795,7 +2803,9 @@ try {
                                 icon: 'success',
                                 confirmButtonText: 'Aceptar'
                             }).then(() => {
-                                // Cerrar modal y recargar página
+                                // Limpiar items y cerrar modal
+                                purchaseItems = [];
+                                renderItems();
                                 const modal = bootstrap.Modal.getInstance(document.getElementById('newPurchaseModal'));
                                 modal.hide();
                                 location.reload();
@@ -2817,6 +2827,13 @@ try {
                             icon: 'error',
                             confirmButtonText: 'Entendido'
                         });
+                    })
+                    .finally(() => {
+                        // Rehabilitar botón en caso de error o éxito
+                        if (saveBtn) {
+                            saveBtn.disabled = false;
+                            saveBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Guardar Compra';
+                        }
                     });
             };
 
@@ -3045,6 +3062,13 @@ try {
                         confirmButtonText: 'Entendido'
                     });
                     return;
+                }
+
+                // Deshabilitar botón para evitar duplicados
+                const payBtn = document.getElementById('submitPaymentBtn');
+                if (payBtn) {
+                    payBtn.disabled = true;
+                    payBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin me-2"></i>Procesando...';
                 }
 
                 // Enviar pago al servidor

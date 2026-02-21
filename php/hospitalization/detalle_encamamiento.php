@@ -1011,6 +1011,12 @@ try {
                     </button>
                 </li>
                 <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#meds-tab">
+                        <i class="bi bi-capsule"></i>
+                        Medicamentos
+                    </button>
+                </li>
+                <li class="nav-item">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#cuenta-tab">
                         <i class="bi bi-currency-dollar"></i>
                         Cuenta Hospitalaria
@@ -1136,6 +1142,47 @@ try {
                             <div class="empty-icon"><i class="bi bi-clipboard-pulse"></i></div>
                             <h4>No hay evoluciones registradas</h4>
                             <p>Haga clic en "Nueva Evolución" para agregar la primera nota</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Tab: Medicamentos -->
+                <div class="tab-pane fade" id="meds-tab">
+                    <div class="tab-header">
+                        <h3 class="tab-title">Medicamentos Administrados</h3>
+                    </div>
+                    <?php if (isset($cargos_por_tipo['Medicamento']) && count($cargos_por_tipo['Medicamento']) > 0): ?>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha/Hora</th>
+                                        <th>Medicamento</th>
+                                        <th>Cantidad</th>
+                                        <th>Precio U.</th>
+                                        <th>Subtotal</th>
+                                        <th>Registrado por</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($cargos_por_tipo['Medicamento'] as $med): ?>
+                                        <tr>
+                                            <td><?php echo date('d/m/Y H:i', strtotime($med['fecha_cargo'])); ?></td>
+                                            <td class="fw-bold"><?php echo htmlspecialchars($med['descripcion']); ?></td>
+                                            <td><?php echo $med['cantidad']; ?></td>
+                                            <td>Q<?php echo number_format($med['precio_unitario'], 2); ?></td>
+                                            <td class="fw-bold">Q<?php echo number_format($med['subtotal'], 2); ?></td>
+                                            <td><small><?php echo htmlspecialchars($med['registrado_nombre']); ?></small></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-capsule"></i></div>
+                            <h4>No hay medicamentos registrados</h4>
+                            <p>Los medicamentos aparecen aquí cuando se agregan a la cuenta hospitalaria.</p>
                         </div>
                     <?php endif; ?>
                 </div>
