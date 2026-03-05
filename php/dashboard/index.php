@@ -5,7 +5,7 @@ session_start();
 
 // Verificar sesión activa
 if (!isset($_SESSION['user_id'])) {
-    header("Location: ../auth/login.php");
+    header("Location: /cmhs");
     exit;
 }
 
@@ -114,8 +114,8 @@ try {
     $stmt->execute();
     $total_medications = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
 
-    // 8. Medicamentos próximos a caducar (30 días)
-    $next_month = date('Y-m-d', strtotime('+30 days'));
+    // 8. Medicamentos próximos a caducar (6 meses)
+    $next_month = date('Y-m-d', strtotime('+6 months'));
     $stmt = $conn->prepare("
         SELECT id_inventario, nom_medicamento, fecha_vencimiento, cantidad_med 
         FROM inventario 

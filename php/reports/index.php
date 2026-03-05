@@ -90,6 +90,8 @@ try {
         JOIN inventario i ON dv.id_inventario = i.id_inventario
         LEFT JOIN purchase_items pi ON i.id_purchase_item = pi.id
         WHERE v.fecha_venta BETWEEN ? AND ?
+        AND v.tipo_pago != 'Traslado'
+        AND dv.precio_unitario > 0
     ");
     $stmt_actual_profit->execute([$start_datetime, $end_datetime]);
     $profit_data = $stmt_actual_profit->fetch(PDO::FETCH_ASSOC);
@@ -160,6 +162,8 @@ try {
         JOIN inventario i ON dv.id_inventario = i.id_inventario
         JOIN ventas v ON dv.id_venta = v.id_venta
         WHERE v.fecha_venta BETWEEN ? AND ?
+        AND v.tipo_pago != 'Traslado'
+        AND dv.precio_unitario > 0
         GROUP BY i.id_inventario
         ORDER BY total_vendido DESC
         LIMIT 5
@@ -211,6 +215,7 @@ try {
         LEFT JOIN purchase_items pi ON i.id_purchase_item = pi.id
         WHERE v.fecha_venta BETWEEN ? AND ?
         AND v.tipo_pago != 'Traslado'
+        AND dv.precio_unitario > 0
         AND COALESCE(pi.unit_cost, 0) > 0
         GROUP BY i.id_inventario, i.nom_medicamento, i.codigo_barras
         ORDER BY total_venta DESC
@@ -230,6 +235,32 @@ try {
 
     $total_profit_amount = $total_profit_revenue - $total_profit_cost;
     $total_profit_margin = $total_profit_revenue > 0 ? ($total_profit_amount / $total_profit_revenue) * 100 : 0;
+
+    // ============ REPORTE DETALLADO DE LABORATORIOS ============
+
+    $stmt_labs_detail = $conn->prepare("
+        SELECT 
+            p.nombre as paciente_nombre,
+            p.apellido as paciente_apellido,
+            cp.nombre_prueba,
+            DATE(ol.fecha_orden) as fecha,
+            TIME(ol.fecha_orden) as hora,
+            cp.precio
+        FROM ordenes_laboratorio ol
+        JOIN orden_pruebas op ON ol.id_orden = op.id_orden
+        JOIN catalogo_pruebas cp ON op.id_prueba = cp.id_prueba
+        JOIN pacientes p ON ol.id_paciente = p.id_paciente
+        WHERE ol.fecha_orden BETWEEN ? AND ?
+        AND op.estado != 'Devuelto'
+        ORDER BY ol.fecha_orden DESC
+    ");
+    $stmt_labs_detail->execute([$profit_start_datetime, $profit_end_datetime]);
+    $labs_detail_data = $stmt_labs_detail->fetchAll(PDO::FETCH_ASSOC);
+
+    $total_labs_report = 0;
+    foreach ($labs_detail_data as $lab) {
+        $total_labs_report += $lab['precio'];
+    }
 
 
 } catch (PDOException $e) {
@@ -1512,6 +1543,77 @@ try {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Nuevo Reporte Detallado de Laboratorios -->
+            <div class="content-section animate-in delay-4 mt-5">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="bi bi-droplet-half section-title-icon" style="color: var(--color-info);"></i>
+                        Reporte Detallado de Laboratorios
+                    </h3>
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <span class="amount-badge income">
+                            Total: Q
+                            <?php echo number_format($total_labs_report, 2); ?>
+                        </span>
+                        <?php if ($user_type === 'admin'): ?>
+                            <a href="export_labs.php?start=<?php echo $profit_start; ?>&end=<?php echo $profit_end; ?>"
+                                target="_blank" class="action-btn" style="background: var(--color-success)">
+                                <i class="bi bi-file-earmark-excel me-2"></i>
+                                Exportar Laboratorios
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Paciente</th>
+                                <th>Examen (Prueba)</th>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th class="text-end">Precio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($labs_detail_data as $lab): ?>
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-dark">
+                                            <?php echo htmlspecialchars($lab['paciente_nombre'] . ' ' . $lab['paciente_apellido']); ?>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            <?php echo htmlspecialchars($lab['nombre_prueba']); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <?php echo date('d/m/Y', strtotime($lab['fecha'])); ?>
+                                    </td>
+                                    <td>
+                                        <?php echo date('h:i A', strtotime($lab['hora'])); ?>
+                                    </td>
+                                    <td class="text-end fw-bold text-success">
+                                        Q
+                                        <?php echo number_format($lab['precio'], 2); ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <?php if (empty($labs_detail_data)): ?>
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        No se encontraron laboratorios realizados en este período.
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 

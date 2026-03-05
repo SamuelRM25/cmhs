@@ -104,7 +104,7 @@ try {
         // Get all existing room charges dates for this account
         $stmt_existing_nights = $conn->prepare("
             SELECT fecha_aplicacion FROM cargos_hospitalarios 
-            WHERE id_cuenta = ? AND tipo_cargo = 'Habitación' AND cancelado = FALSE
+            WHERE id_cuenta = ? AND tipo_cargo = 'Habitación'
         ");
         $stmt_existing_nights->execute([$id_cuenta]);
         $existing_nights = $stmt_existing_nights->fetchAll(PDO::FETCH_COLUMN);
@@ -1337,9 +1337,13 @@ try {
                                                         <td>Q<?php echo number_format($cargo['subtotal'], 2); ?></td>
                                                         <?php if (isset($_SESSION['usuario']) && in_array($_SESSION['usuario'], ['admin', 'epineda', 'ysantos'])): ?>
                                                             <td>
-                                                                <button class="btn btn-sm btn-outline-primary"
+                                                                <button class="btn btn-sm btn-outline-primary" title="Editar Cargo"
                                                                     onclick='editCargo(<?php echo json_encode($cargo); ?>)'>
                                                                     <i class="bi bi-pencil"></i>
+                                                                </button>
+                                                                <button class="btn btn-sm btn-outline-danger" title="Eliminar Cargo"
+                                                                    onclick='deleteCargo(<?php echo $cargo['id_cargo']; ?>)'>
+                                                                    <i class="bi bi-trash"></i>
                                                                 </button>
                                                             </td>
                                                         <?php endif; ?>
@@ -2077,6 +2081,46 @@ try {
                     Swal.fire('¡Actualizado!', 'El cargo ha sido actualizado correctamente.', 'success').then(() => {
                         location.reload();
                     });
+                }
+            });
+        }
+
+        function deleteCargo(id_cargo) {
+            Swal.fire({
+                title: '¿Eliminar Cargo?',
+                text: "Esta acción marcará el cargo como cancelado y recalculará la cuenta.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+                    const formData = new FormData();
+                    formData.append('id_cargo', id_cargo);
+                    formData.append('id_encamamiento', id_encamamiento);
+
+                    fetch('api/delete_charge.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                Swal.fire('¡Eliminado!', 'El cargo ha sido eliminado.', 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', data.message || 'Error al eliminar el cargo.', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire('Error', 'Hubo un problema de conexión.', 'error');
+                        });
                 }
             });
         }
