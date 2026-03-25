@@ -135,7 +135,7 @@ try {
             bottom: 0;
             pointer-events: none;
             z-index: -1;
-            opacity: 0.4;
+            opacity: 0.3;
             background-image:
                 radial-gradient(circle at 20% 30%, rgba(124, 144, 219, 0.08) 0%, transparent 30%),
                 radial-gradient(circle at 80% 70%, rgba(141, 215, 191, 0.08) 0%, transparent 30%),
