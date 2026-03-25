@@ -36,8 +36,8 @@ try {
             ch.cantidad as cargo_cantidad, 
             ch.fecha_cargo, 
             ch.referencia_id, 
-            p.nombre_paciente, 
-            p.apellido_paciente,
+            p.nombre as nombre_paciente, 
+            p.apellido as apellido_paciente,
             i.nom_medicamento as inv_medicamento,
             u.nombre as registrado_por_nombre
         FROM cargos_hospitalarios ch
@@ -57,9 +57,10 @@ try {
 
     $page_title = "Medicamentos Hospitalarios - Inventario";
 
-} catch (Exception $e) {
+} catch (Throwable $e) {
     error_log("Error en medicamentos hospitalarios: " . $e->getMessage());
-    die("Error al cargar la información. contacte al administrador.");
+    echo "DEBUG ERROR: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine();
+    die("<br>Error al cargar la información. contacte al administrador.");
 }
 ?>
 <!DOCTYPE html>
