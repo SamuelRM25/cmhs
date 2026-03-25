@@ -1716,6 +1716,10 @@ try {
                             </button>
                         <?php endif; ?>
                         <?php if ($can_manage_inventory): ?>
+                            <a href="hospital_medications.php" class="action-btn" style="background: var(--color-primary);">
+                                <i class="bi bi-hospital"></i>
+                                Meds. Hospitalarios
+                            </a>
                             <button type="button" class="action-btn" data-bs-toggle="modal"
                                 data-bs-target="#addMedicineModal">
                                 <i class="bi bi-plus-circle"></i>

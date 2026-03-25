@@ -60,11 +60,15 @@ try {
         $id_cuenta = $cuenta['id_cuenta'];
         $id_inventario = isset($cargo_data['id_inventario']) ? intval($cargo_data['id_inventario']) : null;
 
+        // Set referencia if we have inventory id
+        $referencia_id = ($tipo_cargo === 'Medicamento' && $id_inventario > 0) ? $id_inventario : null;
+        $referencia_tabla = ($referencia_id !== null) ? 'inventario' : null;
+
         // Insert charge
         $stmt = $conn->prepare("
             INSERT INTO cargos_hospitalarios 
-            (id_cuenta, tipo_cargo, descripcion, cantidad, precio_unitario, fecha_cargo, registrado_por)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (id_cuenta, tipo_cargo, descripcion, cantidad, precio_unitario, fecha_cargo, registrado_por, referencia_id, referencia_tabla)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
         $stmt->execute([
@@ -74,7 +78,9 @@ try {
             $cantidad,
             $precio_unitario,
             $fecha_cargo,
-            $registrado_por
+            $registrado_por,
+            $referencia_id,
+            $referencia_tabla
         ]);
 
         // Deduct from inventory if it's a medication with linkage

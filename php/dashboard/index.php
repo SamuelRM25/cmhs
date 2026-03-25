@@ -4123,7 +4123,7 @@ try {
                                         : `<div class="text-primary fw-bold">Q${price.toFixed(2)}</div>`
                                     }
                                     </div>
-                                    <button type="button" class="btn btn-link text-danger p-0 ms-2" onclick="document.getElementById('${cb.id}').click()">
+                                    <button type="button" class="btn btn-link text-danger p-0 ms-2" onclick="toggleLabCheckbox('${cb.id}')">
                                         <i class="bi bi-trash"></i>
                                     </button>`;
                                 fragment.appendChild(item);
