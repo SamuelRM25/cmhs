@@ -27,27 +27,33 @@ try {
     $database = new Database();
     $conn = $database->getConnection();
     
-    // Obtener todas las ventas con paginación
-    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-    $limit = 10;
-    $offset = ($page - 1) * $limit;
-    
     // Obtener total de registros para paginación
     $stmt = $conn->prepare("SELECT COUNT(*) as total FROM ventas");
     $stmt->execute();
-    $total_records = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    $total_pages = ceil($total_records / $limit);
+    $total_records = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+    
+    // Obtener todas las ventas con paginación
+    $limit = 50;
+    $total_pages = max(1, ceil($total_records / $limit));
+    
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    if ($page < 1) $page = 1;
+    if ($page > $total_pages && $total_records > 0) $page = $total_pages;
+    
+    $offset = ($page - 1) * $limit;
     
     // Obtener datos de ventas con paginación
+    // Usamos los valores directamente tras castear a int para máxima compatibilidad con LIMIT
+    $limit_int = (int)$limit;
+    $offset_int = (int)$offset;
+    
     $stmt = $conn->prepare("
         SELECT v.*, u.nombre as vendedor_nombre, u.apellido as vendedor_apellido
         FROM ventas v
         LEFT JOIN usuarios u ON v.id_usuario = u.idUsuario
         ORDER BY v.fecha_venta DESC 
-        LIMIT ? OFFSET ?
+        LIMIT $limit_int OFFSET $offset_int
     ");
-    $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-    $stmt->bindValue(2, $offset, PDO::PARAM_INT);
     $stmt->execute();
     $ventas = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
@@ -1481,6 +1487,14 @@ try {
             
             <!-- Sección de ventas -->
             <section class="sales-section animate-in delay-1">
+                <?php if (isset($error_message)): ?>
+                    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Error:</strong> <?php echo htmlspecialchars($error_message); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+
                 <div class="section-header">
                     <h3 class="section-title">
                         <i class="bi bi-receipt section-title-icon"></i>
@@ -1944,9 +1958,9 @@ try {
                             data.items.forEach(item => {
                                 const row = document.createElement('tr');
                                 row.innerHTML = `
-                                    <td>${item.nombre_medicamento || 'Producto'}</td>
-                                    <td>${item.presentacion || 'N/A'}</td>
-                                    <td class="text-center">${item.cantidad || 0}</td>
+                                    <td>${item.nom_medicamento || 'Producto'}</td>
+                                    <td>${item.presentacion_med || 'N/A'}</td>
+                                    <td class="text-center">${item.cantidad_vendida || 0}</td>
                                     <td class="text-end">Q${parseFloat(item.precio_unitario || 0).toFixed(2)}</td>
                                     <td class="text-end">Q${parseFloat(item.subtotal || 0).toFixed(2)}</td>
                                 `;
