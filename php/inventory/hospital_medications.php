@@ -44,7 +44,7 @@ try {
         JOIN cuenta_hospitalaria cu ON ch.id_cuenta = cu.id_cuenta
         JOIN encamamientos e ON cu.id_encamamiento = e.id_encamamiento
         JOIN pacientes p ON e.id_paciente = p.id_paciente
-        LEFT JOIN usuarios u ON ch.registrado_por = u.id_usuario
+        LEFT JOIN usuarios u ON ch.registrado_por = u.idUsuario
         LEFT JOIN inventario i ON ch.referencia_id = i.id_inventario AND ch.referencia_tabla = 'inventario'
         WHERE ch.tipo_cargo IN ('Medicamento', 'Insumo') AND ch.cancelado = 0
         ORDER BY ch.fecha_cargo DESC

@@ -380,9 +380,8 @@ try {
                 radial-gradient(circle at 80% 20%, var(--marble-color-2) 0%, transparent 50%),
                 var(--color-bg);
             background-blend-mode: overlay;
-            background-size: 200% 200%;
-            animation: marbleFloat 20s ease-in-out infinite alternate;
-            opacity: 0.7;
+            background-size: cover;
+            opacity: 0.3;
             pointer-events: none;
         }
 
@@ -3407,8 +3406,7 @@ try {
                                                         <?php foreach ($pruebas as $prueba): ?>
                                                             <div class="col-md-6 test-item"
                                                                 data-name="<?php echo strtolower(htmlspecialchars($prueba['nombre_prueba'])); ?>">
-                                                                <div class="test-card-v2 p-2 border rounded-3 position-relative transition-all d-flex align-items-center gap-3 h-100 hover-shadow cursor-pointer"
-                                                                    onclick="toggleLabCheckbox('test_v2_<?php echo $prueba['id_prueba']; ?>')">
+                                                                <div class="test-card-v2 p-2 border rounded-3 position-relative transition-all d-flex align-items-center gap-3 h-100 hover-shadow cursor-pointer">
                                                                     <div class="check-indicator">
                                                                         <input
                                                                             class="form-check-input test-checkbox stretched-link"
