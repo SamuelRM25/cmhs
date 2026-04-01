@@ -64,10 +64,10 @@ try {
     $edad = date_diff(date_create($orden['fecha_nacimiento']), date_create('today'))->y;
     $genero = $orden['genero'];
 
-    // 3. Get latest global result file for this order
-    $stmt_archivo_global = $conn->prepare("SELECT * FROM archivos_resultados_laboratorio WHERE id_orden = ? ORDER BY id_archivo DESC LIMIT 1");
-    $stmt_archivo_global->execute([$id_orden]);
-    $archivo_orden = $stmt_archivo_global->fetch(PDO::FETCH_ASSOC);
+    // 3. Get all global result files for this order
+    $stmt_archivos_globales = $conn->prepare("SELECT * FROM archivos_resultados_laboratorio WHERE id_orden = ? ORDER BY id_archivo ASC");
+    $stmt_archivos_globales->execute([$id_orden]);
+    $archivos_orden = $stmt_archivos_globales->fetchAll(PDO::FETCH_ASSOC);
 
     $page_title = "Procesar Orden #" . $orden['numero_orden'] . " - Centro Médico Herrera Saenz";
 
@@ -934,28 +934,44 @@ try {
                         </h4>
                     </div>
                     <div class="result-display-area p-4 text-center">
-                        <?php if ($archivo_orden):
-                            $file_url = "api/get_result_file.php?id=" . $archivo_orden['id_archivo'];
-                            $mime_type = $archivo_orden['tipo_contenido'];
+                        <?php if (count($archivos_orden) > 0): ?>
+                            <div class="row g-4 justify-content-center">
+                            <?php foreach ($archivos_orden as $archivo):
+                                $file_url = "api/get_result_file.php?id=" . $archivo['id_archivo'];
+                                $mime_type = $archivo['tipo_contenido'];
                             ?>
-
-                            <?php if (strpos($mime_type, 'image') !== false): ?>
-                                <div class="mb-3">
-                                    <img src="<?php echo htmlspecialchars($file_url); ?>" class="img-fluid rounded border"
-                                        style="max-height: 600px;" alt="Resultado">
+                                <div class="col-md-6 col-lg-4" id="archivo-card-<?php echo $archivo['id_archivo']; ?>">
+                                    <div class="card h-100 shadow-sm border position-relative">
+                                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 rounded-circle shadow" onclick="deleteResultFile(<?php echo $archivo['id_archivo']; ?>)" title="Eliminar archivo" style="z-index: 10;">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <div class="card-body p-0 d-flex flex-column align-items-center justify-content-center bg-light" style="min-height: 200px; overflow: hidden;">
+                                            <?php if (strpos($mime_type, 'image') !== false): ?>
+                                                <img src="<?php echo htmlspecialchars($file_url); ?>" class="img-fluid" style="width: 100%; height: 200px; object-fit: cover;" alt="Resultado">
+                                            <?php elseif (strpos($mime_type, 'pdf') !== false): ?>
+                                                <div class="text-danger py-4"><i class="bi bi-file-earmark-pdf-fill" style="font-size: 3rem;"></i></div>
+                                                <p class="small text-truncate px-3 w-100 mb-2" title="<?php echo htmlspecialchars($archivo['nombre_archivo']); ?>"><?php echo htmlspecialchars($archivo['nombre_archivo']); ?></p>
+                                            <?php else: ?>
+                                                <div class="text-secondary py-4"><i class="bi bi-file-earmark-text-fill" style="font-size: 3rem;"></i></div>
+                                                <p class="small text-truncate px-3 w-100 mb-2" title="<?php echo htmlspecialchars($archivo['nombre_archivo']); ?>"><?php echo htmlspecialchars($archivo['nombre_archivo']); ?></p>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="card-footer bg-white border-top p-2">
+                                            <a href="<?php echo htmlspecialchars($file_url); ?>" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                                                <i class="bi bi-arrows-fullscreen me-1"></i> Abrir
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
-                            <?php elseif (strpos($mime_type, 'pdf') !== false): ?>
-                                <div class="ratio ratio-16x9">
-                                    <iframe src="<?php echo htmlspecialchars($file_url); ?>" frameborder="0"></iframe>
-                                </div>
-                            <?php endif; ?>
-
-                            <div class="mt-3">
-                                <a href="<?php echo htmlspecialchars($file_url); ?>" target="_blank" class="btn btn-primary">
-                                    <i class="bi bi-arrows-fullscreen me-1"></i> Ver en Pantalla Completa
-                                </a>
+                            <?php endforeach; ?>
                             </div>
-
+                            
+                            <div class="mt-4 border-top pt-3">
+                                <button type="button" class="btn btn-outline-primary"
+                                    onclick="openResultsUploadModal(<?php echo $id_orden; ?>)">
+                                    <i class="bi bi-upload me-1"></i> Subir Más Resultados
+                                </button>
+                            </div>
                         <?php else: ?>
                             <div class="empty-state">
                                 <div class="empty-icon">
@@ -1105,10 +1121,10 @@ try {
                             <form id="resultsUploadForm" enctype="multipart/form-data">
                                 <input type="hidden" name="id_orden" id="resultUploadOrderId">
                                 <div class="mb-3">
-                                    <label for="archivo_resultado" class="form-label">Archivo de Resultados (PDF, JPG,
+                                    <label for="archivo_resultado" class="form-label">Archivo(s) de Resultados (PDF, JPG,
                                         PNG)</label>
                                     <input class="form-control" type="file" id="archivo_resultado"
-                                        name="archivo_resultado" accept=".pdf,.jpg,.jpeg,.png" required>
+                                        name="archivo_resultado[]" accept=".pdf,.jpg,.jpeg,.png" required multiple>
                                 </div>
                                 <div class="mb-3">
                                     <label for="notas_resultado" class="form-label">Notas Adicionales</label>
@@ -1420,6 +1436,51 @@ try {
                     submitBtn.disabled = false;
                 });
         });
+
+        // Delete Result File
+        function deleteResultFile(id_archivo) {
+            Swal.fire({
+                title: '¿Eliminar archivo?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('api/delete_result_file.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ id_archivo: id_archivo })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if(data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Eliminado',
+                                text: 'El archivo se ha eliminado correctamente',
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(() => {
+                                document.getElementById('archivo-card-' + id_archivo).remove();
+                                // Optional: if no cards left, reload to show empty state
+                                if (document.querySelectorAll('[id^=archivo-card-]').length === 0) {
+                                    location.reload();
+                                }
+                            });
+                        } else {
+                            Swal.fire('Error', data.message || 'Error al eliminar', 'error');
+                        }
+                    })
+                    .catch(err => Swal.fire('Error', 'Error de conexión', 'error'));
+                }
+            });
+        }
 
         function validateRange(input) {
             window.laboratory.functions.validateRange(input);

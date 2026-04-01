@@ -61,7 +61,7 @@ try {
         $id_inventario = isset($cargo_data['id_inventario']) ? intval($cargo_data['id_inventario']) : null;
 
         // Set referencia if we have inventory id
-        $referencia_id = ($tipo_cargo === 'Medicamento' && $id_inventario > 0) ? $id_inventario : null;
+        $referencia_id = (($tipo_cargo === 'Medicamento' || $tipo_cargo === 'Insumo') && $id_inventario > 0) ? $id_inventario : null;
         $referencia_tabla = ($referencia_id !== null) ? 'inventario' : null;
 
         // Insert charge
@@ -83,8 +83,8 @@ try {
             $referencia_tabla
         ]);
 
-        // Deduct from inventory if it's a medication with linkage
-        if ($tipo_cargo === 'Medicamento' && $id_inventario > 0) {
+        // Deduct from inventory if it's a medication or supply with linkage
+        if (($tipo_cargo === 'Medicamento' || $tipo_cargo === 'Insumo') && $id_inventario > 0) {
             $stmt_deduct = $conn->prepare("
                 UPDATE inventario 
                 SET stock_hospital = stock_hospital - ? 

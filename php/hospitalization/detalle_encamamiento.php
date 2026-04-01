@@ -1745,8 +1745,8 @@ try {
 
             // Handle tipo change
             tipoSelect.addEventListener('change', function () {
-                if (this.value === 'Medicamento') {
-                    descInput.placeholder = 'Buscar medicamento...';
+                if (this.value === 'Medicamento' || this.value === 'Insumo') {
+                    descInput.placeholder = 'Buscar ' + this.value.toLowerCase() + '...';
                     descInput.value = '';
                     precioInput.value = '';
                     row.querySelector('.cargo-id-inventario').value = '';
@@ -1762,7 +1762,7 @@ try {
                 const tipo = tipoSelect.value;
                 const term = this.value;
 
-                if (tipo !== 'Medicamento') {
+                if (tipo !== 'Medicamento' && tipo !== 'Insumo') {
                     resultsDiv.style.display = 'none';
                     return;
                 }
@@ -1772,12 +1772,12 @@ try {
                     return;
                 }
 
-                // Search medications
+                // Search medications/insumos
                 fetch(`api/search_medications.php?q=${encodeURIComponent(term)}`)
                     .then(res => res.json())
                     .then(data => {
                         if (data.length === 0) {
-                            resultsDiv.innerHTML = '<div class="p-2 text-muted small">No se encontraron medicamentos</div>';
+                            resultsDiv.innerHTML = '<div class="p-2 text-muted small">No se encontraron resultados</div>';
                             resultsDiv.style.display = 'block';
                             return;
                         }

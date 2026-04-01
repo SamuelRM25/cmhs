@@ -1777,6 +1777,13 @@ try {
                                 <i class="bi bi-list-ul me-2"></i>Lista
                             </button>
                         </li>
+                        <li class="nav-item d-none" id="detail-tab-container" role="presentation">
+                            <button class="nav-link" id="detail-tab" data-bs-toggle="tab"
+                                data-bs-target="#detail-pane" type="button" role="tab"
+                                onclick="window.dashboard.pos.loadTransferDetails()">
+                                <i class="bi bi-box-seam me-2"></i>Detalle por Insumo
+                            </button>
+                        </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="calendar-tab" data-bs-toggle="tab"
                                 data-bs-target="#calendar-pane" type="button" role="tab"
@@ -1805,6 +1812,37 @@ try {
                             <div id="historyLoading" class="text-center py-5">
                                 <div class="spinner-border text-info" role="status"></div>
                                 <p class="mt-2 text-muted">Cargando historial...</p>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="detail-pane" role="tabpanel">
+                            <div class="p-3 border-bottom bg-light">
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted mb-1">Fecha Inicio</label>
+                                        <input type="date" class="form-control form-control-sm" id="transferStartDate" value="<?php echo date('Y-m-d'); ?>" onchange="window.dashboard.pos.loadTransferDetails()">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted mb-1">Fecha Fin</label>
+                                        <input type="date" class="form-control form-control-sm" id="transferEndDate" value="<?php echo date('Y-m-d'); ?>" onchange="window.dashboard.pos.loadTransferDetails()">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted mb-1">Buscar Producto</label>
+                                        <input type="text" class="form-control form-control-sm" id="transferSearch" placeholder="Nombre de insumo..." oninput="window.dashboard.pos.loadTransferDetails()">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-sm table-hover align-middle mb-0">
+                                    <thead class="bg-light sticky-top">
+                                        <tr>
+                                            <th class="ps-3">Producto</th>
+                                            <th class="text-end pe-3">Cantidad Trasladada</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transferDetailsBody">
+                                        <tr><td colspan="2" class="text-center text-muted py-3">Seleccione un rango de fechas</td></tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         <div class="tab-pane fade" id="calendar-pane" role="tabpanel">
@@ -2613,6 +2651,15 @@ try {
                         bootstrap.Tab.getOrCreateInstance(listTab).show();
                     }
 
+                    const detailTabContainer = document.getElementById('detail-tab-container');
+                    if (detailTabContainer) {
+                        if (type === 'Traslado') {
+                            detailTabContainer.classList.remove('d-none');
+                        } else {
+                            detailTabContainer.classList.add('d-none');
+                        }
+                    }
+
                     tbody.innerHTML = '';
                     loading.style.display = 'block';
 
@@ -2654,6 +2701,48 @@ try {
                     } catch (error) {
                         console.error('Error loading history:', error);
                         tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Error al cargar el historial.</td></tr>';
+                    }
+                }
+
+                async loadTransferDetails() {
+                    const tbody = document.getElementById('transferDetailsBody');
+                    const startDate = document.getElementById('transferStartDate').value;
+                    const endDate = document.getElementById('transferEndDate').value;
+                    const search = document.getElementById('transferSearch').value;
+
+                    if (!tbody) return;
+
+                    tbody.innerHTML = '<tr><td colspan="2" class="text-center py-4"><div class="spinner-border text-info spinner-border-sm" role="status"></div></td></tr>';
+
+                    try {
+                        const url = new URL('get_transfer_details.php', window.location.href);
+                        url.searchParams.append('start', startDate);
+                        url.searchParams.append('end', endDate);
+                        if (search) url.searchParams.append('q', search);
+
+                        const response = await fetch(url);
+                        const data = await response.json();
+
+                        tbody.innerHTML = '';
+
+                        if (data.status === 'success' && data.details.length > 0) {
+                            data.details.forEach(item => {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td class="ps-3">
+                                        <div class="fw-bold">${item.nom_medicamento}</div>
+                                        <small class="text-muted">${item.mol_medicamento || ''}</small>
+                                    </td>
+                                    <td class="text-end pe-3 fw-bold">${item.total_cantidad}</td>
+                                `;
+                                tbody.appendChild(row);
+                            });
+                        } else {
+                            tbody.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-muted">No hay traslados en este periodo.</td></tr>';
+                        }
+                    } catch (error) {
+                        console.error('Error loading transfer details:', error);
+                        tbody.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-danger">Error al cargar detalles.</td></tr>';
                     }
                 }
 
