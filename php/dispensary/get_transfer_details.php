@@ -27,10 +27,14 @@ try {
             i.id_inventario,
             i.nom_medicamento, 
             i.mol_medicamento, 
-            SUM(dv.cantidad_vendida) as total_cantidad
+            dv.cantidad_vendida,
+            v.fecha_venta,
+            v.nombre_cliente,
+            CONCAT(u.nombre, ' ', u.apellido) as realizado_por
         FROM ventas v
         JOIN detalle_ventas dv ON v.id_venta = dv.id_venta
         JOIN inventario i ON dv.id_inventario = i.id_inventario
+        LEFT JOIN usuarios u ON v.id_usuario = u.idUsuario
         WHERE v.tipo_pago = 'Traslado'
         AND v.fecha_venta BETWEEN ? AND ?
     ";
@@ -45,7 +49,7 @@ try {
         $params[] = $term;
     }
 
-    $sql .= " GROUP BY i.id_inventario ORDER BY total_cantidad DESC";
+    $sql .= " ORDER BY v.fecha_venta DESC";
 
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);

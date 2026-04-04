@@ -1835,12 +1835,15 @@ try {
                                 <table class="table table-sm table-hover align-middle mb-0">
                                     <thead class="bg-light sticky-top">
                                         <tr>
-                                            <th class="ps-3">Producto</th>
-                                            <th class="text-end pe-3">Cantidad Trasladada</th>
+                                            <th class="ps-3">Fecha</th>
+                                            <th>Producto</th>
+                                            <th>Realizado Por</th>
+                                            <th>A Quién</th>
+                                            <th class="text-end pe-3">Cant.</th>
                                         </tr>
                                     </thead>
                                     <tbody id="transferDetailsBody">
-                                        <tr><td colspan="2" class="text-center text-muted py-3">Seleccione un rango de fechas</td></tr>
+                                        <tr><td colspan="5" class="text-center text-muted py-3">Seleccione un rango de fechas</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -2712,7 +2715,7 @@ try {
 
                     if (!tbody) return;
 
-                    tbody.innerHTML = '<tr><td colspan="2" class="text-center py-4"><div class="spinner-border text-info spinner-border-sm" role="status"></div></td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><div class="spinner-border text-info spinner-border-sm" role="status"></div></td></tr>';
 
                     try {
                         const url = new URL('get_transfer_details.php', window.location.href);
@@ -2728,21 +2731,29 @@ try {
                         if (data.status === 'success' && data.details.length > 0) {
                             data.details.forEach(item => {
                                 const row = document.createElement('tr');
+                                // Formatear fecha para remover segundos o dejarla amigable si es necesario, 
+                                // O simplemente mostrar el valor directo que viene de 'fecha_venta'
+                                const fechaCompleta = new Date(item.fecha_venta);
+                                const fechaTexto = fechaCompleta.toLocaleString('es-GT', { dateStyle: 'short', timeStyle: 'short' }) || item.fecha_venta;
+
                                 row.innerHTML = `
-                                    <td class="ps-3">
+                                    <td class="ps-3 small text-muted">${fechaTexto}</td>
+                                    <td>
                                         <div class="fw-bold">${item.nom_medicamento}</div>
                                         <small class="text-muted">${item.mol_medicamento || ''}</small>
                                     </td>
-                                    <td class="text-end pe-3 fw-bold">${item.total_cantidad}</td>
+                                    <td><span class="badge bg-light text-dark border"><i class="bi bi-person me-1"></i>${item.realizado_por || 'Sistema'}</span></td>
+                                    <td class="fw-medium">${item.nombre_cliente}</td>
+                                    <td class="text-end pe-3 fw-bold">${item.cantidad_vendida}</td>
                                 `;
                                 tbody.appendChild(row);
                             });
                         } else {
-                            tbody.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-muted">No hay traslados en este periodo.</td></tr>';
+                            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay traslados en este periodo.</td></tr>';
                         }
                     } catch (error) {
                         console.error('Error loading transfer details:', error);
-                        tbody.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-danger">Error al cargar detalles.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Error al cargar detalles.</td></tr>';
                     }
                 }
 
