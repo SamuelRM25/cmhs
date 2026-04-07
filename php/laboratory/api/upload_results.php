@@ -1,5 +1,5 @@
 <?php
-// laboratory/api/upload_results.php - Handle file upload for lab results
+// laboratory/api/upload_results.php - Handle file upload for lab results (With compression and larger file support)
 session_start();
 require_once '../../../config/database.php';
 require_once '../../../includes/functions.php';
@@ -25,35 +25,55 @@ try {
     $database = new Database();
     $conn = $database->getConnection();
 
-    // Handle file upload
     if (isset($_FILES['archivo_resultado'])) {
-        $fileCount = is_array($_FILES['archivo_resultado']['name']) ? count($_FILES['archivo_resultado']['name']) : 1;
+        $files = $_FILES['archivo_resultado'];
+        $fileCount = is_array($files['name']) ? count($files['name']) : 1;
         $uploadedCount = 0;
         
         $conn->beginTransaction();
         
         for ($i = 0; $i < $fileCount; $i++) {
-            $error = is_array($_FILES['archivo_resultado']['error']) ? $_FILES['archivo_resultado']['error'][$i] : $_FILES['archivo_resultado']['error'];
+            $error = is_array($files['error']) ? $files['error'][$i] : $files['error'];
             
             if ($error === UPLOAD_ERR_OK) {
-                $fileTmpPath = is_array($_FILES['archivo_resultado']['tmp_name']) ? $_FILES['archivo_resultado']['tmp_name'][$i] : $_FILES['archivo_resultado']['tmp_name'];
-                $fileName = is_array($_FILES['archivo_resultado']['name']) ? $_FILES['archivo_resultado']['name'][$i] : $_FILES['archivo_resultado']['name'];
-                $fileSize = is_array($_FILES['archivo_resultado']['size']) ? $_FILES['archivo_resultado']['size'][$i] : $_FILES['archivo_resultado']['size'];
-                $fileType = is_array($_FILES['archivo_resultado']['type']) ? $_FILES['archivo_resultado']['type'][$i] : $_FILES['archivo_resultado']['type'];
+                $fileTmpPath = is_array($files['tmp_name']) ? $files['tmp_name'][$i] : $files['tmp_name'];
+                $fileName = is_array($files['name']) ? $files['name'][$i] : $files['name'];
+                $fileType = is_array($files['type']) ? $files['type'][$i] : $files['type'];
                 
                 $fileNameCmps = explode(".", $fileName);
                 $fileExtension = strtolower(end($fileNameCmps));
                 $allowedfileExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
 
                 if (!in_array($fileExtension, $allowedfileExtensions)) {
-                    throw new Exception('Tipo de archivo no permitido: ' . $fileName);
+                    continue; // Skip invalid files instead of throwing error
                 }
 
-                $content = file_get_contents($fileTmpPath);
+                // Compression logic for images
+                $usedPath = $fileTmpPath;
+                $compressedPath = null;
+                if (in_array($fileExtension, ['jpg', 'jpeg', 'png'])) {
+                    $compressedPath = $fileTmpPath . '_compressed.' . $fileExtension;
+                    if (compressImage($fileTmpPath, $compressedPath, 70)) {
+                        $usedPath = $compressedPath;
+                    }
+                }
 
-                $stmt = $conn->prepare("INSERT INTO archivos_resultados_laboratorio (id_orden, nombre_archivo, tipo_contenido, tamano, contenido, notas) VALUES (?, ?, ?, ?, ?, ?)");
+                $content = file_get_contents($usedPath);
+                $fileSize = strlen($content);
+
+                // Insert with explicit categoria 'RESULTADO'
+                $stmt = $conn->prepare("
+                    INSERT INTO archivos_resultados_laboratorio 
+                    (id_orden, categoria, nombre_archivo, tipo_contenido, tamano, contenido, notas) 
+                    VALUES (?, 'RESULTADO', ?, ?, ?, ?, ?)
+                ");
                 $stmt->execute([$id_orden, $fileName, $fileType, $fileSize, $content, $notas]);
                 $uploadedCount++;
+
+                // Clean up
+                if ($compressedPath && file_exists($compressedPath)) {
+                    unlink($compressedPath);
+                }
             }
         }
 
@@ -65,7 +85,7 @@ try {
             ]);
         } else {
             $conn->rollBack();
-            echo json_encode(['success' => false, 'message' => 'Ningún archivo fue recibido o procesado']);
+            echo json_encode(['success' => false, 'message' => 'No se pudo procesar ningún archivo válido']);
         }
 
     } else {
@@ -73,8 +93,7 @@ try {
     }
 
 } catch (Exception $e) {
-    if (isset($conn))
-        $conn->rollBack();
+    if (isset($conn)) $conn->rollBack();
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
 ?>

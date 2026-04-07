@@ -81,12 +81,14 @@ try {
                p.nombre, p.apellido, p.genero, p.fecha_nacimiento,
                u.nombre as doctor_nombre, u.apellido as doctor_apellido,
                COUNT(op.id_orden_prueba) as num_pruebas,
-               TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) as edad
+               TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) as edad,
+               er.id_examen_realizado
         FROM ordenes_laboratorio ol
         JOIN pacientes p ON ol.id_paciente = p.id_paciente
         LEFT JOIN usuarios u ON ol.id_doctor = u.idUsuario
         LEFT JOIN orden_pruebas op ON ol.id_orden = op.id_orden
-        WHERE ol.estado IN ('Pendiente', 'Muestra_Recibida', 'En_Proceso', 'Completada')
+        LEFT JOIN examenes_realizados er ON ol.id_orden = er.id_orden
+        WHERE ol.estado IN ('Pendiente', 'Muestra_Recibida', 'En_Proceso', 'Completada', 'Validada')
         GROUP BY ol.id_orden
         ORDER BY 
             CASE 
@@ -94,7 +96,8 @@ try {
                 WHEN ol.estado = 'Muestra_Recibida' THEN 2
                 WHEN ol.estado = 'En_Proceso' THEN 3
                 WHEN ol.estado = 'Completada' THEN 4
-                ELSE 5
+                WHEN ol.estado = 'Validada' THEN 5
+                ELSE 6
             END,
             ol.fecha_orden DESC
     ");

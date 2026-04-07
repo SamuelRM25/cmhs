@@ -135,12 +135,13 @@ try {
         $nombre_paciente_full = $paciente_data['nombre'] ?? 'Paciente Desconocido';
 
         $stmt_bill = $conn->prepare("
-            INSERT INTO examenes_realizados (id_paciente, nombre_paciente, tipo_examen, cobro, tipo_pago, fecha_examen)
-            VALUES (?, ?, ?, ?, ?, NOW())
+            INSERT INTO examenes_realizados (id_paciente, id_orden, nombre_paciente, tipo_examen, cobro, tipo_pago, fecha_examen)
+            VALUES (?, ?, ?, ?, ?, ?, NOW())
         ");
         $descripcion_bill = "Servicios Laboratorio Order #" . $numero_orden . ": " . implode(", ", $pruebas_nombres);
         $stmt_bill->execute([
             $data['id_paciente'],
+            $id_orden,
             $nombre_paciente_full,
             $descripcion_bill,
             $total_order,

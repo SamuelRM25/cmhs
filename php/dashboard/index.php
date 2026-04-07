@@ -3867,6 +3867,7 @@ try {
                         const hour = date.getHours();
 
                         switch (doctorId) {
+                            case '9': price = (type === 'Consulta') ? 200 : 150; break;
                             case '17': price = (type === 'Consulta') ? 200 : 150; break;
                             case '13': price = (type === 'Consulta') ? 250 : 150; break;
                             case '18': case '11': price = (type === 'Consulta') ? 200 : 100; break;

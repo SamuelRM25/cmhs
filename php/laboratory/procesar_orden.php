@@ -64,10 +64,16 @@ try {
     $edad = date_diff(date_create($orden['fecha_nacimiento']), date_create('today'))->y;
     $genero = $orden['genero'];
 
-    // 3. Get all global result files for this order
-    $stmt_archivos_globales = $conn->prepare("SELECT * FROM archivos_resultados_laboratorio WHERE id_orden = ? ORDER BY id_archivo ASC");
-    $stmt_archivos_globales->execute([$id_orden]);
-    $archivos_orden = $stmt_archivos_globales->fetchAll(PDO::FETCH_ASSOC);
+    // 3. Get all global result files for this order, separated by category
+    $stmt_archivos = $conn->prepare("SELECT * FROM archivos_resultados_laboratorio WHERE id_orden = ? ORDER BY id_archivo ASC");
+    $stmt_archivos->execute([$id_orden]);
+    $todos_archivos = $stmt_archivos->fetchAll(PDO::FETCH_ASSOC);
+    
+    $archivos_resultados = array_filter($todos_archivos, function($a) { return $a['categoria'] === 'RESULTADO' || empty($a['categoria']); });
+    $archivos_muestras = array_filter($todos_archivos, function($a) { return $a['categoria'] === 'ORDEN_FISICA'; });
+
+    // Legacy support for single physical order if it exists but isn't in the new table
+    $tiene_archivo_legacy = !empty($orden['archivo_resultados']);
 
     $page_title = "Procesar Orden #" . $orden['numero_orden'] . " - Centro Médico Herrera Saenz";
 
@@ -912,11 +918,25 @@ try {
                         onclick="openResultsUploadModal(<?php echo $id_orden; ?>)">
                         <i class="bi bi-upload"></i> Subir Resultados
                     </button>
-                    <?php if (!empty($orden['archivo_resultados'])): ?>
-                        <a href="<?php echo htmlspecialchars($orden['archivo_resultados']); ?>" target="_blank"
-                            class="btn btn-sm btn-info text-white mt-1">
-                            <i class="bi bi-eye"></i> Ver Orden
-                        </a>
+                    
+                    <!-- Display Physical Order Files -->
+                    <?php if ($tiene_archivo_legacy || count($archivos_muestras) > 0): ?>
+                        <div class="mt-2 d-flex flex-wrap gap-1 justify-content-end">
+                        <?php if ($tiene_archivo_legacy): ?>
+                            <a href="<?php echo htmlspecialchars($orden['archivo_resultados']); ?>" target="_blank"
+                                class="btn btn-xs btn-info text-white">
+                                <i class="bi bi-eye"></i> Ver Orden (Principal)
+                            </a>
+                        <?php endif; ?>
+                        <?php foreach ($archivos_muestras as $idx => $am): 
+                            $am_url = "api/get_result_file.php?id=" . $am['id_archivo'];
+                        ?>
+                            <a href="<?php echo htmlspecialchars($am_url); ?>" target="_blank"
+                                class="btn btn-xs btn-outline-info">
+                                <i class="bi bi-paperclip"></i> Orden #<?php echo $idx + 1; ?>
+                            </a>
+                        <?php endforeach; ?>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -934,9 +954,9 @@ try {
                         </h4>
                     </div>
                     <div class="result-display-area p-4 text-center">
-                        <?php if (count($archivos_orden) > 0): ?>
+                        <?php if (count($archivos_resultados) > 0): ?>
                             <div class="row g-4 justify-content-center">
-                            <?php foreach ($archivos_orden as $archivo):
+                            <?php foreach ($archivos_resultados as $archivo):
                                 $file_url = "api/get_result_file.php?id=" . $archivo['id_archivo'];
                                 $mime_type = $archivo['tipo_contenido'];
                             ?>
@@ -1073,29 +1093,29 @@ try {
                 </div>
             </form>
 
-            <!-- Modal para carga de archivo -->
+            <!-- Modal para carga de Orden Física -->
             <div class="modal fade" id="fileUploadModal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content" style="border-radius: var(--radius-lg);">
                         <div class="modal-header" style="border-bottom: 1px solid var(--color-border);">
                             <h5 class="modal-title">
-                                <i class="bi bi-file-earmark-arrow-up me-2"></i>
-                                Cargar Archivo de Resultados
+                                <i class="bi bi-paperclip me-2"></i>
+                                Adjuntar Orden Física (Muestra)
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <form id="fileUploadForm" enctype="multipart/form-data">
                             <div class="modal-body">
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Seleccione archivo (PDF o Imagen)</label>
-                                    <input type="file" class="form-control" name="archivo_muestra" id="archivo_muestra"
-                                        accept=".pdf,.jpg,.jpeg,.png" required>
-                                    <small class="text-muted">Formatos permitidos: PDF, JPG, PNG</small>
+                                    <label class="form-label fw-semibold">Seleccione archivo(s) (PDF o Imagen)</label>
+                                    <input type="file" class="form-control" name="archivo_muestra[]" id="archivo_muestra"
+                                        accept=".pdf,.jpg,.jpeg,.png" required multiple>
+                                    <small class="text-muted">Formatos permitidos: PDF, JPG, PNG. Puede seleccionar varios archivos.</small>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold">Notas (Opcional)</label>
                                     <textarea class="form-control" name="notas" rows="2"
-                                        placeholder="Agregar notas sobre la muestra..."></textarea>
+                                        placeholder="Agregar notas sobre la orden física..."></textarea>
                                 </div>
                             </div>
                             <div class="modal-footer" style="border-top: 1px solid var(--color-border);">
