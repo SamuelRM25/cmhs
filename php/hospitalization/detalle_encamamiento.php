@@ -129,14 +129,15 @@ try {
                 // Charge is missing for this night
                 $stmt_add_night = $conn->prepare("
                     INSERT INTO cargos_hospitalarios 
-                    (id_cuenta, tipo_cargo, descripcion, cantidad, precio_unitario, fecha_cargo, fecha_aplicacion, registrado_por)
-                    VALUES (?, 'Habitación', ?, 1, ?, NOW(), ?, ?)
+                    (id_cuenta, tipo_cargo, descripcion, cantidad, precio_unitario, subtotal, fecha_cargo, fecha_aplicacion, registrado_por)
+                    VALUES (?, 'Habitación', ?, 1, ?, ?, NOW(), ?, ?)
                 ");
                 $desc = "Habitación " . $encamamiento['numero_habitacion'] . " - Cama " . $encamamiento['numero_cama'] . " (Noche " . $date_str . ")";
                 $stmt_add_night->execute([
                     $id_cuenta,
                     $desc,
                     $encamamiento['tarifa_por_noche'],
+                    $encamamiento['tarifa_por_noche'], // subtotal (1 * tarifa)
                     $date_str,
                     $user_id
                 ]);

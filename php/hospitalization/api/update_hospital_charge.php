@@ -60,13 +60,13 @@ try {
 
     $id_cuenta = $cargo_info['id_cuenta'];
 
-    // 2. Update the charge (subtotal is generated automatically)
+    // 2. Update the charge (manually recalculate subtotal)
     $stmt_update = $conn->prepare("
         UPDATE cargos_hospitalarios 
-        SET descripcion = ?, cantidad = ?, precio_unitario = ?
+        SET descripcion = ?, cantidad = ?, precio_unitario = ?, subtotal = (? * ?)
         WHERE id_cargo = ?
     ");
-    $stmt_update->execute([$descripcion, $cantidad, $precio_unitario, $id_cargo]);
+    $stmt_update->execute([$descripcion, $cantidad, $precio_unitario, $cantidad, $precio_unitario, $id_cargo]);
 
     // 3. Recalculate account totals (copied logic from detalle_encamamiento.php)
     $stmt_sync = $conn->prepare("
