@@ -263,6 +263,37 @@ try {
     }
 
 
+    // ============ REPORTE DE TRASLADOS (Acceso Restringido) ============
+    $can_view_transfers = in_array($user_id, [1, 9, 10]);
+    $transfers_data = [];
+    $total_transfers_amount = 0;
+
+    if ($can_view_transfers) {
+        $stmt_transfers = $conn->prepare("
+            SELECT 
+                i.nom_medicamento,
+                dv.cantidad_vendida,
+                v.fecha_venta,
+                v.nombre_cliente as destino,
+                v.total as valor_traslado,
+                CONCAT(u.nombre, ' ', u.apellido) as realizado_por
+            FROM ventas v
+            JOIN detalle_ventas dv ON v.id_venta = dv.id_venta
+            JOIN inventario i ON dv.id_inventario = i.id_inventario
+            LEFT JOIN usuarios u ON v.id_usuario = u.idUsuario
+            WHERE v.tipo_pago = 'Traslado'
+            AND v.fecha_venta BETWEEN ? AND ?
+            ORDER BY v.fecha_venta DESC
+        ");
+        $stmt_transfers->execute([$profit_start_datetime, $profit_end_datetime]);
+        $transfers_data = $stmt_transfers->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($transfers_data as $transfer) {
+            $total_transfers_amount += $transfer['valor_traslado'];
+        }
+    }
+
+
 } catch (PDOException $e) {
     // Error específico de base de datos
     error_log("Error DB en módulo de reportes: " . $e->getMessage());
@@ -1616,7 +1647,72 @@ try {
                 </div>
             </div>
 
-            <!-- Sección de datos detallados -->
+            </div>
+
+            <!-- Nuevo Reporte de Traslados (Restringido) -->
+            <?php if ($can_view_transfers): ?>
+                <div class="content-section animate-in delay-4 mt-5">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="bi bi-arrow-left-right section-title-icon" style="color: var(--color-danger);"></i>
+                            Reporte de Traslados (Dispensario)
+                        </h3>
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <span class="amount-badge expense">
+                                Valor Total: Q<?php echo number_format($total_transfers_amount, 2); ?>
+                            </span>
+                            <a href="export_transfers.php?start=<?php echo $profit_start; ?>&end=<?php echo $profit_end; ?>"
+                                target="_blank" class="action-btn" style="background: var(--color-success)">
+                                <i class="bi bi-file-earmark-excel me-2"></i>
+                                Exportar Traslados
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Medicamento</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th>Destino / Paciente</th>
+                                    <th>Realizado por</th>
+                                    <th>Fecha y Hora</th>
+                                    <th class="text-end">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($transfers_data as $transfer): ?>
+                                    <tr>
+                                        <td class="fw-semibold"><?php echo htmlspecialchars($transfer['nom_medicamento']); ?></td>
+                                        <td class="text-center">
+                                            <span class="badge bg-light text-dark border">
+                                                <?php echo $transfer['cantidad_vendida']; ?>
+                                            </span>
+                                        </td>
+                                        <td><?php echo htmlspecialchars($transfer['destino']); ?></td>
+                                        <td><?php echo htmlspecialchars($transfer['realizado_por']); ?></td>
+                                        <td>
+                                            <?php echo date('d/m/Y h:i A', strtotime($transfer['fecha_venta'])); ?>
+                                        </td>
+                                        <td class="text-end fw-bold text-danger">
+                                            Q<?php echo number_format($transfer['valor_traslado'], 2); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($transfers_data)): ?>
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            No se encontraron traslados en este período.
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <?php endif; ?>
             <div class="row g-4 animate-in delay-2">
                 <!-- Procedimientos menores -->
                 <div class="col-lg-6">
