@@ -2218,7 +2218,7 @@ try {
                         <span class="nav-text">Pacientes</span>
                     </a>
                 </li>
-                <?php if ($user_type === 'admin' || $user_type === 'user'): ?>
+                <?php if ($user_type === 'admin'): ?>
                     <li class="nav-item">
                         <a href="../hospitalization/index.php" class="nav-link">
                             <i class="bi bi-hospital nav-icon"></i>
