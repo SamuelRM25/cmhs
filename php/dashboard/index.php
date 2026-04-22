@@ -2226,12 +2226,16 @@ try {
                             <span class="badge bg-info"><?php echo $active_hospitalizations; ?></span>
                         </a>
                     </li>
+                <?php endif; ?>
+                <?php if ($user_type === 'admin' || $_SESSION['user_id'] == 7): ?> 
                     <li class="nav-item">
                         <a href="../laboratory/index.php" class="nav-link">
                             <i class="bi bi-virus nav-icon"></i>
                             <span class="nav-text">Laboratorio</span>
                         </a>
                     </li>
+                <?php endif; ?>
+                <?php if ($user_type === 'admin' || $_SESSION['user_id'] == 6): ?> 
                     <li class="nav-item">
                         <a href="../inventory/index.php" class="nav-link">
                             <i class="bi bi-box-seam nav-icon"></i>
