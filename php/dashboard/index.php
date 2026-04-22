@@ -2227,7 +2227,7 @@ try {
                         </a>
                     </li>
                 <?php endif; ?>
-                <?php if ($user_type === 'admin' || $_SESSION['user_id'] == 7): ?> 
+                <?php if ($user_type === 'admin' || $_SESSION['user_id'] == 7 || $_SESSION['user_id'] == 29): ?> 
                     <li class="nav-item">
                         <a href="../laboratory/index.php" class="nav-link">
                             <i class="bi bi-virus nav-icon"></i>
