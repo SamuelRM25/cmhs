@@ -64,6 +64,9 @@ try {
     $stmt = $conn->query("SELECT COUNT(*) as count FROM inventario WHERE estado = 'Pendiente'");
     $pending_receipt = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
 
+    // 7. Valor total del inventario en base a precio de compra
+    $stmt = $conn->query("SELECT SUM(cantidad_med * precio_compra) as total_valor FROM inventario WHERE cantidad_med > 0");
+    $total_value = $stmt->fetch(PDO::FETCH_ASSOC)['total_valor'] ?? 0;
 
     $total_appointments = 0;
     $active_hospitalizations = 0;
@@ -1607,8 +1610,25 @@ try {
             </div>
 
             <!-- Estadísticas principales -->
-            <?php if ($user_type === 'admin'): ?>
+            <?php if ($_SESSION['user_id'] == 1 || $_SESSION['user_id'] == 9 || $_SESSION['user_id'] == 10): ?>
                 <div class="stats-grid">
+                    <!-- Valor Total en Inventario -->
+                    <div class="stat-card animate-in delay-0">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-title">Valor en Inventario</div>
+                                <div class="stat-value">Q <?php echo number_format($total_value, 2); ?></div>
+                            </div>
+                            <div class="stat-icon success">
+                                <i class="bi bi-cash-stack"></i>
+                            </div>
+                        </div>
+                        <div class="stat-change positive">
+                            <i class="bi bi-info-circle"></i>
+                            <span>Costo de artículos</span>
+                        </div>
+                    </div>
+
                     <!-- Total de items -->
                     <div class="stat-card animate-in delay-1">
                         <div class="stat-header">

@@ -2775,7 +2775,7 @@ try {
             </div>
 
             <!-- Acciones Rápidas -->
-            <?php if ($_SESSION['user_id'] == 7 || $_SESSION['user_id'] == 1 || $_SESSION['user_id'] == 26 || $_SESSION['user_id'] == 27 || $_SESSION['user_id'] == 28): ?>
+            <?php if ($_SESSION['user_id'] == 7 || $_SESSION['user_id'] == 1 || $_SESSION['user_id'] == 26 || $_SESSION['user_id'] == 27 || $_SESSION['user_id'] == 28 || $_SESSION['user_id'] == 29): ?>
                 <div class="stats-grid mb-4 animate-in delay-1">
                     <a href="#" class="stat-card" data-bs-toggle="modal" data-bs-target="#newBillingModal"
                         style="text-decoration: none; border-left: 4px solid var(--color-success);">
@@ -3005,6 +3005,7 @@ try {
                 <?php endif; ?>
             </section>
 
+            <?php if ($user_type === 'admin'): ?>
             <!-- Sección de Hospitalización -->
             <section class="appointments-section animate-in delay-2">
                 <div class="section-header">
@@ -3105,6 +3106,7 @@ try {
                     </div>
                 <?php endif; ?>
             </section>
+            <?php endif; ?>
 
             <!-- Panel de alertas -->
             <div class="alerts-grid animate-in delay-3">
