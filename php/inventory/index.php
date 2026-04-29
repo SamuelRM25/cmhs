@@ -64,9 +64,19 @@ try {
     $stmt = $conn->query("SELECT COUNT(*) as count FROM inventario WHERE estado = 'Pendiente'");
     $pending_receipt = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
 
-    // 7. Valor total del inventario en base a precio de compra
-    $stmt = $conn->query("SELECT SUM(cantidad_med * precio_compra) as total_valor FROM inventario WHERE cantidad_med > 0");
-    $total_value = $stmt->fetch(PDO::FETCH_ASSOC)['total_valor'] ?? 0;
+    // 7. Valor total del inventario en base a precio de compra y precio de venta
+    // Se utiliza COALESCE con purchase_items para los medicamentos que tienen precio_compra en 0
+    $stmt = $conn->query("
+        SELECT 
+            SUM(i.cantidad_med * COALESCE(NULLIF(i.precio_compra, 0), p.unit_cost, 0)) as total_valor_compra, 
+            SUM(i.cantidad_med * i.precio_venta) as total_valor_venta 
+        FROM inventario i
+        LEFT JOIN purchase_items p ON i.id_purchase_item = p.id
+        WHERE i.cantidad_med > 0
+    ");
+    $result_val = $stmt->fetch(PDO::FETCH_ASSOC);
+    $total_value = $result_val['total_valor_compra'] ?? 0;
+    $total_value_venta = $result_val['total_valor_venta'] ?? 0;
 
     $total_appointments = 0;
     $active_hospitalizations = 0;
@@ -1613,11 +1623,11 @@ try {
             <?php if ($_SESSION['user_id'] == 1 || $_SESSION['user_id'] == 9 || $_SESSION['user_id'] == 10): ?>
                 <div class="stats-grid">
                     <!-- Valor Total en Inventario -->
-                    <div class="stat-card animate-in delay-0">
+                    <div class="stat-card animate-in delay-0" id="inventoryValueCard" style="cursor: pointer;" onclick="toggleInventoryValue()">
                         <div class="stat-header">
                             <div>
-                                <div class="stat-title">Valor en Inventario</div>
-                                <div class="stat-value">Q <?php echo number_format($total_value, 2); ?></div>
+                                <div class="stat-title" id="inventoryValueTitle">Valor en Inventario (Compra)</div>
+                                <div class="stat-value" id="inventoryValueAmount">Q <?php echo number_format($total_value, 2); ?></div>
                             </div>
                             <div class="stat-icon success">
                                 <i class="bi bi-cash-stack"></i>
@@ -1625,7 +1635,7 @@ try {
                         </div>
                         <div class="stat-change positive">
                             <i class="bi bi-info-circle"></i>
-                            <span>Costo de artículos</span>
+                            <span id="inventoryValueSubtitle">Haz clic para ver el precio de venta</span>
                         </div>
                     </div>
 
@@ -3200,6 +3210,33 @@ try {
 
     <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Lógica para alternar el valor del inventario
+        let showPurchasePrice = true;
+        const valueCompra = <?php echo json_encode(number_format($total_value, 2)); ?>;
+        const valueVenta = <?php echo json_encode(number_format($total_value_venta, 2)); ?>;
+
+        function toggleInventoryValue() {
+            showPurchasePrice = !showPurchasePrice;
+            const titleEl = document.getElementById('inventoryValueTitle');
+            const amountEl = document.getElementById('inventoryValueAmount');
+            const subtitleEl = document.getElementById('inventoryValueSubtitle');
+            const iconContainer = document.querySelector('#inventoryValueCard .stat-icon');
+
+            if (showPurchasePrice) {
+                titleEl.textContent = 'Valor en Inventario (Compra)';
+                amountEl.textContent = 'Q ' + valueCompra;
+                subtitleEl.textContent = 'Haz clic para ver el precio de venta';
+                iconContainer.classList.replace('primary', 'success');
+            } else {
+                titleEl.textContent = 'Valor en Inventario (Venta)';
+                amountEl.textContent = 'Q ' + valueVenta;
+                subtitleEl.textContent = 'Haz clic para ver el precio de compra';
+                iconContainer.classList.replace('success', 'primary');
+            }
+        }
+    </script>
 </body>
 
 </html>
