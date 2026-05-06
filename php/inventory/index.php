@@ -3102,6 +3102,12 @@ try {
             // INICIALIZACIÓN DE LA APLICACIÓN
             // ==========================================================================
             document.addEventListener('DOMContentLoaded', () => {
+                // Limpiar la barra de búsqueda (Requerimiento 1)
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+
                 // Inicializar componentes
                 const themeManager = new ThemeManager();
                 const inventoryManager = new InventoryManager();
